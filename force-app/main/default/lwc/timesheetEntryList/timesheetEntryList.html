@@ -1,0 +1,62 @@
+<template>
+    <div class="section-list">
+        
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Project</th>
+                    <th>Task</th>
+                    <th>Description</th>
+                    <th>Time</th>
+                    <th>Hours</th>
+                    <th>Status</th>
+                    <th>Billing Status</th>
+                    <th>Approval Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!--<template for:each={entries} for:item="entry">-->
+                    <template for:each={paginatedEntries} for:item="entry">
+                    <tr key={entry.id}>
+                        <td>{entry.date}<br/><small>{entry.day}</small></td>
+                        <td>{entry.project}</td>
+                        <td>{entry.task}</td>
+                       
+                        <td>{entry.description}</td>
+   
+                        <td>{entry.startTime} - {entry.endTime}</td>
+                        <td>Regular: {entry.hours}h<template if:true={entry.overtime}>, OT: {entry.overtime}h</template></td>
+                        <td><span class={entry.statusClass}>{entry.status}</span></td>
+                        <td>{entry.employmentStatus}</td>
+                        <td>
+                            <span class={entry.approvalStatusClass}>{entry.approvalStatus}</span>
+                        </td>
+                        <td>
+                            <lightning-button-icon icon-name="utility:edit" alternative-text="Edit" onclick={editEntry} data-id={entry.id}></lightning-button-icon>
+                            <lightning-button-icon icon-name="utility:delete" alternative-text="Delete" onclick={deleteEntry} data-id={entry.id}></lightning-button-icon>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+        <div class="pagination-controls slds-m-top_medium">
+            <lightning-button
+                label="Previous"
+                onclick={handlePrevPage}
+                disabled={isFirstPage}>
+            </lightning-button>
+
+            <span class="slds-m-horizontal_small">
+                Page {currentPage} of {totalPages}
+            </span>
+
+            <lightning-button
+                label="Next"
+                onclick={handleNextPage}
+                disabled={isLastPage}>
+            </lightning-button>
+        </div>
+    </div>
+</template>

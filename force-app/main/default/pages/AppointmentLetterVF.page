@@ -1,0 +1,282 @@
+<!--<apex:page renderAs="pdf" showHeader="false" sidebar="false" standardController="Contact" extensions="AppointmentLetterController" >-->
+<apex:page renderAs="{!IF(hasError, '', 'pdf')}" showHeader="false" sidebar="false"
+           standardController="Contact" extensions="AppointmentLetterController">
+
+    <head>
+        <style>
+            * { box-sizing: border-box; }
+            body {
+                font-family: Arial, sans-serif;
+                font-size: 11px;
+                line-height: 1.4;
+                margin: 15px;
+            }
+            /* Main bordered container */
+            .doc-wrapper {
+                border: 2px solid #000;
+                padding: 20px;
+            }
+            /* Header with logo */
+            .header-section {
+                text-align: left;
+                margin-bottom: 15px;
+                border-bottom: 1px solid #000;
+                padding-bottom: 10px;
+            }
+            .header-section img {
+                height: 25px;
+                width: auto;
+                display: block;
+                margin-bottom: 5px;
+            }
+            .company-header {
+                font-size: 11px;
+                font-weight: normal;
+            }
+            .date-line {
+                text-align: right;
+                margin-bottom: 10px;
+                font-size: 11px;
+            }
+            h1 {
+                text-align: center;
+                font-size: 14px;
+                margin: 12px 0 10px 0;
+                text-transform: uppercase;
+                font-weight: bold;
+            }
+            .letter-intro {
+                margin-bottom: 15px;
+            }
+            h2 {
+                margin: 15px 0 8px 0;
+                font-size: 11px;
+                font-weight: bold;
+                text-decoration: underline;
+            }
+            h3 {
+                margin: 10px 0 6px 0;
+                font-size: 11px;
+                font-weight: bold;
+            }
+            p {
+                margin: 0 0 8px 0;
+                text-align: justify;
+                line-height: 1.5;
+            }
+            ol, ul {
+                margin-left: 20px;
+                margin-bottom: 8px;
+            }
+            li {
+                margin-bottom: 4px;
+                text-align: justify;
+            }
+            .signature-block {
+                margin-top: 25px;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 12px 0;
+                font-size: 10px;
+            }
+            table td, table th {
+                border: 1px solid #000;
+                padding: 6px;
+                text-align: left;
+            }
+            table th {
+                background-color: #f0f0f0;
+                font-weight: bold;
+            }
+            .amount-col {
+                text-align: right;
+            }
+            .salary-note {
+                margin-top: 8px;
+                font-size: 10px;
+                line-height: 1.4;
+            }
+            .footer-thank-you {
+                text-align: center;
+                margin-top: 20px;
+                font-style: italic;
+                font-size: 11px;
+            }
+        </style>
+    </head>
+    <body>
+<apex:outputPanel rendered="{!hasError}">
+    <div style="border:1px solid red; padding:15px; margin:20px;">
+        <h2 style="color:red; font-size:16px; font-weight:bold;">
+            {!errorMessage}
+        </h2>
+        <p>Please update the employee's Salary Details before generating the Appointment Letter.</p>
+        <p>
+            <a href="/{!contact.Id}" style="color:blue; font-weight:bold;">Go back to Contact</a>
+        </p>
+    </div>
+</apex:outputPanel>
+ <apex:outputPanel rendered="{!NOT(hasError)}">
+        <div class="doc-wrapper">
+
+            <!-- Header -->
+            <div class="header-section">
+                <img src="{!URLFOR($Resource.QbayLogo)}" alt="Quadrobay Logo"/>
+                <div class="company-header">Quadrobay Technologies Private Limited</div>
+            </div>
+
+            <div class="date-line">
+                <strong>Date:</strong> {!TODAY()}
+            </div>
+
+            <h1>LETTER OF APPOINTMENT</h1>
+
+            <!-- Letter Intro -->
+            <div class="letter-intro">
+                <p><strong>To,</strong></p>
+                <p>{!contact.Name}</p>
+                <p>{!IF(contact.MailingStreet != null, contact.MailingStreet + ', ', '')}{!IF(contact.MailingCity != null, contact.MailingCity + ', ', '')}{!IF(contact.MailingState != null, contact.MailingState + ' - ', '')}{!IF(contact.MailingPostalCode != null, contact.MailingPostalCode, '')}</p>
+                <p><strong>Sub : Letter of Appointment.</strong></p>
+            </div>
+
+            <p>Pursuant to our discussion we are pleased to offer you the position of <strong>{!contact.Designation__c}</strong> of Quadrobay Technologies Private Limited ("Company"). This letter ("Letter") is intended to outline some key aspects of your position with the Company with effect from <strong>{!contact.Hire_Date__c}</strong> and shall be followed by an employment agreement in that regard upon joining. Your employment in the Company shall be governed by the terms and conditions mentioned in <u><strong>Annexures-I &amp; II</strong></u> which form an integral part of this Letter.</p>
+
+            <p style="margin-top: 15px;">Thanking you,</p>
+            <p><strong>For Quadrobay Technologies Private Limited,</strong></p>
+            <p><strong>Murugadoss Narayanan</strong></p>
+            <p><strong>Managing Director</strong></p>
+
+            <!-- ANNEXURE I -->
+            <h2 style="margin-top: 20px; page-break-before: avoid;">ANNEXURE-I</h2>
+
+            <h3>1. Employment, Position and Place of Employment:</h3>
+            <ol>
+                <li>You will be designated as <strong>{!contact.Designation__c}</strong> of Company with effect from <strong>{!contact.Hire_Date__c}</strong>.</li>
+                <li>You will report to the {!contact.Manager__c}.</li>
+                <li>You shall devote your whole time and attention to the business of the Company and carry out such duties as may be entrusted to you.</li>
+                <li>You shall undertake to employ the best of your skill and ability to make your utmost endeavours to promote the interests and welfare of the company and to confirm to and comply with the directions and regulations of the Company all such orders and directions as may be given to you from time to time.</li>
+                <li>You will be based out of Chennai, India. The Company also retains the right to place on secondment, depute or transfer you, at its discretion, to any other division/ establishment of any of its subsidiary/associate/group or affiliate concern and/or any other company/ organisation at any place. Reference to subsidiary/associate/ group or affiliate companies of the Company shall also include the subsidiary/ associate/ group or affiliate companies of the shareholders of the Company and/or with whom the company has strategic alliance in any form, whatsoever. In such an event, your employment will also be governed by the service conditions and policies of the division/ establishment or subsidiary/ associate or affiliate company to which you have been deputed. However, you will continue to remain an employee of the Company and your remuneration and all other benefits will continue to be paid by the company (except in case of a permanent transfer) unless otherwise notified previously in writing in accordance with the applicable law.</li>
+            </ol>
+
+            <h3>2. Tenure of Appointment</h3>
+            <p>Your services will be confirmed on successful completion of the Probation period of 6 months with effect from {!contact.Hire_Date__c} subject to your performance with the same Pay as per Point #3. You will be eligible to participate in the Company's Performance Appraisal after one-year completion from the date of service confirmation as per the company's Appraisal Cycle.</p>
+
+            <h3>3. Compensation, Expenses and Benefits:</h3>
+            <p><u>Compensation</u></p>
+            <p>You will be entitled to a CTC of INR {!salaryDetails.Annual_CTC__c} (Rupees {!salaryDetails.Annual_CTC__c}) with Variable Pay Included as per Annexure II</p>
+
+            <p><u>Allowance and Perquisites:</u></p>
+            <ol>
+                <li>House Rent Allowance (HRA): HRA at the rate of 40% of the Basic Salary.</li>
+                <li>Insurance &amp; Benefits: You will be Covered with Medical Insurance Policy, which is included in the CTC and Insurance amount will be recovered from employee in a Pro Rata basis at the time of exit.</li>
+                <li>Leave Encashment: as per Rules of the Company. Accumulation as well as encashment of un-availed earned privilege leave will be permissible in accordance with the Rules of the Company.</li>
+                <li>Gratuity: As per Rules of the Company as applicable from time to time.</li>
+            </ol>
+
+            <h3>4. Other conditions:</h3>
+            <ol>
+                <li>You shall, devote such time and attention to the business of the Company and carry out such duties as may be entrusted to you from time to time and exercise such powers as may be assigned to you, subject to superintendence, control, and direction of the Managing Director in connection with and in the best interest of the business of the Company.</li>
+                <li>The Company shall indemnify you and keep you indemnified against all costs, expenses, losses, damages, penalties that you may incur or suffer in the course of attending or performing the Company's work as {!contact.Designation__c} including but not limited to legal costs and expenses incurred by him in defending any dispute or proceedings in any Court of Law, Arbitration, etc.</li>
+            </ol>
+
+            <h3>5. Conflict of interest:</h3>
+            <p>All current and future conflict of interest should be disclosed to the company.</p>
+
+            <h3>6. Exclusivity and Related Matters:</h3>
+            <ol>
+                <li>Your will wholly and exclusively be in the employment of the company. You shall not at any time during the tenure of your employment directly or indirectly, without the prior written consent of the Company, engage or interest yourself whether for reward or gratuitously, in any work or business, other than in respect of your duties to the Company. You shall also not undertake any office not withstanding that your engagement or interest in such office would not interfere with the performance of your duties with the Company, without prior consent of the Company in writing.</li>
+                <li>You undertake and agree that during the term of your employment, you shall not accept any management position or any other position, directly or indirectly as a director, employee, agent, consultant, advisor, manager or in any other capacity, with any entity without the consent from the Company.</li>
+            </ol>
+
+            <h3>7. Intellectual Property:</h3>
+            <ol>
+                <li>Ownership of, and all right, title, and interest in, all intellectual property and proprietary rights, benefits, privileges and priorities in relation to all work product, patent, applications, trademarks, trade names, service names, registered designs, brand names, internet domain names and sub-domains, logos, slogans, know-how utility models, inventions, database rights, software, trade secrets (including patterns, technical and non-technical data, formulae, processes, sales and distribution methods of the business and the Company, proprietary information and knowledge, technology, databases, copyrights (including any manuals and technical documents), licenses and, franchisees and formulas, formulations, programming (including source code), algorithms, credit risk model and business names or rights with respect thereto necessary for the business as is now hereinafter existing and including, all pending application for the grant, renewal, extension and continuations (in whole or in part) of any of the foregoing and the right to apply for any of the foregoing in any part of the world) together with all goodwill associated therewith and all rights and causes for infringement, misappropriation, violation, misuse, dilution, unfair trade practice or otherwise associated therewith and registrations of any of the aforementioned, in and for all languages, including but not limited to computer and human languages developed or created from time to time by or for the company by you, whether before or after commencement of employment with the company, or which is currently used by the Business (the "intellectual Property") are and shall remain vested in the company.</li>
+                <li>All intellectual Property created by you, during the course of employment with the company, shall be regarded as having been made under a contract of service. To the extent the intellectual Property does not vest in the Company as the first owner of the Intellectual property under a contract of service, You hereby agree to transfer and assign in favour of the Company, all rights, title and interest in and to all the Intellectual property, together with the rights to sublicense or transfer any and all rights assigned hereunder to third parties, in perpetuity. You agree that such assignment shall be perpetual, worldwide and royalty free.</li>
+            </ol>
+
+            <h3>8. Confidentiality:</h3>
+            <ol>
+                <li>Pursuant to your appointment; you will have access to confidential information including the business and financial affairs of the Company and information relating to the customers, suppliers and clients of the Company. You acknowledge that all such information acquired pursuant to your appointment is confidential to the Company and that you shall, while being an employee of the company or at any time (without limit) after ceasing to be an employee of the Company, maintain strict confidentiality of all confidential or secret information or business matters of the Company or any affiliate, associate or business partner of the Company including details, documents, data, applications, software, systems, papers, statements and business/ customer information, business, marketing and financial information of the Company, its associates, affiliates or business partners, customer lists, proprietary data and databases, all trade secrets, know how licenses, know how formulae and processes and all other intellectual property marked confidential by the company, its associates, affiliates or business partners ("Confidential Information") which is communicated by the Company, its associates, affiliates or business partners or any of its representatives / customers or which is acquired by you after there on or after the date of your appointment, irrespective of how you obtained such information.</li>
+                <li>You shall not use such Confidential Information or business matters for your own purpose or for any purposes other than for discharging your duties to the Company, or its affiliate or associate companies, as the case maybe. This Clause shall not apply to such information which is required by way of application of applicable law or where a disclosure is required to be made by or on account of applicable law.</li>
+                <li>You acknowledge and agree that you are aware of the sensitivity and banking and non-banking financial services secrecy obligations with respect to maintenance of customer information and transaction records and shall ensure that you will do any act to violate the same as mandated by the Reserve Bank of India. You may only use the Confidential Information in connection with the performance of its Obligations hereunder.</li>
+                <li>You shall: (a) Inform the Company promptly on becoming aware of any unauthorized use or disclosure of the confidential Information; and (b) Take prompt corrective action to regain the materials containing the Confidential Information and prevent further unauthorized use or disclosure of the confidential Information.</li>
+                <li>Upon written request of the Company at any time during the term or upon expiration/ termination of your employment, you must, at the option of the Company, either: (a) Promptly return all Confidential Information (or the part thereof required in such request) (including copies) to the Company in a format and on media reasonably requested by the Company; or (b) Destroy that Confidential Information (including copies) in the manner specified by the Company.</li>
+                <li>In the event of a breach by you of the aforesaid clause, the Company shall be entitled to injunctive relief in addition to monetary damages to restrain you from any such breach.</li>
+                <li>You Agree: (a) To take all necessary action to protect the Confidential Information against misuse, loss, destruction, deletion and/ or alteration. (b) Not to misuse or permit misuse directly or indirectly, commercially exploit the Confidential Information for economic or other benefit. (c) Not to make or retain any copies or record of any Confidential Information other than as permitted by the provisions of this agreement; and (d) To cooperate with the Company and give access to the Confidential Information in your possession, if the same is required for any proceedings before any judicial and/ or quasi-judicial authorities.</li>
+            </ol>
+
+            <h3>9. Non-Competition and Non-Solicitation</h3>
+            <p>You shall not, during the continuance of your employment with Company, carry on or be engaged, directly or indirectly, either on your own behalf or on behalf of any person, or as manager, agent, consultant or employee of any person, firm or company, in any activity or business, in India or overseas, which shall directly or indirectly be in competition with the business of the Company or its subsidiaries or associated companies.</p>
+            <p>You shall not at any time during the term of your engagement with the company or thereafter, under any circumstances, directly or indirectly solicit or attempt to solicit the company's and/or any of its subsidiaries' and/or affiliates, and/or group companies' personnel to leave the employment of the company and/or any of its subsidiaries and/or affiliates or apply for employment with any third party or encourage such personnel of the company for a period of Two year after your engagement ceases within the company.</p>
+            <p>You have further agreed that you shall not engage in soliciting business or allied business that is in any way similar, identical or competitive with the business, activities, services of the company, or with those customers of the company with whom you may have had any contact during your engagement with the company and for a period of Two year after your engagement ceases within the company.</p>
+
+            <h3>10. Data Protection</h3>
+            <ol>
+                <li>You shall comply with all "Data Protection Legislation" which shall include all legislations, rules, guidelines, advisories and regulations (whether having the force of law or not) relating to the protection of personal data/ information including personal and sensitive information and processing, storage, usage, collection and/ or application of personal data/ information including but not limited to all other banking and non-banking industry guidelines (whether statutory or non-statutory) or codes of conduct relating to the protection of personal data/ information or privacy of an individual issued by any regulator.</li>
+                <li>You confirm that you have read and understood data protection policy adopted by the Company (which is included herein by way of reference) and that you will comply with the data protection policy when processing personal data in the course of employment including personal data relating to any employee, customer, client, supplier, service provider or agent of the Company. You consent to the Company collecting processing and handling data, including personal and sensitive personal data, relating to his for legal, personnel, administrative and management purposes.</li>
+            </ol>
+
+            <h3>11. Termination</h3>
+            <ol>
+                <li>You are required to give 60 (Sixty) days' notice or amount equivalent to your salary for 60 (Sixty) days' in lieu of the notice, in the event of voluntary resignation. However, you will be relieved from your duties only after acceptance of your resignation in writing. In the event, you are providing an amount and equivalent to your salary for 60 (Sixty) days' in lieu of the notice instead of serving the notice period, any amount which the Company owes to you can be set off against the same.</li>
+                <li>Notwithstanding anything contained in this Letter, the Company may terminate your employment at any time without notice or salary in lieu of the notice, for the causes ("Cause") mentioned below: (a) Willful misconduct and commission of any act involving moral turpitude or if found medically unfit or a material breach of the Company's policies and procedures. (b) If it is found out that the documents provided by you are incorrect or forged or that you have suppressed any material information, at any time during the employment.</li>
+                <li>During your Probation period, if your performance is found unsatisfactory, Company reserves the right to terminate the employment with immediate effect.</li>
+                <li>The Company reserves the right to terminate your services without assigning any reason by giving 60 (Sixty) days' notice or salary in lieu thereof.</li>
+                <li>At any time during your employment, the Company reserves the right to conduct internal and/ or external reference checks and make enquiries in respect of the information, documents and credentials submitted by you at the time of joining the Company or any other time thereafter at its sole discretion. The Company also reserves rights, without any notice to you during and after your separation, to share and disclose the information relating to your current/ previous employment and academic credentials with any person, vendor or any other authority or any third party engaged by the company to obtain such information for the purpose of proper verification.</li>
+            </ol>
+
+            <h3>12. Return of Property:</h3>
+            <ol>
+                <li>Upon termination of your employment or on leaving the Company, you shall immediately return any and all properties, documents, correspondence, records, drafts, equipment and any other goods referring to the Company's business and affairs, including any copies thereof and repay all amounts given by the Company by way of loans or advances.</li>
+                <li>You are not entitled to exercise any right of retention concerning the aforementioned documents of your final dues shall be subject to your complying with the terms and conditions stated herein.</li>
+            </ol>
+
+            <h3>13. Other Terms and Conditions:</h3>
+            <ol>
+                <li>Subject to the overall superintendence, control and direction of the Company, you shall perform such duties and responsibilities as are consistent with your designation and shall continue to serve in his position as the {!contact.Designation__c} of the Company.</li>
+                <li>You shall perform and discharge all duties and functions in connection with his employment hereunder in a competent and professional manner. You shall devote all your time, energy and attention to the business and affairs of the Company and the duties assigned to you and shall make best endeavours in promoting the Company's interests. You shall not utilize the assets; resources and time of the Company while carrying out any other external activity which is not connected to the business, and which has not been specifically permitted in writing by the company.</li>
+                <li>You shall comply with all applicable rules, regulations, administrative instructions, guidelines, and policies of the Company in force from time to time including policies relating to leave, data security, IT usage, travel, transfers, reimbursements, etc., as applicable to you ("Policies").</li>
+                <li>You shall always keep the Company promptly and fully informed of the discharge of your responsibilities and also provide such further information, written records and explanation as and when the Company may require.</li>
+                <li>You shall immediately notify any changes in your residential address, present as well as permanent, emergency contact numbers, changes in family status.</li>
+            </ol>
+
+            <h3>14. Governing Law &amp; Jurisdiction:</h3>
+            <p>The provisions of this letter shall be governed by the laws of India. The courts of Chennai, India shall have exclusive jurisdiction over any matters arising hereunder.</p>
+
+            <h3>15. Indemnity</h3>
+            <p>You shall indemnify the Company against any loss, damage, proceeding which the Company might suffer due to any wrongful acts, terms of this Letter. Such indemnity shall not prejudice the right of the Company to terminate your services on such count or the right of the Company to seek other remedies which the Company may have to make good the loss or damage.</p>
+
+            <h3>16. Miscellaneous</h3>
+            <ol>
+                <li>No amendment or variation of this Letter shall be binding on any party unless such variation is in writing and duly signed by the parties.</li>
+                <li>Clauses 6 (Exclusivity and related matters), 7 (Intellectual Property), 8 (Confidentiality), 9 (Non-Competition), 10 (Data Protection), 12 (Return of property), 14 (Governing Law &amp; Jurisdiction), 15 (Indemnity) shall survive termination of this Letter.</li>
+                <li>If any provision of this Letter is held to be invalid, illegal or unenforceable, such provision will be struck from the Letter and the remaining provision of this Letter shall remain in full force and effect. Further, the parties shall endeavour to replace such provision with a valid, legally enforceable provision that reflects the original intent of the parties.</li>
+                <li>Failure of a party to require performance of any provision of this Letter shall not affect such party's right to full performance thereof at any time thereafter, and any waiver by a party of a breach of any provision hereof shall not constitute a waiver of a similar breach in the future or of any other breach. No waiver shall be effective, unless in writing and duly executed by the concerned party.</li>
+                <li>All remedies of either party under this Letter whether provided herein or conferred by statute, civil law, common law, custom trade, or usage are cumulative and alternative and may be enforced successively or concurrently.</li>
+            </ol>
+
+           <!-- ANNEXURE II -->
+<h2 style="margin-top: 20px; page-break-before: always;">ANNEXURE-II - SALARY STRUCTURE</h2>
+
+<div style="margin-top: 10px;">
+    <apex:outputText value="{!CompensationTableHTML}" escape="false"/> 
+</div>          
+
+            <!-- Signature Section -->
+            <div class="signature-block">
+                <h3>Employee Acknowledgement:</h3>
+                <p>I hereby acknowledge and confirm that I have read and understood the terms and conditions of my appointment as mentioned above and agree to abide by the same.</p>
+                <p>Employee Name: <strong>{!contact.Name}</strong></p>
+                <p>Employee Signature: _____________________ &nbsp;&nbsp; Date: _____________________</p>
+            </div>
+
+            <div class="footer-thank-you">
+                <p>Thank you!</p>
+            </div>
+
+        </div><!-- end doc-wrapper -->
+</apex:outputPanel>
+    </body>
+</apex:page>

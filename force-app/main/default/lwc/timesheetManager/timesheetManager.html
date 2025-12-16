@@ -1,0 +1,110 @@
+<template>
+  <div class="header-box">
+    <div class="header-row">
+      <lightning-icon icon-name="custom:custom63" size="small"></lightning-icon>
+      <span class="main-title">Timesheet Management</span>
+    </div>
+    <lightning-button label="New Entry" icon-name="utility:add" onclick={openModal} variant="brand" ></lightning-button>
+  </div>
+
+  <div class="tabs-box">
+    <lightning-tabset active-tab-value={activeTab} onactive={handleTabChange}>
+   
+<lightning-tab label="My Entries" value="myEntries">
+    <div class="tab-content-header slds-p-horizontal_small slds-p-vertical_small slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+        <div class="my-entries-title">
+            <lightning-icon icon-name="utility:file" size="small"></lightning-icon>
+            <h2>My Timesheet Entries</h2>
+        </div>     
+    </div>
+    <c-timesheet-entry-list entries={myEntries}
+      oneditentry={handleEditEntry}
+      onrefreshentries={handleDeleteEntry}>
+    </c-timesheet-entry-list>
+    
+</lightning-tab>
+
+      <lightning-tab label="Weekly View" value="weeklyView">
+        <div class="weekly-view-header">
+          <div class="weekly-view-title">
+            <lightning-icon icon-name="utility:date_input" size="small"></lightning-icon>
+            <h2>Weekly Timesheet</h2>
+          </div>
+        
+        </div>
+        <c-weekly-timesheet-view 
+        onrefreshentries={refreshEntries}>
+    </c-weekly-timesheet-view>
+        
+      </lightning-tab>
+
+      <lightning-tab label="Monthly View" value="monthlyView">
+        <div class="monthly-view-header">
+          <div class="monthly-view-title">
+            <lightning-icon icon-name="utility:date_input" size="small"></lightning-icon>
+            <h2>Monthly Timesheet</h2>
+          </div>
+          
+        </div>
+       
+        <c-monthly-timesheet-view timesheet-entries={timesheetEntries}
+             onviewdetails={handleMonthlyWeekDetails}>
+    </c-monthly-timesheet-view>
+      </lightning-tab>
+
+      <lightning-tab label="Summary" value="summary">
+        <c-timesheet-summary-view timesheet-entries={summaryEntries}></c-timesheet-summary-view>
+      </lightning-tab>
+    </lightning-tabset>
+  </div>
+
+  <template if:true={isModalOpen}>
+    <div class="modal-overlay">
+      <c-timesheet-entry-modal
+        is-open={isModalOpen}
+        entry={modalEntry}
+        onclose={closeModal}
+        onentrycreated={refreshEntries}>
+      </c-timesheet-entry-modal>
+    </div>
+  </template>
+
+  <template if:true={isWeekModalOpen}>
+  <div class="modal-overlay">
+    <section class="modal-content" role="dialog" aria-modal="true">
+      <h2 class="modal-heading">Week Details for {selectedWeekId}</h2>
+      <table class="slds-table slds-table_cell-buffer slds-table_bordered details-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Project</th>
+            <th>Task</th>
+            <th>Regular Hours</th>
+            <th>Overtime</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template for:each={weekDetailEntries} for:item="entry">
+            <tr key={entry.id}>
+              <td>{entry.date}</td>
+              <td>{entry.project}</td>
+              <td>{entry.task}</td>
+              <td>{entry.hours}</td>
+              <td>{entry.overtime}</td>
+              <td>{entry.status}</td>
+            </tr>
+          </template>
+          <template if:false={weekDetailEntries.length}>
+            <tr>
+              <td colspan="6">No entries found for this week</td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+      <lightning-button label="Close" onclick={closeWeekModal} class="modal-close"></lightning-button>
+    </section>
+  </div>
+</template>
+
+</template>

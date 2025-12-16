@@ -1,0 +1,212 @@
+<template>
+    <template if:false={isEditMode}>
+        
+        <lightning-modal-header label="New Timesheet Entries">
+            <div class="toolbar-row">
+                        <button class="add-row-btn" onclick={addRow}>+ Add Row</button>
+                    </div>
+        </lightning-modal-header>
+        <lightning-modal-body> 
+            <div class="form-row">
+
+                <template for:each={rows} for:item="row" for:index="index">
+                    <div class="row-block" key={row.clientKey}>
+
+                        <lightning-input 
+                            class="form-input"
+                            type="date" 
+                            label="Date"
+                            value={row.date}
+                            data-index={index}
+                            data-field="date"
+                            onchange={handleRowChange}>
+                        </lightning-input>
+
+                        <lightning-combobox 
+                            class="form-input"
+                            label="Project *"
+                            value={row.projectId}
+                            options={projectOptions}
+                            placeholder="Select"
+                            data-index={index}
+                            data-field="projectId"
+                            onchange={handleRowChange}>
+                        </lightning-combobox>
+
+                        <lightning-input 
+                            class="form-input"
+                            label="Billing Status"
+                            value={row.employmentStatus}
+                            disabled>
+                        </lightning-input>
+
+                        <lightning-input 
+                            class="form-input"
+                            type="time" 
+                            label="Start Time"
+                            value={row.startTime}
+                            data-index={index}
+                            data-field="startTime"
+                            onchange={handleRowChange}>
+                        </lightning-input>
+
+                        <lightning-input 
+                            class="form-input"
+                            type="time" 
+                            label="End Time"
+                            value={row.endTime}
+                            data-index={index}
+                            data-field="endTime"
+                            onchange={handleRowChange}>
+                        </lightning-input>
+
+                        <lightning-input 
+                            class="form-input"
+                            label="Task *"
+                            placeholder="e.g., Development, Meeting"
+                            value={row.task}
+                            data-index={index}
+                            data-field="task"
+                            onchange={handleRowChange}>
+                        </lightning-input>
+
+                        <lightning-textarea 
+                            class="description-field"
+                            label="Description"
+                            value={row.description}
+                            data-index={index}
+                            data-field="description"
+                            onchange={handleRowChange}>
+                        </lightning-textarea>
+
+                        <lightning-combobox 
+                            class="form-input"
+                            label="Status *"
+                            value={row.status}
+                            options={statusOptions}
+                            data-index={index}
+                            data-field="status"
+                            onchange={handleRowChange}>
+                        </lightning-combobox>
+
+                        <!-- Delete Row -->
+                        <lightning-button-icon 
+                            icon-name="utility:delete"
+                            alternative-text="Delete row"
+                            class="delete-button"
+                            onclick={deleteRow}
+                            data-index={index}>
+                        </lightning-button-icon>
+                         <div class="calculated-box">
+                              <div class="hours-col">
+                                                <span class="hours-total">
+                                                    {row.totalHours}
+                                                </span>
+                                                <small>
+                                                    Reg: {row.regularHours} | OT: {row.overtimeHours}
+                                                </small>
+                                            </div>
+                                            </div>
+                        </div>
+
+                   
+                </template>
+
+            </div>
+            
+        </lightning-modal-body>
+        <lightning-modal-footer>
+   
+            <div class="action-row">
+                        <button class="save-btn" onclick={saveAllEntries} disabled={isSaving}>
+                            <span class="action-icon">
+                                <!-- Save icon -->
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                    width="18" height="18"
+                                    fill="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path
+                                        d="M17 3H5a2 2 0 0 0-2 2v14a2 
+                                    2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zm-5 
+                                    16a3 3 0 1 1 0-6 3 3 0 0 1 0 
+                                    6zm3-10H6V5h9v4z" />
+                                </svg>
+                            </span>
+                            Save All Entries
+                        </button>
+                        <button class="cancel-btn" onclick={handleClose}>Cancel</button>
+                    </div>
+                     </lightning-modal-footer>
+    </template>
+    
+    <template if:true={isEditMode}>
+        <lightning-modal-header label="Edit Timesheet Entry"></lightning-modal-header>
+        <lightning-modal-body> 
+                    <div class="form-row">
+                       <lightning-input class="form-input" label="Date" name="entryDate" type="date"
+    value={entryDate} onchange={handleInputChange}></lightning-input>
+      <lightning-combobox class="form-input" label="Project *" name="entryProject"
+    value={entryProject}
+    options={projectOptions}
+    onchange={handleInputChange}
+    placeholder="Select Project"
+    required>
+</lightning-combobox>
+<lightning-input class="form-input" label="Billing Status"
+                            value={employmentStatus} disabled>
+                        </lightning-input>
+                        <lightning-input class="form-input" label="Start Time" type="time"
+                            value={startTime} onchange={handleInputChange}></lightning-input>
+                        <lightning-input class="form-input" label="End Time" type="time"
+                            value={endTime} onchange={handleInputChange}></lightning-input>
+                         <lightning-input class="form-input" label="Task *"
+                        placeholder="e.g., Development, Meeting, Testing"
+                        value={task} onchange={handleInputChange}></lightning-input>
+
+                    <lightning-textarea class="form-input" label="Description"
+                        placeholder="Detailed description of work performed..."
+                        value={description} onchange={handleInputChange}></lightning-textarea>
+
+                   <lightning-combobox class="form-input" label="Status *" name="entryStatus"
+    value={status}
+    options={statusOptions}
+    onchange={handleInputChange}>
+</lightning-combobox>
+                     </div>
+                     <div class="calculated-box">
+                        <div class="calculated-header">&#128202; Calculated Hours</div>
+                        <div class="calculated-grid">
+                            <div class="calculated-cell regular">
+                                <span>{regularHours}</span><br />Regular
+                            </div>
+                            <div class="calculated-cell overtime">
+                                <span>{overtimeHours}</span><br />Overtime
+                            </div>
+                            <div class="calculated-cell total">
+                                <span>{totalHours}</span><br />Total
+                            </div>
+                        </div>
+                    </div>
+
+
+                     </lightning-modal-body>
+                      <lightning-modal-footer>
+                          <div class="action-row">
+                        <button class="save-btn" onclick={saveEntry}>
+                            <span class="action-icon">
+                                <!-- Edit icon -->
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                    width="18" height="18" fill="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path
+                                        d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                                </svg>
+                            </span>
+                            Update
+                        </button>
+                        <button class="cancel-btn" onclick={handleClose}>Cancel</button>
+                    </div>
+                      </lightning-modal-footer>
+                </template>
+
+</template>

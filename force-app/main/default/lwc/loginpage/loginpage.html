@@ -1,0 +1,122 @@
+<!--<template>
+     <div class="video-container">
+        <video autoplay muted loop playsinline class="bg-video">
+            <source src={bgVideoUrl} type="video/mp4" />
+            Your browser does not support the video tag.
+        </video>
+    <div class="container">
+        <div class="login-card">
+            <div class="left-panel">
+                <h1>WELCOME</h1>
+                <p>QUADROBAY TECH</p>
+            </div>
+            <div class="right-panel">
+                
+                <div class="logo-wrapper">
+                    <img src={logoUrl} alt="Logo" class="logo" />
+                </div>
+                 <div class="input-icon-wrapper">
+                    <lightning-icon icon-name="utility:user" size="x-small" class="input-icon"></lightning-icon>
+                    <lightning-input
+                        
+                        placeholder="User Name"
+                        value={username}
+                        onchange={handleUsernameChange}
+                        class="input-field input-with-icon">
+                    </lightning-input>
+                </div>
+                
+                <div class="input-icon-wrapper password-wrapper">
+                    <lightning-icon icon-name="utility:lock" size="x-small" class="input-icon"></lightning-icon>
+                    <lightning-input
+                        type={passwordFieldType}
+                        placeholder="Password"
+                        value={password}
+                        onchange={handlePasswordChange}
+                        class="input-field input-with-icon">
+                    </lightning-input>
+                    <lightning-icon icon-name={eyeIconName} size="x-small" class="eye-icon" onclick={togglePasswordVisibility}></lightning-icon>
+                </div>
+                
+                <div class="options">
+                    <lightning-input type="checkbox" label="Remember me" class="remember-me"></lightning-input>
+                    <a href="#" class="forgot-password">Forgot Password?</a>
+                </div>
+
+                <button class="signin-btn" onclick={handleLogin}>Sign in</button>
+                <button class="signin-other-btn">Sign in with other</button>
+
+                <p class="signup-text">Don’t have an account? <a href="#">Sign Up</a></p>
+            </div>
+        </div>
+    </div>
+     </div>
+</template>-->
+<template>
+  <div class="video-container">
+    <video autoplay muted loop playsinline class="bg-video">
+      <source src={bgVideoUrl} type="video/mp4" />
+      Your browser does not support the video tag.
+    </video>
+
+    <div class="container">
+      <div class="login-card">
+        <div class="left-panel">
+          <h1>WELCOME</h1>
+          <p>QUADROBAY TECH</p>
+        </div>
+
+        <div class="right-panel">
+          <div class="logo-wrapper">
+            <img src={logoUrl} alt="Logo" class="logo" />
+          </div>
+
+          <!-- ✅ Use real login form -->
+          <form action="/login" method="POST">
+            <!-- Username -->
+            <div class="input-icon-wrapper">
+              <lightning-icon icon-name="utility:user" size="x-small" class="input-icon"></lightning-icon>
+              <input
+                type="text"
+                name="username"
+                placeholder="User Name"
+                required
+                class="input-field input-with-icon"
+              />
+            </div>
+
+            <!-- Password -->
+            <div class="input-icon-wrapper password-wrapper">
+              <lightning-icon icon-name="utility:lock" size="x-small" class="input-icon"></lightning-icon>
+             <input
+    type={passwordFieldType}
+    name="password"
+    placeholder="Password"
+    required
+    class="input-field input-with-icon password-input"
+/>
+
+              <lightning-icon icon-name={eyeIconName} size="x-small" class="eye-icon" onclick={togglePasswordVisibility}></lightning-icon>
+            </div>
+
+            <!-- Options -->
+            <div class="options">
+              <label>
+                <input type="checkbox" name="remember" />
+                Remember me
+              </label>
+              <a href="#" class="forgot-password">Forgot Password?</a>
+            </div>
+
+            <!-- Login button -->
+            <button type="submit" class="signin-btn">Sign in</button>
+          </form>
+
+          <!-- Other buttons -->
+          <button class="signin-other-btn">Sign in with other</button>
+          <p class="signup-text">Don’t have an account? <a href="#">Sign Up</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>

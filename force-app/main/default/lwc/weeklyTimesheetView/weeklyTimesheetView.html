@@ -1,0 +1,343 @@
+<!--<template>
+    <div class="timesheet-section">
+      
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Date</th><th>Day</th><th>Regular Hours</th>
+                    <th>Overtime Hours</th><th>Total Hours</th><th>Project</th><th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template if:true={weeklyEntries.length}>
+            <template for:each={weeklyEntries} for:item="entry">
+                    <tr key={entry.id}>
+                        <td>{entry.date}</td>
+                        <td>{entry.day}</td>
+                        <td>{entry.hours}</td>
+                        <td>{entry.overtime}</td>
+                        <td>{entry.totalHours}</td>
+                        <td>{entry.project}</td>
+                        <td><span class={entry.statusClass}>{entry.status}</span></td>
+                    </tr>
+                </template>
+                 </template>
+                  <template if:false={weeklyEntries.length}>
+            <tr><td colspan="7">No entries found</td></tr>
+        </template>
+            </tbody>
+        </table>
+    </div>
+</template>
+<template>
+    <div class="timesheet-section">
+        <div class="week-navigation slds-m-bottom_medium">
+            <lightning-button
+                label="Previous Week"
+                onclick={handlePrevWeek}
+                icon-name="utility:chevronleft">
+            </lightning-button>
+            
+            <span class="slds-m-horizontal_medium">
+                <strong>Week {currentWeekNumber}, {currentYear}</strong>
+                <br/>
+                <small>{weekStartDate} - {weekEndDate}</small>
+            </span>
+            
+            <lightning-button
+                label="Next Week"
+                onclick={handleNextWeek}
+                icon-name="utility:chevronright"
+                icon-position="right"
+                disabled={isCurrentWeek}>
+            </lightning-button>
+        </div>
+      
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Day</th>
+                    <th>Regular Hours</th>
+                    <th>Overtime Hours</th>
+                    <th>Total Hours</th>
+                    <th>Project</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template if:true={weeklyEntries.length}>
+                    <template for:each={weeklyEntries} for:item="entry">
+                        <tr key={entry.id}>
+                            <td>{entry.date}</td>
+                            <td>{entry.day}</td>
+                            <td>{entry.hours}</td>
+                            <td>{entry.overtime}</td>
+                            <td>{entry.totalHours}</td>
+                            <td>{entry.project}</td>
+                            <td><span class={entry.statusClass}>{entry.status}</span></td>
+                        </tr>
+                    </template>
+                </template>
+                <template if:false={weeklyEntries.length}>
+                    <tr>
+                        <td colspan="7" style="text-align: center;">No entries found for this week</td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+        
+        <div class="week-summary slds-m-top_medium">
+            <strong>Week Total: {weekTotalHours} hours</strong>
+            (Regular: {weekRegularHours}h, Overtime: {weekOvertimeHours}h)
+        </div>
+    </div>
+</template>
+<template>
+    <div class="timesheet-section">
+        -- Week Navigation --
+        <div class="week-navigation slds-m-bottom_medium slds-grid slds-grid_align-spread">
+            <div class="slds-col">
+                <lightning-button
+                    label="Previous Week"
+                    onclick={handlePrevWeek}
+                    icon-name="utility:chevronleft">
+                </lightning-button>
+            </div>
+            
+            <div class="slds-col slds-text-align_center">
+                <div class="slds-text-heading_medium">
+                    Week {currentWeekNumber}, {currentYear}
+                </div>
+                <div class="slds-text-body_small slds-m-top_xx-small">
+                    {weekStartDate} - {weekEndDate}
+                </div>
+            </div>
+            
+            <div class="slds-col slds-text-align_right">
+                <lightning-button
+                    label="Next Week"
+                    onclick={handleNextWeek}
+                    icon-name="utility:chevronright"
+                    icon-position="right"
+                    disabled={isCurrentWeek}>
+                </lightning-button>
+            </div>
+        </div>
+
+        -- Action Buttons --
+        <div class="action-buttons slds-m-bottom_medium slds-grid slds-grid_align-spread">
+            <div class="slds-col">
+                <lightning-button
+                    label="Submit for Approval"
+                    variant="brand"
+                    onclick={handleWeeklySubmitForApproval}
+                    disabled={disableSubmitButton}
+                    icon-name="utility:approval">
+                </lightning-button>
+                <template if:true={weeklySubmissionStatus.anySubmitted}>
+                    <span class="slds-m-left_small slds-text-color_success">
+                        <lightning-icon icon-name="utility:success" size="x-small"></lightning-icon>
+                        Submitted
+                    </span>
+                </template>
+            </div>
+
+            <div class="slds-col slds-text-align_right">
+                <lightning-button-menu
+                    alternative-text="Export Options"
+                    icon-name="utility:download"
+                    menu-alignment="right">
+                    <lightning-menu-item
+                        value="excel"
+                        label="Export as Excel"
+                        icon-name="doctype:excel"
+                        onclick={handleExportExcel}>
+                    </lightning-menu-item>
+                    <lightning-menu-item
+                        value="pdf"
+                        label="Export as PDF"
+                        icon-name="doctype:pdf"
+                        onclick={handleExportPDF}>
+                    </lightning-menu-item>
+                </lightning-button-menu>
+            </div>
+        </div>
+
+        -- Timesheet Table --
+        <table class="data-table slds-table slds-table_bordered">
+            <thead>
+                <tr class="slds-line-height_reset">
+                    <th scope="col">Date</th>
+                    <th scope="col">Day</th>
+                    <th scope="col">Project</th>
+                    <th scope="col">Task</th>
+                    <th scope="col">Regular Hours</th>
+                    <th scope="col">Overtime Hours</th>
+                    <th scope="col">Total Hours</th>
+                    <th scope="col">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template if:true={weeklyEntries.length}>
+                    <template for:each={weeklyEntries} for:item="entry">
+                        <tr key={entry.id}>
+                            <td>{entry.date}</td>
+                            <td>{entry.day}</td>
+                            <td>{entry.project}</td>
+                            <td>{entry.task}</td>
+                            <td>{entry.hours}</td>
+                            <td>{entry.overtime}</td>
+                            <td><strong>{entry.totalHours}</strong></td>
+                            <td>
+                                <span class={entry.statusClass}>{entry.approvalStatus}</span>
+                            </td>
+                        </tr>
+                    </template>
+                    -- Week Total Row --
+                    <tr class="slds-text-title_bold" style="background-color: #f3f3f3;">
+                        <td colspan="4" class="slds-text-align_right"><strong>Week Total:</strong></td>
+                        <td><strong>{weekRegularHours}</strong></td>
+                        <td><strong>{weekOvertimeHours}</strong></td>
+                        <td><strong>{weekTotalHours}</strong></td>
+                        <td></td>
+                    </tr>
+                </template>
+                <template if:false={weeklyEntries.length}>
+                    <tr>
+                        <td colspan="8" class="slds-text-align_center">
+                            No entries found for this week
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+
+        -- Loading Spinner --
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+        </template>
+    </div>
+</template>
+</template>-->
+
+<template>
+    <div class="timesheet-section">
+        <!-- Single Row Header with All Actions -->
+        <div class="compact-header">
+            <div class="left-section">
+                <lightning-button-icon
+                    icon-name="utility:chevronleft"
+                    alternative-text="Previous Week"
+                    onclick={handlePrevWeek}
+                    size="small"
+                    class="nav-icon">
+                </lightning-button-icon>
+                
+                <span class="week-display">
+                    Week {currentWeekNumber}, {currentYear}
+                </span>
+                
+                <lightning-button-icon
+                    icon-name="utility:chevronright"
+                    alternative-text="Next Week"
+                    onclick={handleNextWeek}
+                    disabled={isCurrentWeek}
+                    size="small"
+                    class="nav-icon">
+                </lightning-button-icon>
+            </div>
+
+            <div class="center-section">
+                <span class="date-range">{weekStartDate} - {weekEndDate}</span>
+            </div>
+
+            <div class="right-section">
+                <lightning-button
+                    label="Submit for Approval"
+                    variant="brand"
+                    onclick={handleWeeklySubmitForApproval}
+                    disabled={disableSubmitButton}
+                    size="small"
+                    class="submit-btn">
+                </lightning-button>
+                
+                <lightning-button-menu
+                    alternative-text="Export"
+                    icon-name="utility:download"
+                    icon-size="small"
+                    menu-alignment="right"
+                    variant="border-filled">
+                    <lightning-menu-item
+                        value="excel"
+                        label="Export Excel"
+                        icon-name="doctype:excel"
+                        onclick={handleExportExcel}>
+                    </lightning-menu-item>
+                    
+                </lightning-button-menu>
+            </div>
+        </div>
+     
+        <!-- Timesheet Table -->
+         <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Project</th>
+                    <th>Task</th>
+                    <th>Description</th>
+                    <th>Regular Hours</th>
+                    <th>Overtime Hours</th>
+                    <th>Total Hours</th>
+                    <th>Approval Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template if:true={weeklyEntries.length}>
+                    <template for:each={weeklyEntries} for:item="entry">
+                        <tr key={entry.id}>
+                            <td>
+                                <div class="date-cell">
+                                    <div class="date-main">{entry.date}</div>
+                                    <div class="date-day">{entry.day}</div>
+                                </div>
+                            </td>
+                            <td>{entry.project}</td>
+                            <td>{entry.task}</td>
+                            <td>{entry.description}</td>
+                            <td class="hours-cell">{entry.hours}</td>
+                            <td class="hours-cell">{entry.overtime}</td>
+                            <td class="hours-cell total-hours">{entry.totalHours}</td>
+                            <td>
+                                
+                                <span class={entry.statusClass}>{entry.approvalStatus}</span>
+                            </td>
+                        </tr>
+                    </template>
+                    <!-- Week Total Row -->
+                    <tr class="total-summary-row">
+                        <td class="total-label">
+                            <strong>Week Total: {weekTotalHours} hours</strong>
+                            <span class="total-breakdown">(Regular: {weekRegularHours}h, Overtime: {weekOvertimeHours}h)</span>
+                        </td>
+                        <td colspan="7"></td>
+                    </tr>
+                </template>
+                <template if:false={weeklyEntries.length}>
+                    <tr>
+                        <td colspan="8" class="no-data-cell">
+                            No entries found for this week
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+</div>
+        <!-- Loading Spinner -->
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+        </template>
+    </div>
+</template>

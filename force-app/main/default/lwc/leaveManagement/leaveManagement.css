@@ -1,0 +1,660 @@
+/* Leave Management Container */
+.leave-management-container {
+    font-family: 'Salesforce Sans', Arial, sans-serif;
+    background: #f7f9fc;
+    min-height: 100vh;
+    padding: 0;
+}
+
+/* Header Section */
+.header-section {
+    background: linear-gradient(135deg, #0176d3 0%, #0d4f8b 100%);
+    padding: 24px 32px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.header-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.page-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.page-subtitle {
+    font-size: 14px;
+    margin: 4px 0 0 0;
+    opacity: 0.9;
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+/* Loading */
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+    padding: 40px;
+}
+
+/* Section Header */
+.section-header {
+    padding: 24px 32px 16px 32px;
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #181818;
+    margin: 0;
+}
+
+/* Leave Balance Cards */
+.leave-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    padding: 0 32px 32px 32px;
+}
+
+.leave-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-left: 4px solid #0176d3;
+}
+
+.leave-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.leave-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.leave-type-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.leave-type-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #181818;
+    margin: 0;
+}
+
+.leave-code {
+    font-size: 12px;
+    color: #706e6b;
+    background: #f3f3f3;
+    padding: 2px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-top: 4px;
+}
+
+.leave-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.balance-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.balance-label {
+    font-size: 14px;
+    color: #706e6b;
+}
+
+.balance-value {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.balance-value.available {
+    color: #2e844a;
+}
+
+.balance-value.used {
+    color: #d32f2f;
+}
+
+.balance-value.booked {
+    color: #ff9800;
+}
+
+.balance-value.pending {
+    color: #1976d2;
+}
+
+/* Holidays List */
+.holidays-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0 32px 32px 32px;
+}
+
+.holiday-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: white;
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.holiday-info {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.holiday-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #181818;
+}
+
+.holiday-date {
+    font-size: 14px;
+    color: #706e6b;
+}
+
+/* Past Leave & Holidays Table */
+.past-leave-table-container {
+    padding: 0 32px 32px 32px;
+    overflow-x: auto;
+}
+
+.past-leave-table {
+    width: 100%;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border-collapse: collapse;
+}
+
+.past-leave-table thead {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.past-leave-table th {
+    padding: 16px;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 600;
+    color: #181818;
+    border-bottom: 2px solid #dee2e6;
+    white-space: nowrap;
+}
+
+.past-leave-table td {
+    padding: 16px;
+    font-size: 14px;
+    color: #181818;
+    border-bottom: 1px solid #f3f3f3;
+}
+
+.past-leave-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.past-leave-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.leave-type-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.leave-type-badge {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.days-badge {
+    background: #f3f3f3;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.reason-cell, .comments-cell {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.status-badge.approved {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.status-badge.rejected {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.status-badge.pending {
+    background: #fff8e1;
+    color: #f57c00;
+}
+
+.status-badge.cancelled {
+    background: #f3f3f3;
+    color: #616161;
+}
+
+.status-badge.completed {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+/* Empty State */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 20px;
+    background: white;
+    border-radius: 12px;
+    margin: 0 32px 32px 32px;
+    text-align: center;
+}
+
+.empty-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #181818;
+    margin: 20px 0 8px 0;
+}
+
+.empty-message {
+    font-size: 14px;
+    color: #706e6b;
+    margin: 0;
+}
+
+/* Apply Leave Form Styles */
+.apply-leave-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.balance-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background: #e8f5e9;
+    border-radius: 8px;
+    margin-top: 8px;
+}
+
+.balance-info .balance-label {
+    font-size: 14px;
+    color: #2e7d32;
+    font-weight: 500;
+}
+
+.balance-info .balance-value {
+    font-size: 16px;
+    color: #1b5e20;
+    font-weight: 700;
+}
+
+.half-day-type-section {
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-top: 12px;
+    border-left: 4px solid #ff9800;
+}
+
+.total-days-display {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: #e3f2fd;
+    border-radius: 8px;
+    border-left: 4px solid #1976d2;
+}
+
+.days-text {
+    font-size: 15px;
+    color: #0d47a1;
+}
+
+.field-help-text {
+    font-size: 12px;
+    color: #706e6b;
+    margin: 4px 0 0 0;
+    font-style: italic;
+}
+
+/* Modal Overrides */
+.slds-modal__container {
+    max-width: 800px;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .leave-cards-grid {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-section {
+        padding: 16px 20px;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .page-title {
+        font-size: 20px;
+    }
+
+    .section-header {
+        padding: 20px 20px 12px 20px;
+    }
+
+    .section-title {
+        font-size: 18px;
+    }
+
+    .leave-cards-grid {
+        grid-template-columns: 1fr;
+        padding: 0 20px 20px 20px;
+        gap: 12px;
+    }
+
+    .holidays-list {
+        padding: 0 20px 20px 20px;
+    }
+
+    .past-leave-table-container {
+        padding: 0 20px 20px 20px;
+    }
+
+    .past-leave-table {
+        font-size: 12px;
+    }
+
+    .past-leave-table th,
+    .past-leave-table td {
+        padding: 12px 8px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .header-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-title {
+        font-size: 18px;
+    }
+
+    .section-title {
+        font-size: 16px;
+    }
+
+    .leave-card {
+        padding: 16px;
+    }
+
+    .leave-type-name {
+        font-size: 14px;
+    }
+
+    .balance-value {
+        font-size: 16px;
+    }
+
+    .past-leave-table th,
+    .past-leave-table td {
+        padding: 10px 6px;
+        font-size: 11px;
+    }
+
+    .status-badge {
+        padding: 4px 8px;
+        font-size: 10px;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .header-actions,
+    .slds-modal,
+    .slds-backdrop {
+        display: none !important;
+    }
+
+    .past-leave-table {
+        box-shadow: none;
+    }
+}
+.section-header {
+    padding: 24px 32px 16px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Scrollable Holidays Section */
+.holidays-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0 32px 32px 32px;
+    max-height: 400px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Custom Scrollbar for Holidays */
+.holidays-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.holidays-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.holidays-list::-webkit-scrollbar-thumb {
+    background: #0176d3;
+    border-radius: 10px;
+}
+
+.holidays-list::-webkit-scrollbar-thumb:hover {
+    background: #014486;
+}
+
+/* Scrollable Leave Requests Table */
+.past-leave-table-container {
+    padding: 0 32px 32px 32px;
+    max-height: 600px;
+    overflow-y: auto;
+    overflow-x: auto;
+}
+
+/* Custom Scrollbar for Table */
+.past-leave-table-container::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.past-leave-table-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.past-leave-table-container::-webkit-scrollbar-thumb {
+    background: #0176d3;
+    border-radius: 10px;
+}
+
+.past-leave-table-container::-webkit-scrollbar-thumb:hover {
+    background: #014486;
+}
+
+/* Sticky Table Header */
+.past-leave-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Holiday Item Hover Effect */
+.holiday-item:hover {
+    background: #f8f9fa;
+    transform: translateX(4px);
+    transition: all 0.2s ease;
+}
+
+/* Section Header with Count Badge */
+.section-header {
+    padding: 24px 32px 16px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.section-title-with-count {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.count-badge {
+    background: #0176d3;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* Scroll Indicator */
+.scroll-indicator {
+    text-align: center;
+    padding: 8px;
+    font-size: 12px;
+    color: #706e6b;
+    font-style: italic;
+    background: linear-gradient(to bottom, transparent, #f7f9fc);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .holidays-list {
+        max-height: 300px;
+        padding: 0 20px 20px 20px;
+    }
+    
+    .past-leave-table-container {
+        max-height: 400px;
+        padding: 0 20px 20px 20px;
+    }
+}
+
+
+/* NEW: Eligibility Message */
+.eligibility-message {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    border-radius: 4px;
+    margin-top: 8px;
+    color: #856404;
+    font-size: 13px;
+}
+
+/* NEW: Carry Forward Balance */
+.balance-value.carry-forward {
+    color: #7b1fa2;
+}

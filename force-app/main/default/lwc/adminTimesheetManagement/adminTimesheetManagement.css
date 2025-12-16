@@ -1,0 +1,1102 @@
+/* ========================================
+   MAIN CONTAINER & LAYOUT
+   ======================================== */
+
+.timesheet-container {
+    background: linear-gradient(135deg, #f8f9fb 0%, #f4f6f9 100%);
+    padding: 1rem;
+    min-height: 100vh;
+}
+
+/* ========================================
+   HEADER BOX - SEPARATE SECTION
+   ======================================== */
+
+.header-box {
+    background: linear-gradient(135deg, #0176d3 0%, #0a5cb8 100%);
+    color: white;
+    padding: 1rem 1.25rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 12px rgba(1, 118, 211, 0.15);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+}
+
+.header-icon {
+    font-size: 2.5rem;
+    flex-shrink: 0;
+}
+
+.header-text {
+    min-width: 0;
+}
+
+.header-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    line-height: 1.3;
+}
+
+.header-subtitle {
+    margin: 0.5rem 0 0 0;
+    font-size: 0.8rem;
+    opacity: 0.95;
+    font-weight: 400;
+}
+
+.export-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* ========================================
+   STATS SECTION
+   ======================================== */
+
+.stats-section {
+    margin-bottom: 1.2rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0.7rem;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-radius: 0.35rem;
+    background: white;
+    border-left: 4px solid;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+    gap: 0.7rem;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card-blue {
+    border-left-color: #0176d3;
+    background: linear-gradient(135deg, #f0f8ff 0%, #ffffff 100%);
+}
+
+.stat-card-orange {
+    border-left-color: #fe9339;
+    background: linear-gradient(135deg, #fff8f0 0%, #ffffff 100%);
+}
+
+.stat-card-green {
+    border-left-color: #2e844a;
+    background: linear-gradient(135deg, #f0fff4 0%, #ffffff 100%);
+}
+
+.stat-card-red {
+    border-left-color: #ea001e;
+    background: linear-gradient(135deg, #fff0f0 0%, #ffffff 100%);
+}
+
+.stat-card-purple {
+    border-left-color: #8b5cf6;
+    background: linear-gradient(135deg, #f5f3ff 0%, #ffffff 100%);
+}
+
+.stat-card-indigo {
+    border-left-color: #4f46e5;
+    background: linear-gradient(135deg, #eef2ff 0%, #ffffff 100%);
+}
+
+.stat-icon {
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-label {
+    font-size: 0.7rem;
+    color: #706e6b;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #080707;
+    line-height: 1;
+}
+
+/* ========================================
+   FILTERS BOX - SEPARATE SECTION
+   ======================================== */
+
+.filters-box {
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.filter-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: linear-gradient(135deg, #f8f9fb 0%, #f4f6f9 100%);
+    padding: 1rem 1.25rem;
+    border-bottom: 2px solid #e8e8eb;
+}
+
+.filter-icon {
+    color: #0176d3;
+}
+
+.filter-title {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #080707;
+    letter-spacing: -0.25px;
+}
+
+.filter-content {
+    padding: 1rem;
+}
+/* Single Row Filter Layout */
+.filter-row-main {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
+    align-items: flex-end;
+    width: 100%;
+}
+
+.filter-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.filter-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.filter-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #080707;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+
+/*.filter-input {
+    width: 100%;
+    min-width: 180px;
+    box-sizing: border-box;
+}*/
+.filter-input-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 220px;  /* set an explicit width, adjust as needed */
+}
+.filter-input {
+    width: 220px;
+    margin-right: 0;
+}
+/* Date Range Selector */
+.date-range-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: white;
+    border: 1px solid #d9d7d5;
+    border-radius: 0.25rem;
+    padding: 0.75rem 0.5rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.nav-btn {
+    flex-shrink: 0;
+    padding: 0.25rem;
+}
+
+.date-display {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 0.5rem;
+}
+
+.date-range-text {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #080707;
+    text-align: center;
+    line-height: 1.4;
+}
+
+.view-toggle-btn {
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.75rem !important;
+    height: auto !important;
+    line-height: 1 !important;
+}
+
+/* Active Filters Pills */
+.active-filters {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 0.7rem;
+    background: #f9f9fb;
+    border-radius: 0.25rem;
+    border-left: 3px solid #0176d3;
+}
+.active-filters[data-active="false"] {
+    display: none;
+}
+.pills-label {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #080707;
+    white-space: nowrap;
+    padding-top: 0.25rem;
+}
+
+.filter-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.filter-pill {
+    background: white;
+    border: 1px solid #0176d3;
+    color: #0176d3;
+}
+
+/* Filter Actions */
+.filter-actions {
+    display: flex;
+    gap: 0.6rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #e8e8eb;
+}
+
+.clear-btn {
+    margin-left: auto;
+}
+
+/* ========================================
+   RESULTS INFO
+   ======================================== */
+
+.results-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: white;
+    border-left: 4px solid #0176d3;
+    margin-bottom: 1.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    color: #080707;
+    font-weight: 600;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+/* ========================================
+   PAGINATION STYLES
+   ======================================== */
+
+.pagination-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg, #f8f9fb 0%, #f4f6f9 100%);
+    border-top: 2px solid #e8e8eb;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.pagination-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.page-size-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #080707;
+    white-space: nowrap;
+}
+
+.page-size-select {
+    min-width: 100px;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.pagination-btn {
+    flex-shrink: 0;
+}
+
+.page-numbers {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+}
+
+.page-btn {
+    min-width: 36px;
+    padding: 0.5rem !important;
+}
+
+.page-btn::part(button) {
+    padding: 0 !important;
+    min-width: 36px;
+    height: 36px;
+}
+
+.pagination-status {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1rem;
+    flex-shrink: 0;
+}
+
+.page-counter {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #080707;
+    white-space: nowrap;
+}
+/* ========================================
+   PAGINATION - RESPONSIVE
+   ======================================== */
+
+@media (max-width: 1024px) {
+    .pagination-container {
+        padding: 1rem 1.25rem;
+        gap: 1rem;
+    }
+
+    .pagination-controls {
+        order: 2;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .pagination-info {
+        order: 1;
+        justify-content: flex-start;
+    }
+
+    .pagination-status {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .page-size-select {
+        min-width: 80px;
+    }
+}
+
+@media (max-width: 768px) {
+    .pagination-container {
+        flex-direction: column;
+        padding: 1rem;
+        gap: 0.75rem;
+    }
+
+    .pagination-info {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .page-size-label {
+        font-size: 0.8rem;
+    }
+
+    .page-size-select {
+        min-width: 70px;
+        font-size: 0.8rem;
+    }
+
+    .pagination-controls {
+        width: 100%;
+        order: 2;
+        gap: 0.25rem;
+    }
+
+    .page-btn {
+        min-width: 32px;
+        font-size: 0.75rem;
+        padding: 0.4rem !important;
+    }
+
+    .pagination-btn {
+        font-size: 0.8rem;
+    }
+
+    .pagination-status {
+        width: 100%;
+        order: 3;
+        justify-content: center;
+    }
+
+    .page-counter {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .pagination-container {
+        flex-direction: column;
+        padding: 0.75rem;
+        gap: 0.5rem;
+    }
+
+    .pagination-info {
+        width: 100%;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .page-size-label {
+        font-size: 0.75rem;
+    }
+
+    .page-size-select {
+        min-width: 60px;
+        font-size: 0.7rem;
+    }
+
+    .pagination-controls {
+        width: 100%;
+        gap: 0.2rem;
+        overflow-x: auto;
+        padding: 0.5rem 0;
+    }
+
+    .page-numbers {
+        gap: 0.15rem;
+    }
+
+    .page-btn {
+        min-width: 28px;
+        font-size: 0.7rem;
+        padding: 0.3rem !important;
+    }
+
+    .pagination-btn {
+        font-size: 0.7rem;
+        padding: 0.2rem !important;
+    }
+
+    .pagination-status {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .page-counter {
+        font-size: 0.75rem;
+    }
+}
+
+/* ========================================
+   TABLE BOX - SEPARATE SECTION
+   ======================================== */
+
+.table-box {
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+
+.table-header {
+    background: linear-gradient(135deg, #f8f9fb 0%, #f4f6f9 100%);
+    padding: 1.25rem 1.5rem;
+    border-bottom: 2px solid #e8e8eb;
+}
+
+.table-title {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #080707;
+    letter-spacing: -0.25px;
+}
+
+.table-wrapper {
+    position: relative;
+    overflow-x: auto;
+    flex: 1;
+}
+
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem 1rem;
+    
+}
+
+/* Timesheet Table */
+.timesheet-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+.timesheet-table thead {
+    background: linear-gradient(135deg, #f4f4f6 0%, #eaeaec 100%);
+    border-bottom: 2px solid #d9d7d5;
+     position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.timesheet-table th {
+    padding: 1rem 1.25rem;
+    text-align: left;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #080707;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.timesheet-table tbody tr {
+    border-bottom: 1px solid #e8e8eb;
+    transition: background-color 0.2s;
+}
+
+.timesheet-table tbody tr:hover {
+    background-color: #f9f9fb;
+}
+
+.timesheet-table td {
+    padding: 1rem 1.25rem;
+    font-size: 0.875rem;
+    color: #3e3e3c;
+    vertical-align: middle;
+}
+
+.hours-cell {
+    font-weight: 600;
+    color: #0176d3;
+}
+
+.description-cell {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.actions-cell {
+    text-align: center;
+    padding: 1rem 0.75rem;
+}
+
+/* Empty State */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+    color: #706e6b;
+}
+
+.empty-state lightning-icon {
+    margin-bottom: 1rem;
+    color: #d9d7d5;
+}
+
+.empty-state h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.125rem;
+    color: #080707;
+    font-weight: 600;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #706e6b;
+}
+
+/* ========================================
+   STATUS BADGES
+   ======================================== */
+
+lightning-badge.status-pending {
+    --slds-c-badge-color-background: #fef3cd;
+    --slds-c-badge-text-color: #826100;
+}
+
+lightning-badge.status-approved {
+    --slds-c-badge-color-background: #d4edda;
+    --slds-c-badge-text-color: #155724;
+}
+
+lightning-badge.status-rejected {
+    --slds-c-badge-color-background: #f8d7da;
+    --slds-c-badge-text-color: #721c24;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN - TABLET
+   ======================================== */
+
+@media (max-width: 1024px) {
+    .filter-row-main {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    }
+
+    .filter-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.5rem;
+    }
+
+    .header-left {
+        width: 100%;
+    }
+
+    .export-btn {
+        align-self: flex-end;
+    }
+}
+/* ========================================
+   RESPONSIVE - DESKTOP FILTERS
+   ======================================== */
+
+@media (max-width: 1440px) {
+    .filter-row-main {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 1rem;
+    }
+}
+
+/* ========================================
+   RESPONSIVE DESIGN - MOBILE
+   ======================================== */
+
+@media (max-width: 768px) {
+    .timesheet-container {
+        padding: 0.75rem;
+    }
+
+    /* Header */
+    .header-box {
+        padding: 1rem 1.25rem;
+        margin-bottom: 1rem;
+    }
+
+    .header-content {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+
+    .header-left {
+        width: 100%;
+    }
+
+    .header-icon {
+        font-size: 2rem;
+    }
+
+    .header-title {
+        font-size: 1.375rem;
+    }
+
+    .header-subtitle {
+        font-size: 0.8rem;
+    }
+
+    .export-btn {
+        width: 100%;
+    }
+
+    /* Stats */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+
+    .stat-card {
+        padding: 1rem;
+    }
+
+    .stat-label {
+        font-size: 0.7rem;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+    }
+
+    .stat-icon {
+        width: 1.5rem;
+        height: 1.5rem;
+    }
+
+    /* Filters */
+    .filters-box {
+        margin-bottom: 1rem;
+    }
+
+    .filter-header {
+        padding: 1rem 1rem;
+    }
+
+    .filter-title {
+        font-size: 1rem;
+    }
+
+    .filter-content {
+        padding: 1rem;
+    }
+    .filter-row-main {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+ .filter-group {
+        gap: 0.4rem;
+    }
+
+    .filter-label {
+        font-size: 0.8rem;
+    }
+
+    .date-range-selector {
+        flex-wrap: wrap;
+        padding: 0.5rem;
+    }
+
+    .date-display {
+        order: -1;
+        width: 100%;
+        padding: 0.5rem 0;
+    }
+
+    .date-range-text {
+        font-size: 0.85rem;
+    }
+
+    .active-filters {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 0.75rem;
+    }
+  .view-toggle-btn {
+        font-size: 0.65rem !important;
+        padding: 0.2rem 0.4rem !important;
+    }
+    .pills-label {
+        font-size: 0.8rem;
+    }
+
+    .filter-pills {
+        width: 100%;
+    }
+
+    .filter-actions {
+        flex-direction: column-reverse;
+    }
+
+    .clear-btn {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    /* Results Info */
+    
+    .results-info {
+        font-size: 0.8rem;
+        /*padding: 0.6rem 0.75rem;*/
+    }
+    
+  
+
+    /* Table */
+    .table-box {
+        margin-bottom: 1rem;
+    }
+
+    .table-header {
+        padding: 1rem;
+    }
+
+    .table-title {
+        font-size: 1rem;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .timesheet-table {
+        font-size: 0.75rem;
+    }
+
+    .timesheet-table th {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.7rem;
+    }
+
+    .timesheet-table td {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.75rem;
+    }
+
+    .description-cell {
+        max-width: 120px;
+    }
+
+    .actions-cell {
+        padding: 0.75rem 0.25rem;
+    }
+}
+    
+/* ========================================
+   RESPONSIVE DESIGN - SMALL MOBILE
+   ======================================== */
+
+@media (max-width: 480px) {
+    .timesheet-container {
+        padding: 0.5rem;
+    }
+
+    /* Header */
+    .header-box {
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .header-icon {
+        font-size: 1.5rem;
+    }
+
+    .header-title {
+        font-size: 1.1rem;
+    }
+
+    .header-subtitle {
+        font-size: 0.7rem;
+    }
+
+    .export-btn {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem !important;
+    }
+
+    /* Stats */
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+
+    .stat-card {
+        padding: 0.75rem;
+        gap: 0.75rem;
+    }
+
+    .stat-label {
+        font-size: 0.65rem;
+    }
+
+    .stat-value {
+        font-size: 1.25rem;
+    }
+
+    .stat-icon {
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+
+    /* Filters */
+    .filter-header {
+        padding: 0.75rem;
+    }
+
+    .filter-title {
+        font-size: 0.9rem;
+    }
+
+    .filter-content {
+        padding: 0.75rem;
+    }
+
+    .filter-row {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .filter-label {
+        font-size: 0.75rem;
+        gap: 0.25rem;
+    }
+
+    .date-range-text {
+        font-size: 0.75rem;
+    }
+
+    .view-toggle-btn {
+        font-size: 0.65rem !important;
+        padding: 0.2rem 0.4rem !important;
+    }
+
+    .active-filters {
+        padding: 0.5rem;
+        gap: 0.5rem;
+    }
+
+    .pills-label {
+        font-size: 0.75rem;
+    }
+
+    /* Results Info */
+    .results-info {
+        font-size: 0.75rem;
+        padding: 0.5rem 0.5rem;
+    }
+
+    /* Table */
+    .table-header {
+        padding: 0.75rem;
+    }
+
+    .table-title {
+        font-size: 0.95rem;
+    }
+
+    .timesheet-table th {
+        padding: 0.5rem 0.4rem;
+        font-size: 0.65rem;
+    }
+
+    .timesheet-table td {
+        padding: 0.5rem 0.4rem;
+        font-size: 0.7rem;
+    }
+
+    .description-cell {
+        max-width: 100px;
+    }
+
+}  
+.filter-dropdown-popover {
+    position: relative;
+    display: inline-block;
+    width: 220px; /* should match input width */
+    vertical-align: top;
+}
+
+.custom-dropdown-listbox {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 4px); /* ensures fully below input, small gap */
+    min-width: 220px;
+    background: #fff;
+    border: 1px solid #dcdcdc;
+    border-radius: 0.4rem;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+    z-index: 30;
+    max-height: 220px;
+    overflow-y: auto;
+    transition: opacity 0.18s;
+    opacity: 1;
+}
+
+.dropdown-item {
+    padding: 0.8rem 1rem;
+    cursor: pointer;
+    font-size: 1rem;
+    border-bottom: 1px solid #ececec;
+    background: #fff;
+    transition: background 0.12s;
+}
+
+.dropdown-item:last-child { border-bottom: none; }
+
+.dropdown-item:hover, .dropdown-item.active {
+    background-color: #f2f6fc;
+}

@@ -1,0 +1,223 @@
+<apex:page controller="WFHApprovalPageController" 
+           action="{!processAutoAction}"
+           showHeader="true" 
+           sidebar="false"
+           docType="html-5.0"
+           title="WFH Approval">
+    
+    <apex:slds />
+    
+    <style>
+        .approval-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        
+        .slds-card {
+            margin-bottom: 20px;
+        }
+        
+        .status-approved {
+            color: #2e844a;
+            font-weight: bold;
+        }
+        
+        .status-rejected {
+            color: #c23934;
+            font-weight: bold;
+        }
+        
+        .status-pending {
+            color: #0176d3;
+            font-weight: bold;
+        }
+        
+        .approval-actions {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .approval-actions .slds-button {
+            margin: 0 10px;
+        }
+    </style>
+    
+    <div class="approval-container slds-scope">
+        
+        <!-- Page Header -->
+        <div class="slds-page-header">
+            <div class="slds-page-header__row">
+                <div class="slds-page-header__col-title">
+                    <div class="slds-media">
+                        <div class="slds-media__figure">
+                            <span class="slds-icon_container slds-icon-standard-approval">
+                                <svg class="slds-icon slds-page-header__icon" aria-hidden="true">
+                                    <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="/apexpages/slds/latest/assets/icons/standard-sprite/svg/symbols.svg#approval"></use>
+                                </svg>
+                            </span>
+                        </div>
+                        <div class="slds-media__body">
+                            <div class="slds-page-header__name">
+                                <div class="slds-page-header__name-title">
+                                    <h1>
+                                        <span class="slds-page-header__title slds-truncate" title="Work From Home Approval">Work From Home Approval</span>
+                                    </h1>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Success/Error Messages -->
+        <apex:outputPanel rendered="{!showMessage}">
+            <div class="slds-notify_container slds-is-relative">
+                <div class="slds-notify slds-notify_alert slds-theme_{!IF(messageType == 'success', 'success', IF(messageType == 'error', 'error', 'info'))}" role="alert">
+                    <span class="slds-assistive-text">{!messageType}</span>
+                    <span class="slds-icon_container slds-icon-utility-{!IF(messageType == 'success', 'success', IF(messageType == 'error', 'error', 'info'))} slds-m-right_x-small">
+                        <svg class="slds-icon slds-icon_x-small" aria-hidden="true">
+                            <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="/apexpages/slds/latest/assets/icons/utility-sprite/svg/symbols.svg#{!IF(messageType == 'success', 'success', IF(messageType == 'error', 'error', 'info'))}"></use>
+                        </svg>
+                    </span>
+                    <h2>{!message}</h2>
+                </div>
+            </div>
+        </apex:outputPanel>
+        
+        <!-- Request Details Card -->
+        <apex:outputPanel rendered="{!attendanceRecord != null}">
+            <article class="slds-card">
+                <div class="slds-card__header slds-grid">
+                    <header class="slds-media slds-media_center slds-has-flexi-truncate">
+                        <div class="slds-media__figure">
+                            <span class="slds-icon_container slds-icon-standard-user">
+                                <svg class="slds-icon slds-icon_small" aria-hidden="true">
+                                    <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="/apexpages/slds/latest/assets/icons/standard-sprite/svg/symbols.svg#user"></use>
+                                </svg>
+                            </span>
+                        </div>
+                        <div class="slds-media__body">
+                            <h2 class="slds-card__header-title">
+                                <span>WFH Request Details</span>
+                            </h2>
+                        </div>
+                    </header>
+                </div>
+                
+                <div class="slds-card__body slds-card__body_inner">
+                    <div class="slds-grid slds-wrap slds-gutters">
+                        <div class="slds-col slds-size_1-of-2">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label"><strong>Employee:</strong></label>
+                                <div class="slds-form-element__control">
+                                    <span>{!employeeName}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="slds-col slds-size_1-of-2">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label"><strong>Request Date:</strong></label>
+                                <div class="slds-form-element__control">
+                                    <span>{!formattedRequestDate}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="slds-col slds-size_1-of-2">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label"><strong>Work Location:</strong></label>
+                                <div class="slds-form-element__control">
+                                    <span>{!attendanceRecord.Work_Location__c}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="slds-col slds-size_1-of-2">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label"><strong>Current Status:</strong></label>
+                                <div class="slds-form-element__control">
+                                    <span class="status-{!LOWER(currentStatus)}">{!currentStatus}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="slds-col slds-size_1-of-1">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label"><strong>Reason for WFH:</strong></label>
+                                <div class="slds-form-element__control">
+                                    <div class="slds-textarea">{!attendanceRecord.WFH_Reason__c}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </apex:outputPanel>
+        
+        <!-- Approval Actions -->
+        <apex:outputPanel rendered="{!AND(attendanceRecord != null, NOT(isAlreadyProcessed))}">
+            <article class="slds-card">
+                <div class="slds-card__header slds-grid">
+                    <header class="slds-media slds-media_center slds-has-flexi-truncate">
+                        <div class="slds-media__body">
+                            <h2 class="slds-card__header-title">
+                                <span>Manager Decision</span>
+                            </h2>
+                        </div>
+                    </header>
+                </div>
+                
+                <div class="slds-card__body slds-card__body_inner">
+                    <apex:form >
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label" for="comments">Comments (Optional):</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputTextarea value="{!approvalComments}" 
+                                                   id="comments"
+                                                   styleClass="slds-textarea" 
+                                                   rows="4"
+                                                   html-placeholder="Add any comments for the employee..."/>
+                            </div>
+                        </div>
+                        
+                        <div class="approval-actions">
+                            <apex:commandButton value="✅ Approve Request" 
+                                               action="{!approveRequest}" 
+                                               styleClass="slds-button slds-button_brand"
+                                               reRender=""/>
+                            
+                            <apex:commandButton value="❌ Reject Request" 
+                                               action="{!rejectRequest}" 
+                                               styleClass="slds-button slds-button_destructive"
+                                               reRender=""/>
+                        </div>
+                    </apex:form>
+                </div>
+            </article>
+        </apex:outputPanel>
+        
+        <!-- Already Processed Message -->
+        <apex:outputPanel rendered="{!isAlreadyProcessed}">
+            <article class="slds-card">
+                <div class="slds-card__body slds-card__body_inner">
+                    <div class="slds-text-align_center">
+                        <p class="slds-text-heading_medium">This request has already been processed.</p>
+                        <p class="slds-text-body_regular">Status: <span class="status-{!LOWER(currentStatus)}">{!currentStatus}</span></p>
+                        
+                        <apex:outputPanel rendered="{!NOT(ISBLANK(attendanceRecord.Approval_Comments__c))}">
+                            <div class="slds-box slds-theme_default slds-m-top_medium">
+                                <p><strong>Manager's Comments:</strong></p>
+                                <p>{!attendanceRecord.Approval_Comments__c}</p>
+                            </div>
+                        </apex:outputPanel>
+                    </div>
+                </div>
+            </article>
+        </apex:outputPanel>
+        
+    </div>
+    
+</apex:page>

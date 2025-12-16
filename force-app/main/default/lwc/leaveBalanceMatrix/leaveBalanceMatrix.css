@@ -1,0 +1,417 @@
+/* Container */
+.leave-matrix-container {
+    font-family: 'Salesforce Sans', Arial, sans-serif;
+    background: #f7f9fc;
+    min-height: 100vh;
+    padding: 0;
+}
+
+/* Header Section */
+.header-section {
+    background: linear-gradient(135deg, #0176d3 0%, #0d4f8b 100%);
+    padding: 24px 32px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.header-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.page-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.page-subtitle {
+    font-size: 14px;
+    margin: 4px 0 0 0;
+    opacity: 0.9;
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+/* Filter Section */
+.filter-section {
+    background: white;
+    padding: 24px 32px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin-bottom: 24px;
+}
+
+.filter-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 20px;
+    align-items: end;
+}
+
+.filter-field {
+    width: 100%;
+}
+
+.filter-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+/* Loading */
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+    padding: 40px;
+}
+
+/* Summary Section */
+.summary-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    padding: 0 32px 24px 32px;
+}
+
+.summary-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-left: 4px solid #0176d3;
+}
+
+.summary-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.summary-label {
+    font-size: 13px;
+    color: #706e6b;
+    margin-bottom: 4px;
+}
+
+.summary-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #181818;
+}
+
+/* Matrix Table Container */
+.matrix-table-container {
+    padding: 0 32px 32px 32px;
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 600px;
+}
+
+.matrix-table-container::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.matrix-table-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.matrix-table-container::-webkit-scrollbar-thumb {
+    background: #0176d3;
+    border-radius: 10px;
+}
+
+.matrix-table-container::-webkit-scrollbar-thumb:hover {
+    background: #014486;
+}
+
+/* Matrix Table */
+.matrix-table {
+    width: 100%;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border-collapse: collapse;
+}
+
+.matrix-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.matrix-table th {
+    padding: 16px 12px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #181818;
+    border-bottom: 2px solid #dee2e6;
+    white-space: nowrap;
+}
+
+.matrix-table td {
+    padding: 14px 12px;
+    font-size: 14px;
+    color: #181818;
+    border-bottom: 1px solid #f3f3f3;
+    text-align: center;
+}
+
+.matrix-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+/* Sticky Employee ID Column (First Column) */
+.sticky-column {
+    position: sticky;
+    left: 0;
+    background: white;
+    z-index: 5;
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+}
+
+.matrix-table thead .sticky-column {
+    z-index: 15;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+/* Sticky Employee Name Column (Second Column) */
+.sticky-column-2 {
+    position: sticky;
+    left: 150px; /* Adjust based on Employee ID column width */
+    background: white;
+    z-index: 5;
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+}
+
+.matrix-table thead .sticky-column-2 {
+    z-index: 15;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+/* Employee ID Column */
+.employee-id-column {
+    min-width: 150px;
+    text-align: left !important;
+}
+
+.employee-id-cell {
+    text-align: left !important;
+    font-weight: 600;
+    color: #0176d3;
+    font-size: 13px;
+}
+
+/* Employee Name Column */
+.employee-column {
+    min-width: 200px;
+    text-align: left !important;
+}
+
+.employee-cell {
+    text-align: left !important;
+}
+
+.employee-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.employee-name {
+    font-weight: 600;
+    color: #181818;
+}
+
+/* Leave Type Header */
+.leave-type-header {
+    min-width: 120px;
+}
+
+.header-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.leave-code {
+    font-size: 12px;
+    font-weight: 700;
+    color: #0176d3;
+    background: #e3f2fd;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.leave-name {
+    font-size: 11px;
+    color: #706e6b;
+}
+
+/* Balance Cell Styling */
+.balance-cell {
+    font-weight: 600;
+}
+
+.balance-zero {
+    color: #c62828;
+    background: #ffebee;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    min-width: 30px;
+}
+
+.balance-low {
+    color: #f57c00;
+    background: #fff8e1;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    min-width: 30px;
+}
+
+.balance-medium {
+    color: #1976d2;
+    background: #e3f2fd;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    min-width: 30px;
+}
+
+.balance-high {
+    color: #2e7d32;
+    background: #e8f5e9;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    min-width: 30px;
+}
+
+/* Empty State */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 20px;
+    background: white;
+    border-radius: 12px;
+    margin: 0 32px 32px 32px;
+    text-align: center;
+}
+
+.empty-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #181818;
+    margin: 20px 0 8px 0;
+}
+
+.empty-message {
+    font-size: 14px;
+    color: #706e6b;
+    margin: 0;
+}
+
+/* Scroll Indicator */
+.scroll-indicator {
+    text-align: center;
+    padding: 12px;
+    font-size: 13px;
+    color: #706e6b;
+    font-style: italic;
+    background: linear-gradient(to right, transparent, #f7f9fc, transparent);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .header-section {
+        padding: 16px 20px;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .page-title {
+        font-size: 20px;
+    }
+    
+    .filter-container {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .filter-buttons {
+        width: 100%;
+        flex-direction: column;
+    }
+    
+    .summary-section {
+        grid-template-columns: 1fr;
+        padding: 0 20px 20px 20px;
+    }
+    
+    .matrix-table-container {
+        padding: 0 20px 20px 20px;
+    }
+    
+    .header-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+    
+    .sticky-column-2 {
+        left: 120px; /* Smaller offset for mobile */
+    }
+}
+
+@media print {
+    .header-actions,
+    .filter-section,
+    .scroll-indicator {
+        display: none !important;
+    }
+    
+    .matrix-table-container {
+        max-height: none;
+        overflow: visible;
+    }
+}
+
+/* Add this new class to your existing CSS */
+
+/* N/A styling for non-eligible leave types */
+.balance-not-applicable {
+    color: #706e6b;
+    background: #f3f3f3;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    min-width: 30px;
+    font-style: italic;
+    font-weight: 500;
+}

@@ -1,0 +1,305 @@
+<apex:page controller="LeaveApprovalController" lightningStylesheets="true" showHeader="false" sidebar="false" standardStylesheets="false">
+    <html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            
+            body {
+                font-family: 'Salesforce Sans', Arial, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding: 20px;
+            }
+            
+            .container {
+                background: white;
+                border-radius: 16px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                max-width: 600px;
+                width: 100%;
+                overflow: hidden;
+            }
+            
+            .header {
+                background: linear-gradient(135deg, #0176d3 0%, #0d4f8b 100%);
+                color: white;
+                padding: 30px;
+                text-align: center;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+                margin-bottom: 8px;
+            }
+            
+            .content {
+                padding: 30px;
+            }
+            
+            .leave-details {
+                background: #f8f9fa;
+                border-radius: 8px;
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+            
+            .detail-row {
+                display: flex;
+                justify-content: space-between;
+                padding: 12px 0;
+                border-bottom: 1px solid #e5e5e5;
+            }
+            
+            .detail-row:last-child {
+                border-bottom: none;
+            }
+            
+            .detail-label {
+                font-weight: 600;
+                color: #706e6b;
+            }
+            
+            .detail-value {
+                color: #181818;
+                font-weight: 500;
+            }
+            
+            .form-group {
+                margin-bottom: 20px;
+            }
+            
+            .form-group label {
+                display: block;
+                font-weight: 600;
+                margin-bottom: 8px;
+                color: #181818;
+            }
+            
+            .form-group textarea {
+                width: 100%;
+                padding: 12px;
+                border: 1px solid #d8dde6;
+                border-radius: 4px;
+                font-family: inherit;
+                font-size: 14px;
+                resize: vertical;
+                min-height: 100px;
+            }
+            
+            .form-group textarea:focus {
+                outline: none;
+                border-color: #0176d3;
+                box-shadow: 0 0 0 3px rgba(1, 118, 211, 0.1);
+            }
+            
+            .action-buttons {
+                display: flex;
+                gap: 12px;
+                margin-top: 20px;
+            }
+            
+            .btn {
+                flex: 1;
+                padding: 14px 24px;
+                border: none;
+                border-radius: 6px;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            
+            .btn-approve {
+                background: #2e844a;
+                color: white;
+            }
+            
+            .btn-approve:hover {
+                background: #1f5b31;
+            }
+            
+            .btn-reject {
+                background: #d32f2f;
+                color: white;
+            }
+            
+            .btn-reject:hover {
+                background: #a02222;
+            }
+            
+            .btn-cancel {
+                background: #706e6b;
+                color: white;
+            }
+            
+            .btn-cancel:hover {
+                background: #4a4a4a;
+            }
+            
+            .message {
+                padding: 20px;
+                border-radius: 8px;
+                text-align: center;
+                font-weight: 500;
+                font-size: 16px;
+            }
+            
+            .message.success {
+                background: #e8f5e9;
+                color: #2e844a;
+                border-left: 4px solid #2e844a;
+            }
+            
+            .message.error {
+                background: #ffebee;
+                color: #c62828;
+                border-left: 4px solid #c62828;
+            }
+            
+            .status-badge {
+                display: inline-block;
+                padding: 6px 12px;
+                border-radius: 16px;
+                font-size: 12px;
+                font-weight: 600;
+                text-transform: uppercase;
+            }
+            
+            .status-pending {
+                background: #fff8e1;
+                color: #f57c00;
+            }
+            
+            @media (max-width: 600px) {
+                .action-buttons {
+                    flex-direction: column;
+                }
+                
+                .detail-row {
+                    flex-direction: column;
+                    gap: 4px;
+                }
+            }
+        </style>
+        
+        <script type="text/javascript">
+            function closeWindowNow() {
+                setTimeout(function() {
+                    window.opener = null;
+                    window.open('', '_self');
+                    window.close();
+                }, 1500); // Close after 1.5 seconds to show message
+            }
+        </script>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Leave Request Approval</h1>
+                <p>Review and take action on this leave request</p>
+            </div>
+            
+            <div class="content">
+                <apex:form id="mainForm">
+                    <apex:actionFunction name="closeWindow" action="{!doNothing}" oncomplete="closeWindowNow();" />
+                    
+                    <apex:outputPanel id="contentPanel">
+                        <apex:outputPanel rendered="{!showSuccess}">
+                            <div class="message success">
+                                <strong>Success!</strong><br/>
+                                Leave request has been {!actionTaken}.<br/>
+                                Employee will be notified via email.<br/>
+                                <small>Closing window...</small>
+                            </div>
+                            <script type="text/javascript">
+                                closeWindowNow();
+                            </script>
+                        </apex:outputPanel>
+                        
+                        <apex:outputPanel rendered="{!showError}">
+                            <div class="message error">
+                                <strong>Error!</strong><br/>
+                                {!errorMessage}
+                            </div>
+                        </apex:outputPanel>
+                        
+                        <apex:outputPanel rendered="{!AND(leaveRequest != null, NOT(showSuccess), NOT(showError))}">
+                            <div class="leave-details">
+                                <div class="detail-row">
+                                    <span class="detail-label">Employee:</span>
+                                    <span class="detail-value">{!employeeName}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Email:</span>
+                                    <span class="detail-value">{!employeeEmail}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Leave Type:</span>
+                                    <span class="detail-value">{!leaveTypeName}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Start Date:</span>
+                                    <span class="detail-value">{!startDate}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">End Date:</span>
+                                    <span class="detail-value">{!endDate}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Total Days:</span>
+                                    <span class="detail-value">{!totalDays}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Reason:</span>
+                                    <span class="detail-value">{!reason}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Status:</span>
+                                    <span class="status-badge status-pending">{!leaveRequest.Status__c}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="comments">Manager Comments <span style="color: red;">*</span></label>
+                                <apex:inputTextarea value="{!managerComments}" id="comments" html-placeholder="Enter your comments here..."/>
+                            </div>
+                            
+                            <div class="action-buttons">
+                                <apex:commandButton value="Approve" action="{!approveRequest}" styleClass="btn btn-approve" reRender="contentPanel" status="processing"/>
+                                <apex:commandButton value="Reject" action="{!rejectRequest}" styleClass="btn btn-reject" reRender="contentPanel" status="processing"/>
+                                <apex:commandButton value="Cancel Request" action="{!cancelRequest}" styleClass="btn btn-cancel" reRender="contentPanel" status="processing"/>
+                            </div>
+                            
+                            <apex:actionStatus id="processing">
+                                <apex:facet name="start">
+                                    <div style="text-align: center; margin-top: 20px;">
+                                        <strong>Processing...</strong>
+                                    </div>
+                                </apex:facet>
+                            </apex:actionStatus>
+                        </apex:outputPanel>
+                        
+                        <apex:outputPanel rendered="{!AND(leaveRequest == null, NOT(showError))}">
+                            <div class="message error">
+                                <strong>Invalid Request!</strong><br/>
+                                This leave request link is invalid or has already been processed.<br/>
+                                <small>You may close this window now.</small>
+                            </div>
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                </apex:form>
+            </div>
+        </div>
+    </body>
+    </html>
+</apex:page>

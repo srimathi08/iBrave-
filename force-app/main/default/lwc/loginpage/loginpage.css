@@ -1,0 +1,220 @@
+.video-container {
+    /* position: relative; */
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+.bg-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    min-width: 100%;
+    min-height: 100%;
+    object-fit: cover;
+    z-index: 0;
+   filter: brightness(1.2) saturate(1.1);
+}
+.video-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(
+        rgba(111, 46, 70, 0.4), 
+        rgba(212, 192, 200, 0.4)
+    ); /* customize colors to match your brand */
+    z-index: 0;
+}
+
+     .container {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px; /* adds breathing room on small screens */
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+ .logo-wrapper {
+        text-align: center;
+        margin-bottom: 15px;
+    }
+
+    .logo {
+        width: 120px;
+        height: auto;
+    }
+    .input-icon-wrapper {
+        position: relative;
+        margin-bottom: 16px;
+         
+    }
+
+.input-icon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 8px;
+    z-index: 2;
+    pointer-events: none;
+    --slds-c-icon-color-foreground-default: #999;
+}
+.eye-icon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 12px;
+    z-index: 2;
+    cursor: pointer;
+    --slds-c-icon-color-foreground-default: #6F2E46;
+}
+ .input-field {
+    width: 100%;
+    font-size: 16px;
+    padding-left: 2.2rem; 
+   
+    --slds-c-input-spacing-inline-start: 4rem;
+    --slds-c-input-radius-border: 6px;
+    --slds-c-input-height: 2rem;
+     max-width: 500px;
+}
+
+   .login-card {
+    width: 100%;
+    max-width: 700px;
+    background: white;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: row;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    z-index: 1;
+   
+}
+
+    .left-panel {
+        background: linear-gradient(135deg, #6F2E46, #d4c0c8);
+        width: 40%;
+        padding: 30px;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+         border-top-right-radius: 150px;
+    border-bottom-right-radius: 150px;
+    }
+
+    .left-panel h1 {
+    font-size: 36px;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+    .left-panel p {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+    .right-panel {
+        padding: 40px;
+        width: 60%;
+        box-sizing: border-box;
+    }
+
+ 
+    .password-wrapper {
+        position: relative;
+    }
+
+    .show-btn {
+        position: absolute;
+        right: 10px;
+        top: 34px;
+        background: transparent;
+        border: none;
+        color: #0070d2;
+        cursor: pointer;
+    }
+
+    .options {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 14px;
+       margin: 5px 0 10px 0;
+    }
+.remember-me lightning-input {
+    margin: 0 !important;
+}
+
+    .signin-btn {
+        width: 100%;
+        background: #6F2E46;
+        color: white;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        margin: 10px 0;
+        cursor: pointer;
+    }
+
+    .signin-other-btn {
+        width: 100%;
+        background: transparent;
+        border: 2px solid #6F2E46;
+        color: #6F2E46;
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+    .signup-text {
+        text-align: center;
+        margin: 30px 0 10px 0;
+        font-size: 14px;
+    }
+
+    .signup-text a, .forgot-password {
+        color: #6F2E46;
+        text-decoration: none;
+        font-weight: bold;
+    }
+    @media screen and (max-width: 768px) {
+    .login-card {
+        flex-direction: column;
+        max-height: none;
+        height: auto;
+        border-radius: 20px;
+        padding: 1rem;
+    }
+
+    .left-panel {
+        width: 100%;
+        border-radius: 20px 20px 0 0;
+    }
+
+    .right-panel {
+        width: 100%;
+        padding: 16px;
+    }
+    .signin-btn,
+    .signin-other-btn {
+        padding: 10px;
+        font-size: 15px;
+    }
+
+    .signup-text {
+        text-align: center;
+        margin: 30px 0 10px 0; /* Adds breathing space */
+        font-size: 14px;
+    }
+}

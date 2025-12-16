@@ -1,0 +1,282 @@
+<template>
+    <div class="dashboard-wrapper">
+        
+        <!-- Loading State -->
+        <template if:true={isLoading}>
+            <div class="loading-spinner">
+                <lightning-spinner 
+                    alternative-text="Loading dashboard..." 
+                    size="large" 
+                    class="main-spinner">
+                </lightning-spinner>
+            </div>
+        </template>
+
+
+        <!-- Main Dashboard Content -->
+        <template if:true={isUserDataReady}>
+            
+            <!-- Header Section with Real User Data -->
+            <div class="dashboard-header">
+                <div class="welcome-section">
+                    <h1 class="welcome-title">Welcome back, {employeeName}!</h1>
+                    
+                </div>
+                <div class="profile-actions">
+                    <lightning-button-icon 
+                        icon-name="utility:notification" 
+                        variant="border-filled" 
+                        alternative-text="Notifications"
+                        class="notification-btn"
+                        title="Notifications">
+                    </lightning-button-icon>
+                    <div class="profile-avatar" title={displayUserEmail}>
+                        <lightning-icon 
+                            icon-name="standard:user" 
+                            size="medium"
+                            alternative-text="User Profile">
+                        </lightning-icon>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Metrics Dashboard -->
+            <div class="metrics-grid">
+                
+                <!-- Attendance Rate Metric -->
+                <div class="metric-card attendance-metric" onclick={handleAttendanceMetricClick}>
+                    <div class="metric-header">
+                        <div class="metric-info">
+                            <h3 class="metric-title">Attendance Rate</h3>
+                            <div class="metric-value">{attendanceRate}%</div>
+                            <p class="metric-subtitle">this month</p>
+                        </div>
+                        <div class="metric-icon attendance-icon">
+                            <lightning-icon 
+                                icon-name="utility:clock" 
+                                size="medium" 
+                                variant="inverse"
+                                alternative-text="Attendance">
+                            </lightning-icon>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- Hours This Week Metric -->
+                <div class="metric-card hours-metric" onclick={handleHoursMetricClick}>
+                    <div class="metric-header">
+                        <div class="metric-info">
+                            <h3 class="metric-title">Hours This Week</h3>
+                            <div class="metric-value">{hoursThisWeek}</div>
+                            <p class="metric-subtitle">{overtimeText}</p>
+                        </div>
+                        <div class="metric-icon hours-icon">
+                           <lightning-icon 
+                                icon-name='standard:timesheet_entry' 
+                                alternative-text='Timesheet Entry' 
+                                size='medium' 
+                                title='Hours Worked'
+                                variant="inverse">
+                            </lightning-icon>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- Leave Balance Metric -->
+                <div class="metric-card leave-metric" onclick={handleLeaveMetricClick}>
+                    <div class="metric-header">
+                        <div class="metric-info">
+                            <h3 class="metric-title">Leave Balance</h3>
+                            <div class="metric-value">{leaveBalance}</div>
+                            <p class="metric-subtitle">days remaining</p>
+                        </div>
+                        <div class="metric-icon leave-icon">
+                            <lightning-icon 
+                                icon-name="utility:event" 
+                                size="medium" 
+                                variant="inverse"
+                                alternative-text="Leave Balance">
+                            </lightning-icon>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+
+
+            <!-- Navigation Tabs -->
+            <div class="tab-container">
+                
+                <!-- Tab Navigation Header -->
+                <div class="tab-navigation">
+                    <template for:each={tabOptions} for:item="tab">
+                        <button 
+                            key={tab.value} 
+                            class={tab.cssClass} 
+                            data-tab={tab.value}
+                            onclick={handleTabClick}
+                            title={tab.label}
+                            type="button">
+                            {tab.label}
+                        </button>
+                    </template>
+                </div>
+                
+                <!-- Tab Content Area -->
+                <div class="tab-content">
+                    
+                    <!-- Overview Tab -->
+                    <template if:true={isOverviewActive}>
+                        <div class="tab-panel">
+                            <div class="content-placeholder">
+                                <lightning-icon 
+                                    icon-name="utility:dashboard" 
+                                    size="large"
+                                    class="placeholder-icon">
+                                </lightning-icon>
+                                <h3>Overview Dashboard</h3>
+                                
+                               
+                                
+                            </div>
+                        </div>
+                    </template>
+                    
+                    <!-- Attendance Tab - Child Component -->
+                    <template if:true={isAttendanceActive}>
+                        <div class="tab-panel attendance-panel">
+                            <c-attendance-component 
+                                employee-id={employeeId}
+                                employee-name={currentUserName}
+                                employee-email={currentUserEmail}
+                                employee-profile={currentUserProfile}>
+                            </c-attendance-component>
+                        </div>
+                    </template>
+                    
+                    <!-- Timesheet Tab -->
+                    <template if:true={isTimesheetActive}>
+                        <div class="tab-panel timesheet-panel">
+                            <c-timesheet-manager></c-timesheet-manager>
+                        </div>
+                    </template>
+
+                    <!-- Payslip Tab -->
+                    <template if:true={isPayslipActive}>
+                        <div class="tab-panel">
+                            <div class="content-placeholder">
+                                <lightning-icon 
+                                    icon-name="utility:currency" 
+                                    size="large"
+                                    class="placeholder-icon">
+                                </lightning-icon>
+                                <h3>Payslip & Salary</h3>
+                                <p>Access your payslips and salary information</p>
+                               </div>
+                        </div>
+                    </template>
+
+
+                    <!-- Goals Tab -->
+                    <template if:true={isGoalsActive}>
+                        <div class="tab-panel">
+                            <div class="content-placeholder">
+                                <lightning-icon 
+                                    icon-name="utility:target" 
+                                    size="large"
+                                    class="placeholder-icon">
+                                </lightning-icon>
+                                <h3>Goals & Performance</h3>
+                                <p>Track your goals and performance metrics, {displayUserName}</p>
+                                <div class="goals-preview">
+                                    <div class="goal-item">
+                                        <span class="goal-status">🎯</span>
+                                        <span class="goal-text">Complete Q4 objectives</span>
+                                        <span class="goal-progress">75%</span>
+                                    </div>
+                                    <div class="goal-item">
+                                        <span class="goal-status">📈</span>
+                                        <span class="goal-text">Skill development</span>
+                                        <span class="goal-progress">60%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+
+                    <!-- Leave Tab - MODIFIED: Now shows Leave Management Component -->
+                    <template if:true={isLeaveActive}>
+                        <div class="tab-panel leave-panel">
+                            <c-leave-management></c-leave-management>
+                        </div>
+                    </template>
+
+
+                    <!-- Learning Tab -->
+                    <template if:true={isLearningActive}>
+                        <div class="tab-panel">
+                            <div class="content-placeholder">
+                                <lightning-icon 
+                                    icon-name="utility:education" 
+                                    size="large"
+                                    class="placeholder-icon">
+                                </lightning-icon>
+                                <h3>Learning & Development</h3>
+                                <p>Continue your learning journey, {displayUserName}</p>
+                                <div class="learning-preview">
+                                    <div class="course-item">
+                                        <span class="course-icon">📚</span>
+                                        <div class="course-info">
+                                            <div class="course-title">Salesforce Advanced Admin</div>
+                                            <div class="course-progress">Progress: 40%</div>
+                                        </div>
+                                    </div>
+                                    <div class="course-item">
+                                        <span class="course-icon">🎓</span>
+                                        <div class="course-info">
+                                            <div class="course-title">Leadership Skills</div>
+                                            <div class="course-progress">Progress: 15%</div>
+                                        </div>
+                                    </div>
+                                </div>
+                              
+                            </div>
+                        </div>
+                    </template>
+                    
+                </div>
+            </div>
+            
+        </template>
+
+
+        <!-- Error State -->
+        <template if:false={isUserDataReady}>
+            <template if:false={isLoading}>
+                <div class="error-state">
+                    <div class="error-content">
+                        <lightning-icon 
+                            icon-name="utility:warning" 
+                            size="large" 
+                            class="error-icon">
+                        </lightning-icon>
+                        <h3>Unable to Load Dashboard</h3>
+                        <p>There was an issue loading your dashboard. Please refresh the page or contact support.</p>
+                        <lightning-button 
+                            label="Retry" 
+                            variant="brand" 
+                            onclick={handleRetry}
+                            class="retry-button">
+                        </lightning-button>
+                    </div>
+                </div>
+            </template>
+        </template>
+
+
+    </div>
+</template>

@@ -1,0 +1,160 @@
+<template>
+    <div class="leave-matrix-container">
+        
+        <!-- Header Section -->
+        <div class="header-section">
+            <div class="header-left">
+                <lightning-icon icon-name="utility:matrix" size="large"></lightning-icon>
+                <div class="header-text">
+                    <h1 class="page-title">Leave Balance Matrix Report</h1>
+                    <p class="page-subtitle">View all employees' leave balances by month</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <lightning-button 
+                    variant="brand" 
+                    label="Export to CSV" 
+                    icon-name="utility:download"
+                    onclick={exportToCSV}
+                    disabled={isLoading}>
+                </lightning-button>
+            </div>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <div class="filter-container">
+                <lightning-combobox
+                    name="month"
+                    label="Select Month"
+                    value={selectedMonth}
+                    placeholder="Choose Month"
+                    options={monthOptions}
+                    onchange={handleMonthChange}
+                    class="filter-field">
+                </lightning-combobox>
+
+                <lightning-combobox
+                    name="year"
+                    label="Select Year"
+                    value={selectedYear}
+                    placeholder="Choose Year"
+                    options={yearOptions}
+                    onchange={handleYearChange}
+                    class="filter-field">
+                </lightning-combobox>
+
+                <div class="filter-buttons">
+                    <lightning-button 
+                        variant="brand" 
+                        label="Generate Report" 
+                        icon-name="utility:search"
+                        onclick={handleGenerateReport}
+                        disabled={isLoading}>
+                    </lightning-button>
+                    <lightning-button 
+                        label="Reset" 
+                        icon-name="utility:refresh"
+                        onclick={handleReset}>
+                    </lightning-button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <template if:true={isLoading}>
+            <div class="loading-container">
+                <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+            </div>
+        </template>
+
+        <!-- Matrix Table Section -->
+        <template if:false={isLoading}>
+            <template if:true={hasData}>
+                
+                <!-- Summary Info -->
+                <div class="summary-section">
+                    <div class="summary-card">
+                        <lightning-icon icon-name="utility:people" size="small"></lightning-icon>
+                        <div class="summary-info">
+                            <span class="summary-label">Total Employees</span>
+                            <span class="summary-value">{totalEmployees}</span>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <lightning-icon icon-name="utility:layers" size="small"></lightning-icon>
+                        <div class="summary-info">
+                            <span class="summary-label">Leave Types</span>
+                            <span class="summary-value">{totalLeaveTypes}</span>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <lightning-icon icon-name="utility:date_input" size="small"></lightning-icon>
+                        <div class="summary-info">
+                            <span class="summary-label">Report Period</span>
+                            <span class="summary-value">{reportPeriod}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scrollable Matrix Table -->
+                <div class="matrix-table-container">
+                    <table class="matrix-table">
+                        <thead>
+                            <tr>
+                                <th class="sticky-column employee-id-column">Employee ID</th>
+                                <th class="sticky-column-2 employee-column">Employee Name</th>
+                                <template for:each={leaveTypeColumns} for:item="leaveType">
+                                    <th key={leaveType.id} class="leave-type-header" title={leaveType.fullName}>
+                                        <div class="header-content">
+                                            <span class="leave-code">{leaveType.code}</span>
+                                            <span class="leave-name">{leaveType.name}</span>
+                                        </div>
+                                    </th>
+                                </template>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={matrixData} for:item="employee">
+                                <tr key={employee.employeeId}>
+                                    <td class="sticky-column employee-id-cell">{employee.employeeIdDisplay}</td>
+                                    <td class="sticky-column-2 employee-cell">
+                                        <div class="employee-info">
+                                            <lightning-icon icon-name="standard:user" size="x-small"></lightning-icon>
+                                            <span class="employee-name">{employee.employeeName}</span>
+                                        </div>
+                                    </td>
+                                    <template for:each={employee.balances} for:item="balance">
+                                        <td key={balance.leaveTypeId} class="balance-cell">
+                                            <span class={balance.balanceClass}>{balance.displayValue}</span>
+                                        </td>
+                                    </template>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Scroll Indicator -->
+                <template if:true={showScrollIndicator}>
+                    <div class="scroll-indicator">
+                        Scroll horizontally to see more leave types →
+                    </div>
+                </template>
+
+            </template>
+
+            <!-- Empty State -->
+            <template if:false={hasData}>
+                <div class="empty-state">
+                    <lightning-icon icon-name="utility:search" size="large"></lightning-icon>
+                    <h3 class="empty-title">No Data Available</h3>
+                    <p class="empty-message">
+                        Please select a month and year, then click "Generate Report" to view leave balance matrix.
+                    </p>
+                </div>
+            </template>
+        </template>
+
+    </div>
+</template>

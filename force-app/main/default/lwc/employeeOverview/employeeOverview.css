@@ -1,0 +1,232 @@
+.overview-container {
+    padding: 20px;
+    background: #f3f3f3;
+    min-height: 100vh;
+}
+
+/* Header Section */
+.header-section {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.title-section {
+    flex: 1;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: #080707;
+    margin-bottom: 4px;
+}
+
+.page-subtitle {
+    font-size: 14px;
+    color: #706e6b;
+    margin: 0;
+}
+
+.edit-button {
+    flex-shrink: 0;
+}
+
+/* Content Grid */
+.content-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+/* Info Cards */
+.info-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.card-header {
+    background: #f8f9fa;
+    padding: 20px 24px;
+    border-bottom: 2px solid #e5e5e5;
+}
+
+.card-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #080707;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.card-body {
+    padding: 24px;
+}
+
+/* Info Rows (View Mode) */
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 14px 0;
+    border-bottom: 1px solid #f3f3f3;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-size: 14px;
+    color: #706e6b;
+    font-weight: 500;
+    flex: 0 0 40%;
+}
+
+.info-value {
+    font-size: 14px;
+    color: #080707;
+    font-weight: 600;
+    text-align: right;
+    flex: 1;
+    word-break: break-word;
+}
+
+/* Badges */
+.badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badge.active {
+    background: #d9f2e6;
+    color: #04844b;
+}
+
+.badge.inactive {
+    background: #fee;
+    color: #ea001e;
+}
+
+/* Edit Form */
+.edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.form-field {
+    width: 100%;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.half-width {
+    width: 100%;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    background: white;
+    padding: 20px 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Loading Spinner */
+lightning-spinner {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .content-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .overview-container {
+        padding: 12px;
+    }
+
+    .header-content {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .page-title {
+        font-size: 24px;
+    }
+
+    .card-header {
+        padding: 16px 20px;
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    .info-row {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .info-label {
+        flex: none;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .info-value {
+        text-align: left;
+        font-size: 15px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-title {
+        font-size: 20px;
+    }
+
+    .card-title {
+        font-size: 16px;
+    }
+}

@@ -1,0 +1,1142 @@
+/* ========================================
+   MONTHLY ATTENDANCE REPORT - MAIN CONTAINER
+   ======================================== */
+
+
+.report-container {
+    font-family: 'Salesforce Sans', Arial, sans-serif;
+    background: #f7f9fc;
+    min-height: 100vh;
+    padding: 0;
+}
+
+
+/* ========================================
+   HEADER SECTION
+   ======================================== */
+
+
+.report-header {
+    background: linear-gradient(135deg, #0176d3 0%, #0d4f8b 100%);
+    padding: 24px 32px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+
+.header-text {
+    display: flex;
+    flex-direction: column;
+}
+
+
+.page-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+    color: white;
+}
+
+
+.page-subtitle {
+    font-size: 14px;
+    margin: 4px 0 0 0;
+    opacity: 0.9;
+}
+
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+
+/* ========================================
+   FILTERS SECTION
+   ======================================== */
+
+
+.filters-section {
+    background: white;
+    padding: 24px 32px;
+    margin: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+
+.filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+
+/* ========================================
+   REPORT SUMMARY CARDS
+   ======================================== */
+
+
+.report-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 2px solid #e5e5e5;
+}
+
+
+.summary-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    padding: 16px 20px;
+    border-radius: 12px;
+    border-left: 4px solid #0176d3;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+
+.summary-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+
+.summary-content {
+    display: flex;
+    flex-direction: column;
+}
+
+
+.summary-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #0176d3;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+
+
+.summary-label {
+    font-size: 12px;
+    color: #706e6b;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+
+/* ========================================
+   LOADING STATES
+   ======================================== */
+
+
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+    padding: 60px 20px;
+    background: white;
+    margin: 24px 32px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+
+.loading-text {
+    margin-top: 20px;
+    font-size: 16px;
+    color: #706e6b;
+    font-weight: 500;
+}
+
+
+.loading-more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 24px;
+    background: #f8f9fa;
+    border-top: 2px solid #e5e5e5;
+}
+
+
+.loading-more span {
+    font-size: 14px;
+    color: #706e6b;
+    font-weight: 500;
+}
+
+
+/* ========================================
+   REPORT TABLE WRAPPER - FIXED SCROLLING
+   ======================================== */
+
+
+.report-table-wrapper {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 600px;
+    margin: 24px 32px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    position: relative;
+    -webkit-overflow-scrolling: touch;
+}
+
+
+/* Custom Scrollbar */
+.report-table-wrapper::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+
+.report-table-wrapper::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+
+.report-table-wrapper::-webkit-scrollbar-thumb {
+    background: #0176d3;
+    border-radius: 10px;
+}
+
+
+.report-table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #014486;
+}
+
+
+/* Firefox scrollbar */
+.report-table-wrapper {
+    scrollbar-width: thin;
+    scrollbar-color: #0176d3 #f1f1f1;
+}
+
+
+/* ========================================
+   REPORT TABLE - REMOVED STICKY COLUMNS
+   ======================================== */
+
+
+.report-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+    min-width: 100%;
+}
+
+
+/* ========================================
+   TABLE HEADER - ONLY HEADER STICKY
+   ======================================== */
+
+
+.report-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: linear-gradient(135deg, #0176d3 0%, #0d4f8b 100%);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+
+.header-row {
+    background: linear-gradient(135deg, #0176d3 0%, #0d4f8b 100%);
+}
+
+
+.report-table th {
+    padding: 12px 8px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+    white-space: nowrap;
+    background: linear-gradient(135deg, #0176d3 0%, #0d4f8b 100%);
+}
+
+
+.report-table th:last-child {
+    border-right: none;
+}
+
+
+/* ========================================
+   REMOVED ALL FIXED/STICKY COLUMN STYLES
+   ======================================== */
+
+
+/* Regular columns - no sticky positioning */
+.emp-id-col,
+.emp-name-col,
+.emp-doj-col,
+.location-col,
+.manager-col {
+    min-width: 120px;
+    padding: 12px 8px;
+}
+
+
+.emp-id-col {
+    min-width: 80px;
+}
+
+
+.emp-name-col {
+    min-width: 200px;
+    text-align: left;
+}
+
+
+.emp-doj-col {
+    min-width: 100px;
+}
+
+
+.location-col {
+    min-width: 180px;
+    text-align: left;
+}
+
+
+.manager-col {
+    min-width: 150px;
+    text-align: left;
+}
+
+
+/* ========================================
+   DATE HEADER STYLING
+   ======================================== */
+
+
+.date-col {
+    min-width: 50px;
+    max-width: 50px;
+    padding: 8px 4px;
+}
+
+
+.date-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+
+.date-day {
+    font-size: 9px;
+    font-weight: 600;
+    opacity: 0.9;
+}
+
+
+.date-number {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+
+/* Weekend Header */
+.weekend-header {
+    background: linear-gradient(135deg, #9e9e9e 0%, #757575 100%);
+}
+
+
+/* Holiday Header */
+.holiday-header {
+    background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
+}
+
+
+/* ========================================
+   SUMMARY COLUMNS - VISIBLE AND SCROLLABLE
+   ======================================== */
+
+
+.summary-col {
+    min-width: 90px;
+    max-width: 90px;
+    font-weight: 700;
+    background: #ffffff;
+    border-left: 2px solid #0176d3;
+    padding: 12px 8px;
+}
+
+
+/* Summary header styling */
+.summary-header-text {
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    color: white;
+}
+
+
+/* Summary value cells with better visibility */
+.summary-value-cell {
+    font-weight: 600;
+    font-size: 14px;
+    color: #181818;
+    background: #f8f9fa;
+}
+
+
+.present-value-cell {
+    color: #4caf50;
+    font-weight: 700;
+    background: #e8f5e9;
+}
+
+
+.absent-value-cell {
+    color: #f44336;
+    font-weight: 700;
+    background: #ffebee;
+}
+
+
+.leave-value-cell {
+    color: #2196f3;
+    font-weight: 700;
+    background: #e3f2fd;
+}
+
+
+.holiday-value-cell {
+    color: #9c27b0;
+    font-weight: 700;
+    background: #f3e5f5;
+}
+
+
+/* ✅ NEW v3.2: Days Payable value cell */
+.payable-value-cell {
+    color: #00796b;
+    font-weight: 700;
+    background: #e0f2f1;
+    border-left: 3px solid #00796b;
+}
+
+
+/* ========================================
+   TABLE BODY
+   ======================================== */
+
+
+.data-row {
+    border-bottom: 1px solid #e5e5e5;
+    transition: background-color 0.2s ease;
+}
+
+
+.data-row:hover {
+    background-color: #f0f8ff;
+}
+
+
+.data-row:nth-child(even) {
+    background-color: #fafbfc;
+}
+
+
+.data-row:nth-child(even):hover {
+    background-color: #f0f8ff;
+}
+
+
+.report-table td {
+    padding: 12px 8px;
+    text-align: center;
+    font-size: 13px;
+    color: #181818;
+    border-right: 1px solid #f1f1f1;
+    vertical-align: middle;
+}
+
+
+.report-table td:last-child {
+    border-right: none;
+}
+
+
+/* ========================================
+   EMPLOYEE NAME CELL
+   ======================================== */
+
+
+.employee-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-align: left;
+    padding-left: 8px;
+}
+
+
+.employee-name-cell span {
+    font-weight: 600;
+    color: #181818;
+}
+
+
+/* Location cell styling */
+.location-cell {
+    text-align: left;
+    padding-left: 12px;
+}
+
+
+.location-details {
+    display: flex;
+    flex-direction: column;
+}
+
+
+.location-main {
+    font-weight: 500;
+    color: #181818;
+}
+
+
+/* ========================================
+   ATTENDANCE CELLS
+   ======================================== */
+
+
+.attendance-cell {
+    padding: 4px;
+}
+
+
+/* Present Cell */
+.present-cell {
+    background: #e8f5e9;
+}
+
+
+.present-cell:hover {
+    background: #c8e6c9;
+}
+
+
+/* Absent Cell */
+.absent-cell {
+    background: #ffebee;
+}
+
+
+.absent-cell:hover {
+    background: #ffcdd2;
+}
+
+
+/* Leave Cell */
+.leave-cell {
+    background: #fff8e1;
+}
+
+
+.leave-cell:hover {
+    background: #ffecb3;
+}
+
+
+/* Holiday Cell */
+.holiday-cell {
+    background: #f3e5f5;
+}
+
+
+.holiday-cell:hover {
+    background: #e1bee7;
+}
+
+
+/* Weekend Cell */
+.weekend-cell {
+    background: #f5f5f5;
+}
+
+
+.weekend-cell:hover {
+    background: #e0e0e0;
+}
+
+
+/* ========================================
+   STATUS BADGES
+   ======================================== */
+
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1;
+}
+
+
+/* Present Badge */
+.present-badge {
+    background: #4caf50;
+    color: white;
+    box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+}
+
+
+/* Late Badge */
+.late-badge {
+    background: #ff9800;
+    color: white;
+    box-shadow: 0 2px 4px rgba(255, 152, 0, 0.3);
+}
+
+
+/* Absent Badge */
+.absent-badge {
+    background: #f44336;
+    color: white;
+    box-shadow: 0 2px 4px rgba(244, 67, 54, 0.3);
+}
+
+
+/* Holiday Badge */
+.holiday-badge {
+    background: #9c27b0;
+    color: white;
+    box-shadow: 0 2px 4px rgba(156, 39, 176, 0.3);
+}
+
+
+/* Weekend Badge */
+.weekend-badge {
+    background: #757575;
+    color: white;
+    box-shadow: 0 2px 4px rgba(117, 117, 117, 0.3);
+}
+
+
+/* Leave Badge (CL, SL, ML, PL) */
+.leave-badge {
+    background: #2196f3;
+    color: white;
+    box-shadow: 0 2px 4px rgba(33, 150, 243, 0.3);
+}
+
+
+/* Half Day Badge */
+.half-badge {
+    background: #ff9800;
+    color: white;
+    box-shadow: 0 2px 4px rgba(255, 152, 0, 0.3);
+}
+
+
+/* ========================================
+   LEGEND SECTION
+   ======================================== */
+
+
+.legend-section {
+    background: white;
+    padding: 20px 32px;
+    margin: 0 32px 32px 32px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+
+.legend-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #181818;
+    margin: 0 0 16px 0;
+}
+
+
+.legend-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: center;
+}
+
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+
+.legend-badge {
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    min-width: 40px;
+    text-align: center;
+}
+
+
+.legend-text {
+    font-size: 13px;
+    color: #181818;
+    font-weight: 500;
+}
+
+
+/* ========================================
+   EMPTY STATE
+   ======================================== */
+
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 20px;
+    background: white;
+    border-radius: 12px;
+    margin: 24px 32px 32px 32px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+
+.empty-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #181818;
+    margin: 20px 0 8px 0;
+}
+
+
+.empty-message {
+    font-size: 14px;
+    color: #706e6b;
+    margin: 0;
+    max-width: 500px;
+    line-height: 1.5;
+}
+
+
+/* Error container */
+.error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 20px;
+    background: white;
+    border-radius: 12px;
+    margin: 24px 32px 32px 32px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+
+.error-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #f44336;
+    margin: 20px 0 8px 0;
+}
+
+
+.error-message {
+    font-size: 14px;
+    color: #706e6b;
+    margin: 0 0 24px 0;
+    max-width: 500px;
+    line-height: 1.5;
+}
+
+
+/* End of records */
+.end-of-records {
+    text-align: center;
+    padding: 20px;
+    background: #f8f9fa;
+    border-top: 2px solid #e5e5e5;
+    color: #706e6b;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+
+/* Tablet */
+@media (max-width: 1024px) {
+    .report-header {
+        padding: 20px 24px;
+    }
+
+
+    .filters-section {
+        padding: 20px 24px;
+    }
+
+
+    .filters-grid {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+    }
+
+
+    .report-summary {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+
+    .report-table-wrapper {
+        margin: 20px 24px;
+        max-height: 500px;
+    }
+
+
+    .legend-section {
+        padding: 16px 24px;
+        margin: 0 24px 24px 24px;
+    }
+}
+
+
+/* Mobile */
+@media (max-width: 768px) {
+    .report-header {
+        padding: 16px 20px;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+
+    .page-title {
+        font-size: 20px;
+    }
+
+
+    .page-subtitle {
+        font-size: 12px;
+    }
+
+
+    .header-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+
+    .filters-section {
+        padding: 16px 20px;
+    }
+
+
+    .filters-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+
+    .report-summary {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+
+    .summary-card {
+        padding: 12px 16px;
+    }
+
+
+    .summary-value {
+        font-size: 24px;
+    }
+
+
+    .report-table-wrapper {
+        margin: 16px 20px;
+        max-height: 400px;
+    }
+
+
+    .report-table {
+        font-size: 11px;
+    }
+
+
+    .report-table th {
+        padding: 10px 6px;
+        font-size: 10px;
+    }
+
+
+    .report-table td {
+        padding: 10px 6px;
+        font-size: 11px;
+    }
+
+
+    .status-badge {
+        padding: 3px 6px;
+        font-size: 10px;
+    }
+
+
+    .legend-section {
+        padding: 16px 20px;
+        margin: 0 20px 20px 20px;
+    }
+
+
+    .legend-items {
+        gap: 12px;
+    }
+
+
+    .legend-badge {
+        padding: 4px 8px;
+        font-size: 10px;
+        min-width: 35px;
+    }
+
+
+    .legend-text {
+        font-size: 12px;
+    }
+}
+
+
+/* Small Mobile */
+@media (max-width: 480px) {
+    .page-title {
+        font-size: 18px;
+    }
+
+
+    .header-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+
+    .summary-value {
+        font-size: 20px;
+    }
+
+
+    .summary-label {
+        font-size: 11px;
+    }
+
+
+    .report-table {
+        font-size: 10px;
+    }
+
+
+    .report-table th,
+    .report-table td {
+        padding: 8px 4px;
+    }
+
+
+    .status-badge {
+        padding: 2px 4px;
+        font-size: 9px;
+    }
+
+
+    .legend-items {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+}
+
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+
+
+@media print {
+    .report-header,
+    .filters-section,
+    .legend-section {
+        break-inside: avoid;
+    }
+
+
+    .report-table-wrapper {
+        max-height: none;
+        overflow: visible;
+        box-shadow: none;
+    }
+
+
+    .report-table {
+        page-break-inside: auto;
+    }
+
+
+    .data-row {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+
+
+    .header-actions {
+        display: none;
+    }
+
+
+    .status-badge {
+        border: 1px solid #000;
+        box-shadow: none;
+    }
+}
+
+
+/* ========================================
+   HIGH CONTRAST MODE
+   ======================================== */
+
+
+@media (prefers-contrast: high) {
+    .report-table {
+        border: 2px solid #000;
+    }
+
+
+    .report-table th,
+    .report-table td {
+        border: 1px solid #000;
+    }
+
+
+    .status-badge {
+        border: 2px solid #000;
+    }
+
+
+    .present-badge {
+        background: #000;
+        color: #fff;
+    }
+
+
+    .absent-badge {
+        background: #fff;
+        color: #000;
+        border: 2px solid #000;
+    }
+}
+
+
+/* ========================================
+   REDUCED MOTION
+   ======================================== */
+
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+
+
+    .summary-card:hover,
+    .data-row:hover {
+        transform: none;
+    }
+}
+
+
+/* ========================================
+   ACCESSIBILITY ENHANCEMENTS
+   ======================================== */
+
+
+/* Focus Indicators */
+.report-table:focus-within {
+    outline: 3px solid #0176d3;
+    outline-offset: 2px;
+}
+
+
+/* Screen Reader Only */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+
+/* ========================================
+   CUSTOM ENHANCEMENTS
+   ======================================== */
+
+
+/* Tooltip for long text */
+.report-table td[title] {
+    cursor: help;
+}
+
+
+/* Highlight current cell on hover */
+.report-table td:hover {
+    background-color: rgba(1, 118, 211, 0.1);
+    cursor: pointer;
+}

@@ -1,0 +1,19 @@
+.filter-section {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+}
+
+.filter-dropdown {
+    flex: 1;
+    max-width: 300px;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+.slds-badge {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+}

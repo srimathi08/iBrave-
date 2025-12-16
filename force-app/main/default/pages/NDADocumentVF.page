@@ -1,0 +1,409 @@
+<!--<apex:page renderAs="pdf" showHeader="false" sidebar="false"
+           standardController="Contact" extensions="NDADocumentController"
+           applyHtmlTag="false" docType="html-5.0">
+    <html>
+    <head>
+        <style type="text/css">
+            @page {
+                size: A4;
+                margin: 0.5in;
+                padding: 0;
+                @top-left {
+                    content: element(header);
+                }
+            }
+            
+            body { 
+                font-family: Arial, sans-serif; 
+                line-height: 1.5; 
+                font-size: 11px;
+                color: #000;
+                border: 2px solid #000;
+                padding: 30px;
+                margin: 0;
+            }
+            
+            .pdf-header {
+                text-align: left;
+                margin-bottom: 20px;
+                height: 50px;
+                position: running(header);
+            }
+            
+            h1 { 
+                text-align: center; 
+                font-size: 16px; 
+                margin-bottom: 15px; 
+                text-transform: uppercase; 
+            }
+            
+            h2 { 
+                margin-top: 20px; 
+                margin-bottom: 8px;
+                text-decoration: underline;
+                font-size: 12px;
+            }
+            
+            h3 { 
+                margin-top: 20px; 
+                margin-bottom: 8px;
+                font-size: 11px;
+            }
+            
+            p, li { 
+                text-align: justify; 
+            }
+            
+            table.signatures { 
+                width: 100%; 
+                margin-top: 40px; 
+            }
+            
+            table.signatures td { 
+                vertical-align: top; 
+                padding-right: 20px; 
+            }
+            
+            .page-break {
+                page-break-after: always;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="pdf-header">
+            <img src="{!URLFOR($Resource.QbayLogo)}" alt="Quadrobay Logo" height="45" />
+        </div>
+        
+        <div>
+            <h1>CONFIDENTIALITY AGREEMENT (NDA)</h1>
+
+            <p>This NON-DISCLOSURE AGREEMENT, hereinafter known as the "Agreement", is entered into between</p>
+            <p><strong>(NAME OF EMPLOYEE) {!contact.Name}</strong></p>
+            <p><strong>Aadhar no {!contact.Aadhar_Card_Number__c}</strong> (hereinafter called as Employee), Joining Quadrobay Technologies as <strong>{!contact.Designation__c}</strong> on dated (in the format- Date/Month/ Year) <strong>{!contact.Hire_Date__c}</strong></p>
+            <p>residing at <strong>{!IF(contact.MailingStreet != null, contact.MailingStreet + ', ', '')}{!IF(contact.MailingCity != null, contact.MailingCity + ', ', '')}{!IF(contact.MailingState != null, contact.MailingState + ', ', '')}{!IF(contact.MailingPostalCode != null, contact.MailingPostalCode, '')}</strong></p>
+            <p>and Quadrobay Technologies Private Limited. ("Company"), having registered office at Plot No. 4B1, KSR Nagar Main Road, KSR Nagar, Ambattur, Chennai - 600 053, collectively known as the "Parties" as of the <strong>{!TODAY()}</strong> (the "Effective Date").</p>
+
+            <p><strong>NOW THEREFORE, in consideration for, and as a condition to, the furnishing of such information, the parties hereby agree as follows:</strong></p>
+
+            <h2>1. Scope of Agreement</h2>
+            <p>This Agreement acknowledges that certain confidential information, trade secrets, and proprietary data (hereinafter defined and referred to as "Confidential Information") of or regarding the Company / Company's Clients may be discussed between Employee and the Company / Company's Clients (hereinafter known collectively as the "Parties"). The provisions set forth in this Agreement define the circumstances in which the Employee can and cannot disclose Confidential Information, and include the remedies, penalties, and lawful action the Company may take should such information be used or disclosed by the Employee. Both Parties agree that it is in their best interests to protect the Company's Confidential Information, and that the terms of this Agreement create a bond of trust and confidentiality between them, and the Parties agree as follows:</p>
+
+            <h2>2. Confidential Information</h2>
+            <p>Confidential Information is any material, knowledge, information and data (verbal, electronic, written or any other form) concerning the Company/ company's clients or its businesses not generally known to the public consisting of, but not limited to, inventions, discoveries, plans, concepts, designs, blueprints, drawings, models, devices, equipment, apparatus, products, prototypes, formulae, algorithms, techniques, research projects, computer programs, software, firmware, hardware, business, development and marketing plans, merchandising systems, Accounting ,financial and pricing data, information concerning investors, customers, suppliers, consultants, Clients and Employee and any other concepts, ideas or information involving or related to the business which, if misused or disclosed, could adversely affect the Company's business.</p>
+
+            <h2>3. Period of Confidentiality</h2>
+            <p>Employee agree that he/she shall not during, or at any time after the termination of my employment with the Company, use for myself or others, or disclose or divulge to others including future employees, any trade secrets, confidential information, or any other proprietary data of the Company and their clients in violation of this agreement.</p>
+
+            <h2>4. Ownership</h2>
+            <p>All repositories of information containing or in any way relating to Confidential Information are considered property of the Company. The removal of Confidential Information from the Company's/ company's client premises is prohibited unless prior written consent is provided by the Company. All such items made, compiled, or used by the Employee shall be delivered to the Company by employee upon termination of Agreement or at any other time as per the Company's request.</p>
+            <p>As part of the Agreement, the Employee may utilize proprietary software, ideas, concepts, know-how, tools, models, processes, methodologies, and techniques that have been originated or developed by the Company/ company's client or that have been purchased by or licensed to the Company/ company's client (collectively, the "Company Proprietary Materials"), including enhancements, modifications or additions that have been developed while the Employee is associated with this Agreement. The Company grants the Employee a perpetual, non-exclusive, worldwide, non-transferable license to use the Company Proprietary Materials in connection with the Deliverables or the Services for only company/ company's client. Employee agrees that the Company shall retain sole and exclusive right, title, and interest in and to the Company Proprietary Materials....</p>
+
+            <h2>5. Entire Agreement</h2>
+            <p><strong>A. Previous Agreements.</strong> This Agreement constitutes the entire agreement and the signing thereof by both Parties nullifies any and all previous agreements made between Company and Employee.</p>
+            <p><strong>B. Modifications and Amendments.</strong> No modifications, amendments, changes, or alterations can be made to the Agreement unless in writing and signed by both Parties.</p>
+
+            <h2>6. Severability</h2>
+            <p>Any provision within the Agreement (or any portion thereof) deemed invalid, unlawful, or otherwise unusable by a court of law shall be dissolved from the Agreement and the remainder of the Agreement shall continue to be enforceable. A severed provision shall not alter the integrity of the Agreement, and the terms set forth in any severed provision shall be construed in such a way as to interpret the purpose for which it was drafted.</p>
+
+            <h2>7. Prevailing party</h2>
+            <p>In a dispute arising out of or in relation to this Agreement, the prevailing party shall have the right to collect from the other party its reasonable attorney fees, costs and necessary expenditures.</p>
+
+            <h2>8. Governing Law</h2>
+            <p>This Agreement shall be subject to and governed by laws in the city of Chennai, State of Tamil Nadu, India or under this Agreement shall be subject to the exclusive Jurisdiction of Chennai, Tamil Nadu, India.</p>
+
+            <h2>9. Non-Solicitation:</h2>
+            <p>Employee agrees not to solicit, nor attempt to solicit, the Company's services or client of the Company during the term of this Agreement and thereafter for a period of two (2) years, without the prior written consent of the Company.</p>
+
+            <h2>10. Breach of agreement</h2>
+            <p><strong>A. Cause for Action.</strong> Employee understands that the use or disclosure of any Confidential Information may be cause for an action at law in an appropriate court in the City of Chennai, State of Tamil Nadu, India, and that the Company shall be entitled to an injunction prohibiting the use or disclosure of the Confidential Information.</p>
+            <p><strong>B. Injunctive Relief.</strong> The Employee understands and agrees that the use or disclosure of Confidential Information could cause the Company/ Company's Client (Partner/ partner's customer) irreparable harm and the Company has the right to pursue legal action beyond remedies of a monetary nature in the form of injunctive or equitable relief. This may be in addition to any other remedy, penalty or claim the law can provide.</p>
+            <p><strong>C. Notice of Unauthorized Use or Disclosure.</strong> Employee is bound by this Agreement to notify the Company in the event of a breach of agreement involving the dissemination of Confidential Information, either by the Customer or a third party, and will do everything possible to help the Company regain possession of the Confidential Information.</p>
+            <p>Data Misuse is not acceptable. In any event, a significant breach of Data might lead to other legal severe consequences and subject to a penalty of Minimum of Three-Month Salary with job termination without notice and the company will not issue any work experience certificate and officially put on record.</p>
+
+            <h2>IN WITNESS WHEREOF</h2>
+            <p>The Parties hereto agree to the terms of this Agreement and signed on the dates written below.</p>
+
+            <table class="signatures">
+                <tr>
+                    <td>
+                        <p><strong>Employee</strong></p>
+                        <p>Name: {!contact.Name}</p>
+                        <p>Signature: _______________________________</p>
+                        <p>Place: _________________________________</p>
+                        <p>Date: __________________________________</p>
+                    </td>
+                    <td>
+                        <p><strong>For Quadrobay Technologies Private Limited</strong></p>
+                        <p>Name: __________________________________</p>
+                        <p>Signature: _______________________________</p>
+                        <p>Title: ___________________________________</p>
+                        <p>Place: ___________________________________</p>
+                        <p>Date: ___________________________________</p>
+                    </td>
+                </tr>
+            </table>
+
+            <p style="text-align:center; margin-top:30px; font-style:italic;">Thank you!</p>
+        </div>
+    </body>
+    </html>
+</apex:page>-->
+<apex:page renderAs="pdf" showHeader="false" sidebar="false"
+           standardController="Contact" extensions="NDADocumentController"
+           applyHtmlTag="false" docType="html-5.0">
+    <html>
+    <head>
+        <style type="text/css">
+            @page {
+                size: A4;
+                margin: 0.75in 0.6in;
+                padding: 0;
+            }
+            
+            body { 
+                font-family: 'Times New Roman', Times, serif; 
+                line-height: 1.6; 
+                font-size: 11pt;
+                color: #000;
+                margin: 0;
+                padding: 0;
+            }
+            
+            .document-container {
+                border: 2px solid #000;
+                padding: 35px 40px;
+                min-height: 100%;
+            }
+            
+            .pdf-header {
+                text-align: left;
+                margin-bottom: 25px;
+                border-bottom: 1px solid #ccc;
+                padding-bottom: 15px;
+            }
+            
+            .pdf-header img {
+                height: 50px;
+            }
+            
+            h1 { 
+                text-align: center; 
+                font-size: 18pt; 
+                font-weight: bold;
+                margin: 20px 0 25px 0; 
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+            
+            .intro-section {
+                margin-bottom: 20px;
+                line-height: 1.8;
+            }
+            
+            .intro-section p {
+                margin: 8px 0;
+            }
+            
+            .field-label {
+                display: inline-block;
+                min-width: 120px;
+                font-weight: normal;
+            }
+            
+            .field-value {
+                font-weight: bold;
+                text-decoration: underline;
+            }
+            
+            .now-therefore {
+                margin: 25px 0 20px 0;
+                font-weight: bold;
+                text-align: justify;
+            }
+            
+            h2 { 
+                margin-top: 25px; 
+                margin-bottom: 12px;
+                font-size: 12pt;
+                font-weight: bold;
+                text-decoration: underline;
+            }
+            
+            h3 { 
+                margin-top: 15px; 
+                margin-bottom: 10px;
+                font-size: 11pt;
+                font-weight: bold;
+            }
+            
+            p { 
+                text-align: justify;
+                margin: 10px 0;
+                line-height: 1.6;
+            }
+            
+            .subsection {
+                margin-left: 25px;
+                margin-top: 12px;
+            }
+            
+            .subsection p {
+                margin: 8px 0;
+            }
+            
+            .penalty-notice {
+                font-weight: bold;
+                margin-top: 15px;
+            }
+            
+            .witness-section {
+                margin-top: 35px;
+                page-break-inside: avoid;
+            }
+            
+            .witness-intro {
+                font-weight: bold;
+                text-align: center;
+                margin-bottom: 15px;
+                font-size: 12pt;
+            }
+            
+            table.signatures { 
+                width: 100%; 
+                margin-top: 30px;
+                border-collapse: collapse;
+            }
+            
+            table.signatures td { 
+                vertical-align: top; 
+                width: 50%;
+                padding: 0 15px;
+            }
+            
+            .signature-block {
+                margin-top: 10px;
+            }
+            
+            .signature-block p {
+                margin: 12px 0;
+                text-align: left;
+            }
+            
+            .signature-line {
+                display: inline-block;
+                border-bottom: 1px solid #000;
+                width: 250px;
+                margin-left: 10px;
+            }
+            
+            .footer-text {
+                text-align: center; 
+                margin-top: 40px; 
+                font-style: italic;
+                font-size: 11pt;
+            }
+            
+            .page-break {
+                page-break-after: always;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="document-container">
+            <div class="pdf-header">
+                <img src="{!URLFOR($Resource.QbayLogo)}" alt="Quadrobay Technologies Logo" />
+            </div>
+            
+            <h1>Confidentiality Agreement (NDA)</h1>
+
+            <div class="intro-section">
+                <p>This NON-DISCLOSURE AGREEMENT, hereinafter known as the "Agreement", is entered into between</p>
+                
+                <p><span class="field-label">(NAME OF EMPLOYEE)</span> <span class="field-value">{!contact.Name}</span></p>
+                
+                <p><span class="field-label">Aadhar no</span> <span class="field-value">{!contact.Aadhar_Card_Number__c}</span> (hereinafter called as Employee), Joining Quadrobay Technologies as <span class="field-value">{!contact.Designation__c}</span> on dated (in the format- Date/Month/Year) <span class="field-value"><apex:outputText value="{0,date,dd'/'MM'/'yyyy}"><apex:param value="{!contact.Hire_Date__c}" /></apex:outputText></span></p>
+                
+                <p>residing at <span class="field-value">{!IF(contact.MailingStreet != null, contact.MailingStreet + ', ', '')}{!IF(contact.MailingCity != null, contact.MailingCity + ', ', '')}{!IF(contact.MailingState != null, contact.MailingState + ', ', '')}{!IF(contact.MailingPostalCode != null, contact.MailingPostalCode, '')}</span></p>
+                
+                <p>and <strong>Quadrobay Technologies Private Limited</strong> ("Company"), having registered office at <strong>Plot No. 4B1, KSR Nagar Main Road, KSR Nagar, Ambattur, Chennai - 600 053</strong>, collectively known as the "Parties" as of the <span class="field-value"><apex:outputText value="{0,date,dd'/'MM'/'yyyy}"><apex:param value="{!TODAY()}" /></apex:outputText></span> (the "Effective Date").</p>
+            </div>
+
+            <p class="now-therefore">NOW THEREFORE, in consideration for, and as a condition to, the furnishing of such information, the parties hereby agree as follows:</p>
+
+            <h2>1. Scope of Agreement</h2>
+            <p>This Agreement acknowledges that certain confidential information, trade secrets, and proprietary data (hereinafter defined and referred to as "Confidential Information") of or regarding the Company / Company's Clients may be discussed between Employee and the Company / Company's Clients (hereinafter known collectively as the "Parties"). The provisions set forth in this Agreement define the circumstances in which the Employee can and cannot disclose Confidential Information, and include the remedies, penalties, and lawful action the Company may take should such information be used or disclosed by the Employee. Both Parties agree that it is in their best interests to protect the Company's Confidential Information, and that the terms of this Agreement create a bond of trust and confidentiality between them, and the Parties agree as follows:</p>
+
+            <h2>2. Confidential Information</h2>
+            <p>Confidential Information is any material, knowledge, information and data (verbal, electronic, written or any other form) concerning the Company/ company's clients or its businesses not generally known to the public consisting of, but not limited to, inventions, discoveries, plans, concepts, designs, blueprints, drawings, models, devices, equipment, apparatus, products, prototypes, formulae, algorithms, techniques, research projects, computer programs, software, firmware, hardware, business, development and marketing plans, merchandising systems, Accounting, financial and pricing data, information concerning investors, customers, suppliers, consultants, Clients and Employee and any other concepts, ideas or information involving or related to the business which, if misused or disclosed, could adversely affect the Company's business.</p>
+
+            <h2>3. Period of Confidentiality</h2>
+            <p>Employee agree that he/she shall not during, or at any time after the termination of my employment with the Company, use for myself or others, or disclose or divulge to others including future employees, any trade secrets, confidential information, or any other proprietary data of the Company and their clients in violation of this agreement.</p>
+
+            <h2>4. Ownership</h2>
+            <p>All repositories of information containing or in any way relating to Confidential Information are considered property of the Company. The removal of Confidential Information from the Company's/ company's client premises is prohibited unless prior written consent is provided by the Company. All such items made, compiled, or used by the Employee shall be delivered to the Company by employee upon termination of Agreement or at any other time as per the Company's request.</p>
+            
+            <p>As part of the Agreement, the Employee may utilize proprietary software, ideas, concepts, know-how, tools, models, processes, methodologies, and techniques that have been originated or developed by the Company/ company's client or that have been purchased by or licensed to the Company/ company's client (collectively, the "Company Proprietary Materials"), including enhancements, modifications or additions that have been developed while the Employee is associated with this Agreement. The Company grants the Employee a perpetual, non-exclusive, worldwide, non-transferable license to use the Company Proprietary Materials in connection with the Deliverables or the Services for only company/ company's client. Employee agrees that the Company shall retain sole and exclusive right, title, and interest in and to the Company Proprietary Materials.</p>
+
+            <h2>5. Entire Agreement</h2>
+            <div class="subsection">
+                <p><strong>A. Previous Agreements.</strong> This Agreement constitutes the entire agreement and the signing thereof by both Parties nullifies any and all previous agreements made between Company and Employee.</p>
+                <p><strong>B. Modifications and Amendments.</strong> No modifications, amendments, changes, or alterations can be made to the Agreement unless in writing and signed by both Parties.</p>
+            </div>
+
+            <h2>6. Severability</h2>
+            <p>Any provision within the Agreement (or any portion thereof) deemed invalid, unlawful, or otherwise unusable by a court of law shall be dissolved from the Agreement and the remainder of the Agreement shall continue to be enforceable. A severed provision shall not alter the integrity of the Agreement, and the terms set forth in any severed provision shall be construed in such a way as to interpret the purpose for which it was drafted.</p>
+
+            <h2>7. Prevailing Party</h2>
+            <p>In a dispute arising out of or in relation to this Agreement, the prevailing party shall have the right to collect from the other party its reasonable attorney fees, costs and necessary expenditures.</p>
+
+            <h2>8. Governing Law</h2>
+            <p>This Agreement shall be subject to and governed by laws in the city of Chennai, State of Tamil Nadu, India or under this Agreement shall be subject to the exclusive Jurisdiction of Chennai, Tamil Nadu, India.</p>
+
+            <h2>9. Non-Solicitation</h2>
+            <p>Employee agrees not to solicit, nor attempt to solicit, the Company's services or client of the Company during the term of this Agreement and thereafter for a period of two (2) years, without the prior written consent of the Company.</p>
+
+            <h2>10. Breach of Agreement</h2>
+            <div class="subsection">
+                <p><strong>A. Cause for Action.</strong> Employee understands that the use or disclosure of any Confidential Information may be cause for an action at law in an appropriate court in the City of Chennai, State of Tamil Nadu, India, and that the Company shall be entitled to an injunction prohibiting the use or disclosure of the Confidential Information.</p>
+                
+                <p><strong>B. Injunctive Relief.</strong> The Employee understands and agrees that the use or disclosure of Confidential Information could cause the Company/ Company's Client (Partner/ partner's customer) irreparable harm and the Company has the right to pursue legal action beyond remedies of a monetary nature in the form of injunctive or equitable relief. This may be in addition to any other remedy, penalty or claim the law can provide.</p>
+                
+                <p><strong>C. Notice of Unauthorized Use or Disclosure.</strong> Employee is bound by this Agreement to notify the Company in the event of a breach of agreement involving the dissemination of Confidential Information, either by the Customer or a third party, and will do everything possible to help the Company regain possession of the Confidential Information.</p>
+                
+                <p class="penalty-notice">Data Misuse is not acceptable. In any event, a significant breach of Data might lead to other legal severe consequences and subject to a penalty of Minimum of Three-Month Salary with job termination without notice and the company will not issue any work experience certificate and officially put on record.</p>
+            </div>
+
+            <div class="witness-section">
+                <p class="witness-intro">IN WITNESS WHEREOF</p>
+                <p>The Parties hereto agree to the terms of this Agreement and signed on the dates written below.</p>
+
+                <table class="signatures">
+                    <tr>
+                        <td>
+                            <div class="signature-block">
+                                <p><strong>EMPLOYEE</strong></p>
+                                <p>Name: <span class="field-value">{!contact.Name}</span></p>
+                                <p>Signature: <span class="signature-line"></span></p>
+                                <p>Place: <span class="signature-line"></span></p>
+                                <p>Date: <span class="signature-line"></span></p>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="signature-block">
+                                <p><strong>For Quadrobay Technologies Private Limited</strong></p>
+                                <p>Name: <span class="signature-line"></span></p>
+                                <p>Signature: <span class="signature-line"></span></p>
+                                <p>Title: <span class="signature-line"></span></p>
+                                <p>Place: <span class="signature-line"></span></p>
+                                <p>Date: <span class="signature-line"></span></p>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <p class="footer-text">Thank you!</p>
+        </div>
+    </body>
+    </html>
+</apex:page>

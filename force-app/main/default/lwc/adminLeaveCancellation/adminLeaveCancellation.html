@@ -1,0 +1,89 @@
+<template>
+    <lightning-card title="Cancel Employee Leave Request" icon-name="utility:close">
+        
+        <!-- Employee Lookup -->
+        <div class="slds-p-around_medium">
+            <lightning-record-picker
+                label="Select Employee"
+                placeholder="Search for employee..."
+                object-api-name="User"
+                value={employeeId}
+                onchange={handleEmployeeSelect}
+                filter={userFilter}>
+            </lightning-record-picker>
+        </div>
+
+        <!-- Rest of the template remains the same -->
+        <!-- Loading -->
+        <template if:true={isLoading}>
+            <div class="slds-align_absolute-center slds-p-around_large">
+                <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+            </div>
+        </template>
+
+        <!-- Leave Requests List (same as above) -->
+        <template if:false={isLoading}>
+            <template if:true={hasCancellableLeaves}>
+                <div class="slds-p-around_medium">
+                    <div class="slds-text-heading_small slds-m-bottom_medium">
+                        <lightning-icon icon-name="utility:event" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                        Active Leave Requests ({cancellableLeaves.length})
+                    </div>
+                    
+                    <template for:each={cancellableLeaves} for:item="leave">
+                        <div key={leave.Id} class="leave-item">
+                            <div class="leave-header">
+                                <div>
+                                    <div class="leave-name">{leave.Name}</div>
+                                    <div class="employee-name">{leave.Employee__r.Name}</div>
+                                </div>
+                                <lightning-badge label={leave.Status__c}></lightning-badge>
+                            </div>
+                            
+                            <div class="leave-details">
+                                <div class="detail-item">
+                                    <span class="detail-label">Leave Type:</span>
+                                    <span class="detail-value">{leave.Leave_Type__r.Leave_Type_Name__c}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Period:</span>
+                                    <span class="detail-value">{leave.formattedStartDate} to {leave.formattedEndDate}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Days:</span>
+                                    <span class="detail-value">{leave.Total_Days__c}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Reason:</span>
+                                    <span class="detail-value">{leave.Reason__c}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="leave-actions">
+                                <lightning-button
+                                    label="Cancel This Leave"
+                                    variant="destructive"
+                                    icon-name="utility:close"
+                                    onclick={handleCancelClick}
+                                    data-id={leave.Id}
+                                    data-name={leave.Name}
+                                    data-employee={leave.Employee__r.Name}>
+                                </lightning-button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
+
+            <template if:false={hasCancellableLeaves}>
+                <template if:true={searchPerformed}>
+                    <div class="slds-align_absolute-center slds-p-around_x-large">
+                        <lightning-icon icon-name="utility:info" size="large"></lightning-icon>
+                        <p class="slds-m-top_small">No active leave requests found for this employee</p>
+                    </div>
+                </template>
+            </template>
+        </template>
+
+    </lightning-card>
+</template>

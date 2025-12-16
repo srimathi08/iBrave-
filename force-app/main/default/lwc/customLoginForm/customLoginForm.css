@@ -1,0 +1,134 @@
+.login-container {
+    display: flex;
+    background: linear-gradient(to right, #1399e1 60%, #ffffff 40%);
+    border-radius: 20px;
+    box-shadow: 0 8px 40px 0 rgba(22,22,22,.2);
+    overflow: hidden;
+    width: 700px;
+    margin: 40px auto;
+    min-height: 400px;
+}
+
+.left-side {
+    flex: 1 1 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle, #1780c0 60%, #1399e1 100%);
+    color: #fff;
+    position: relative;
+}
+
+.left-side .welcome {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+.left-side .headline {
+    font-size: 1rem;
+    margin-top: 20px;
+}
+
+.right-side {
+    flex: 1 1 400px;
+    background: #fff;
+    padding: 40px 30px 20px 30px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.sign-in-title {
+    font-size: 1.6rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #222;
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+    background: #f4f8fb;
+    border-radius: 7px;
+    margin-bottom: 20px;
+    padding: 8px;
+    box-shadow: 0 2px 6px 0 rgba(0,0,0,.04);
+}
+
+.input-group .icon {
+    margin-right: 10px;
+    color: #1399e1;
+}
+
+.input-group input {
+    border: none;
+    background: transparent;
+    outline: none;
+    width: 100%;
+    font-size: 1rem;
+    color: #111;
+}
+
+.options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.forgot-link {
+    color: #1399e1;
+    font-size: 0.97rem;
+    text-decoration: none;
+}
+
+.login-btn {
+    background: #1399e1;
+    color: #fff;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 7px;
+    padding: 12px 0px;
+    box-shadow: 0 2px 12px 0 rgba(37,102,177,.19);
+    margin-bottom: 15px;
+    cursor: pointer;
+}
+
+.divider {
+    text-align: center;
+    color: #aaa;
+    margin: 12px 0;
+}
+
+.other-login-btn {
+    background: #eff3f8;
+    color: #333;
+    font-size: 1.07rem;
+    border: none;
+    border-radius: 7px;
+    padding: 10px 0px;
+    margin-bottom: 15px;
+    cursor: pointer;
+}
+
+.signup-link {
+    text-align: right;
+    font-size: 0.95rem;
+}
+
+.signup-link a {
+    color: #1399e1;
+    text-decoration: none;
+    margin-left: 6px;
+}
+
+.error-message {
+    color: #e22d2d;
+    background: #fff0f0;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 10px;
+    text-align: center;
+}

@@ -1,0 +1,266 @@
+<template>
+    <div class="overview-container">
+        <!-- Header with Edit Button -->
+        <div class="header-section">
+            <div class="header-content">
+                <div class="title-section">
+                    <h1 class="page-title">Employee Overview</h1>
+                    <p class="page-subtitle">View and manage your profile information</p>
+                </div>
+                <lightning-button
+                    label={editButtonLabel}
+                    icon-name={editButtonIcon}
+                    variant={editButtonVariant}
+                    onclick={handleEditToggle}
+                    class="edit-button">
+                </lightning-button>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="content-grid">
+            <!-- Personal Information Card -->
+            <div class="info-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <lightning-icon icon-name="standard:contact" size="small"></lightning-icon>
+                        Personal Information
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <template if:false={isEditMode}>
+                        <!-- View Mode -->
+                        <div class="info-row">
+                            <span class="info-label">Full Name</span>
+                            <span class="info-value">{userDetails.Name}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Employee ID</span>
+                            <span class="info-value">{userDetails.EmployeeNumber}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Email</span>
+                            <span class="info-value">{userDetails.Email}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Phone</span>
+                            <span class="info-value">{userDetails.Phone}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Mobile Phone</span>
+                            <span class="info-value">{userDetails.MobilePhone}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Address</span>
+                            <span class="info-value">{userDetails.Street}, {userDetails.City}, {userDetails.State} {userDetails.PostalCode}</span>
+                        </div>
+                    </template>
+
+                    <template if:true={isEditMode}>
+                        <!-- Edit Mode -->
+                        <div class="edit-form">
+                            <lightning-input
+                                label="Full Name"
+                                value={userDetails.Name}
+                                data-field="Name"
+                                onchange={handleFieldChange}
+                                class="form-field">
+                            </lightning-input>
+                            
+                            <lightning-input
+                                label="Employee ID"
+                                value={userDetails.EmployeeNumber}
+                                data-field="EmployeeNumber"
+                                onchange={handleFieldChange}
+                                class="form-field">
+                            </lightning-input>
+
+                            <lightning-input
+                                label="Email"
+                                type="email"
+                                value={userDetails.Email}
+                                data-field="Email"
+                                onchange={handleFieldChange}
+                                class="form-field">
+                            </lightning-input>
+
+                            <lightning-input
+                                label="Phone"
+                                type="tel"
+                                value={userDetails.Phone}
+                                data-field="Phone"
+                                onchange={handleFieldChange}
+                                class="form-field">
+                            </lightning-input>
+
+                            <lightning-input
+                                label="Mobile Phone"
+                                type="tel"
+                                value={userDetails.MobilePhone}
+                                data-field="MobilePhone"
+                                onchange={handleFieldChange}
+                                class="form-field">
+                            </lightning-input>
+
+                            <lightning-input
+                                label="Street"
+                                value={userDetails.Street}
+                                data-field="Street"
+                                onchange={handleFieldChange}
+                                class="form-field">
+                            </lightning-input>
+
+                            <div class="form-row">
+                                <lightning-input
+                                    label="City"
+                                    value={userDetails.City}
+                                    data-field="City"
+                                    onchange={handleFieldChange}
+                                    class="form-field half-width">
+                                </lightning-input>
+
+                                <lightning-input
+                                    label="State"
+                                    value={userDetails.State}
+                                    data-field="State"
+                                    onchange={handleFieldChange}
+                                    class="form-field half-width">
+                                </lightning-input>
+                            </div>
+
+                            <lightning-input
+                                label="Postal Code"
+                                value={userDetails.PostalCode}
+                                data-field="PostalCode"
+                                onchange={handleFieldChange}
+                                class="form-field">
+                            </lightning-input>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Employment Details Card -->
+            <div class="info-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <lightning-icon icon-name="standard:work_order" size="small"></lightning-icon>
+                        Employment Details
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <template if:false={isEditMode}>
+                        <!-- View Mode -->
+                        <div class="info-row">
+                            <span class="info-label">Username</span>
+                            <span class="info-value">{userDetails.Username}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Department</span>
+                            <span class="info-value">{userDetails.Department}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Title</span>
+                            <span class="info-value">{userDetails.Title}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Manager</span>
+                            <span class="info-value">{userDetails.ManagerName}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Profile</span>
+                            <span class="info-value">{userDetails.ProfileName}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">User Role</span>
+                            <span class="info-value">{userDetails.UserRoleName}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Status</span>
+                            <span class="info-value">
+                                <span class={statusBadgeClass}>{userStatus}</span>
+                            </span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Time Zone</span>
+                            <span class="info-value">{userDetails.TimeZoneSidKey}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Language</span>
+                            <span class="info-value">{userDetails.LanguageLocaleKey}</span>
+                        </div>
+                    </template>
+
+                    <template if:true={isEditMode}>
+                        <!-- Edit Mode -->
+                        <div class="edit-form">
+                            <lightning-input
+                                label="Username"
+                                value={userDetails.Username}
+                                disabled
+                                class="form-field">
+                            </lightning-input>
+
+                            <lightning-input
+                                label="Department"
+                                value={userDetails.Department}
+                                data-field="Department"
+                                onchange={handleFieldChange}
+                                class="form-field">
+                            </lightning-input>
+
+                            <lightning-input
+                                label="Title"
+                                value={userDetails.Title}
+                                data-field="Title"
+                                onchange={handleFieldChange}
+                                class="form-field">
+                            </lightning-input>
+
+                            <lightning-combobox
+                                label="Time Zone"
+                                value={userDetails.TimeZoneSidKey}
+                                options={timeZoneOptions}
+                                data-field="TimeZoneSidKey"
+                                onchange={handleFieldChange}
+                                class="form-field">
+                            </lightning-combobox>
+
+                            <lightning-combobox
+                                label="Language"
+                                value={userDetails.LanguageLocaleKey}
+                                options={languageOptions}
+                                data-field="LanguageLocaleKey"
+                                onchange={handleFieldChange}
+                                class="form-field">
+                            </lightning-combobox>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons (shown in edit mode) -->
+        <template if:true={isEditMode}>
+            <div class="action-buttons">
+                <lightning-button
+                    label="Cancel"
+                    onclick={handleCancel}
+                    class="cancel-button">
+                </lightning-button>
+                <lightning-button
+                    label="Save Changes"
+                    variant="brand"
+                    onclick={handleSave}
+                    disabled={isSaving}
+                    class="save-button">
+                </lightning-button>
+            </div>
+        </template>
+
+        <!-- Loading Spinner -->
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+        </template>
+    </div>
+</template>

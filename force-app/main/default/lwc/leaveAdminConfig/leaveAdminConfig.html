@@ -1,0 +1,888 @@
+<template>
+  <div class="admin-wrapper">
+
+    <!-- Header -->
+    <header class="admin-header" aria-label="Admin header">
+      <div class="header-left">
+        <lightning-icon icon-name="utility:settings" size="large" alternative-text="Settings"></lightning-icon>
+        <div class="header-txt">
+          <h1 class="page-title">Leave Management Configuration</h1>
+          <p class="page-subtitle">Manage Leave Types, Holidays, Employee Allocations & Reports</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <lightning-button label="Refresh" variant="brand" onclick={handleRefresh}></lightning-button>
+      </div>
+    </header>
+
+    <!-- Tab Navigation - UPDATED WITH 2 NEW TABS -->
+    <div class="tab-container" aria-label="Configuration tabs">
+      <div class="tab-navigation">
+        <button class={leaveTypesTabClass} onclick={handleLeaveTypesTab}>
+          <lightning-icon icon-name="utility:layers" size="x-small"></lightning-icon>
+          Leave Types
+        </button>
+        <button class={holidaysTabClass} onclick={handleHolidaysTab}>
+          <lightning-icon icon-name="utility:event" size="x-small"></lightning-icon>
+          Holidays
+        </button>
+        <button class={allocationsTabClass} onclick={handleAllocationsTab}>
+          <lightning-icon icon-name="utility:people" size="x-small"></lightning-icon>
+          Employee Allocations
+        </button>
+        <button class={reportsTabClass} onclick={handleReportsTab}>
+          <lightning-icon icon-name="utility:download" size="x-small"></lightning-icon>
+          Leave Reports
+        </button>
+        <!-- NEW TAB 5: Leave Balance Matrix -->
+        <button class={balanceMatrixTabClass} onclick={handleBalanceMatrixTab}>
+          <lightning-icon icon-name="utility:matrix" size="x-small"></lightning-icon>
+          Balance Matrix
+        </button>
+        <!-- NEW TAB 6: Admin Leave Cancellation -->
+        <button class={cancellationTabClass} onclick={handleCancellationTab}>
+          <lightning-icon icon-name="utility:close" size="x-small"></lightning-icon>
+          Cancel Leaves
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <template if:true={isLoading}>
+      <div class="loading-container">
+        <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+      </div>
+    </template>
+
+    <!-- Leave Types Tab -->
+    <template if:true={isLeaveTypesTab}>
+      <section class="content-section">
+        <div class="action-bar">
+          <div class="action-bar-left">
+            <h2 class="section-title">Leave Types Management</h2>
+            <span class="record-count">{leaveTypeCount} types configured</span>
+          </div>
+          <div class="action-bar-right">
+            <lightning-button variant="brand" label="Add New Leave Type" icon-name="utility:add" onclick={handleAddLeaveType}></lightning-button>
+            <lightning-button variant="neutral" label="Sync All Balances" icon-name="utility:refresh" onclick={handleSyncAllBalances}></lightning-button>
+          </div>
+        </div>
+
+        <template if:true={hasLeaveTypes}>
+          <div class="cards-grid">
+            <template for:each={leaveTypes} for:item="lt">
+              <div key={lt.Id} class="config-card">
+                <div class="card-header">
+                  <div class={lt.iconClass}>
+                    <lightning-icon icon-name={lt.Icon_Name__c} size="small"></lightning-icon>
+                  </div>
+                  <div class="card-title-wrap">
+                    <h3 class="card-title">{lt.Leave_Type_Name__c}</h3>
+                    <span class="card-code">{lt.Leave_Code__c}</span>
+                  </div>
+                  <div class="card-actions">
+                    <lightning-button-icon icon-name="utility:edit" variant="border-filled" data-id={lt.Id} onclick={handleEditLeaveType}></lightning-button-icon>
+                    <lightning-button-icon icon-name="utility:delete" variant="border-filled" data-id={lt.Id} onclick={handleDeleteLeaveType}></lightning-button-icon>
+                  </div>
+                </div>
+
+                <div class="card-body">
+                  <div class="info-row">
+                    <span class="info-label">Default Allocation</span>
+                    <span class="info-value">{lt.Default_Allocation__c} days</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Requires Approval</span>
+                    <template if:true={lt.Requires_Approval__c}>
+                      <span class="info-value">Yes</span>
+                    </template>
+                    <template if:false={lt.Requires_Approval__c}>
+                      <span class="info-value">No</span>
+                    </template>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Carry Forward</span>
+                    <span class="info-value">{lt.carryForwardText}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Accrual</span>
+                    <span class="info-value">{lt.Accrual_Type__c}</span>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </template>
+
+        <template if:false={hasLeaveTypes}>
+          <div class="empty-state">
+            <lightning-icon icon-name="utility:layers" size="large"></lightning-icon>
+            <h3 class="empty-title">No Leave Types Found</h3>
+            <p class="empty-message">Create leave types to start tracking allocations.</p>
+            <lightning-button variant="brand" label="Add Leave Type" onclick={handleAddLeaveType}></lightning-button>
+          </div>
+        </template>
+      </section>
+    </template>
+
+    <!-- Holidays Tab -->
+    <template if:true={isHolidaysTab}>
+      <section class="content-section">
+        <div class="action-bar">
+          <div class="action-bar-left">
+            <h2 class="section-title">Holidays Management</h2>
+            <span class="record-count">{holidayCount} holidays configured</span>
+          </div>
+          <div class="action-bar-right">
+            <lightning-button variant="brand" label="Add New Holiday" icon-name="utility:add" onclick={handleAddHoliday}></lightning-button>
+          </div>
+        </div>
+
+        <template if:true={hasHolidays}>
+          <div class="table-wrapper">
+            <table class="holidays-table">
+              <thead>
+                <tr>
+                  <th>Holiday Name</th>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Departments</th>
+                  <th>Active</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template for:each={holidays} for:item="h">
+                  <tr key={h.Id}>
+                    <td>
+                      <div class="holiday-name-cell">
+                        <lightning-icon icon-name={h.Icon_Name__c} size="x-small"></lightning-icon>
+                        <span class="holiday-name">{h.Name}</span>
+                      </div>
+                    </td>
+                    <td>{h.formattedDate}</td>
+                    <td><span class={h.typeClass}>{h.Holiday_Type__c}</span></td>
+                    <td>{h.Applicable_Departments__c}</td>
+                    <td><span class={h.statusClass}>{h.statusText}</span></td>
+                    <td>
+                      <div class="table-actions">
+                        <lightning-button-icon icon-name="utility:edit" variant="bare" data-id={h.Id} onclick={handleEditHoliday}></lightning-button-icon>
+                        <lightning-button-icon icon-name="utility:delete" variant="bare" data-id={h.Id} onclick={handleDeleteHoliday}></lightning-button-icon>
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </template>
+
+        <template if:false={hasHolidays}>
+          <div class="empty-state">
+            <lightning-icon icon-name="utility:event" size="large"></lightning-icon>
+            <h3 class="empty-title">No Holidays Configured</h3>
+            <p class="empty-message">Add holidays to reflect in employee views.</p>
+            <lightning-button variant="brand" label="Add Holiday" onclick={handleAddHoliday}></lightning-button>
+          </div>
+        </template>
+      </section>
+    </template>
+
+    <!-- Employee Allocations Tab WITH PAGINATION -->
+    <template if:true={isAllocationsTab}>
+      <section class="content-section">
+        <div class="action-bar">
+          <div class="action-bar-left">
+            <h2 class="section-title">Employee Leave Allocations</h2>
+            <span class="record-count">{totalRecords} employees</span>
+          </div>
+          <div class="action-bar-right">
+            <lightning-input 
+              type="search"
+              placeholder="Search employees..."
+              value={searchKey}
+              onchange={handleSearch}
+              class="search-input">
+            </lightning-input>
+          </div>
+        </div>
+
+        <template if:true={hasEmployees}>
+          <!-- Pagination Info Top -->
+          <div class="pagination-info-top">
+            <span class="pagination-text">{pageInfo}</span>
+          </div>
+
+          <!-- Employees List -->
+          <div class="employees-container">
+            <template for:each={filteredEmployees} for:item="emp">
+              <div key={emp.Id} class="employee-card">
+                <div class="employee-header">
+                  <div class="employee-info">
+                    <lightning-avatar size="medium"></lightning-avatar>
+                    <div class="employee-details">
+                      <h3 class="employee-name">{emp.Name}</h3>
+                      <p class="employee-email">{emp.Email}</p>
+                      <p class="employee-id">ID: {emp.Employee_Id__c}</p>
+                    </div>
+                  </div>
+                  <lightning-button 
+                    label="Edit Allocations" 
+                    variant="brand"
+                    data-employee-id={emp.Id}
+                    onclick={handleEditAllocations}>
+                  </lightning-button>
+                </div>
+                
+                <div class="balances-grid-compact">
+                  <template for:each={emp.balances} for:item="bal">
+                    <div key={bal.Id} class="balance-item-compact">
+                      <div class="balance-compact-header">
+                        <span class="leave-type-name">{bal.leaveTypeName}</span>
+                        <span class="leave-code">({bal.leaveCode})</span>
+                      </div>
+                      <div class="balance-compact-values">
+                        <span class="value allocated">Allocated: {bal.allocated}</span>
+                        <span class="value available">Available: {bal.available}</span>
+                        <span class="value used">Used: {bal.used}</span>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <!-- Pagination Controls Bottom -->
+          <div class="pagination-container">
+            <div class="pagination-info">
+              <span class="pagination-text">{pageInfo}</span>
+            </div>
+            
+            <div class="pagination-controls">
+              <lightning-button 
+                label="First"
+                onclick={handleFirstPage}
+                disabled={hasPreviousPage}
+                class="pagination-btn">
+              </lightning-button>
+              
+              <lightning-button-icon 
+                icon-name="utility:chevronleft"
+                onclick={handlePreviousPage}
+                disabled={hasPreviousPage}
+                alternative-text="Previous">
+              </lightning-button-icon>
+              
+              <span class="page-number">Page {currentPage} of {totalPages}</span>
+              
+              <lightning-button-icon 
+                icon-name="utility:chevronright"
+                onclick={handleNextPage}
+                disabled={hasNextPage}
+                alternative-text="Next">
+              </lightning-button-icon>
+              
+              <lightning-button 
+                label="Last"
+                onclick={handleLastPage}
+                disabled={hasNextPage}
+                class="pagination-btn">
+              </lightning-button>
+            </div>
+          </div>
+        </template>
+
+        <template if:false={hasEmployees}>
+          <div class="empty-state">
+            <lightning-icon icon-name="utility:people" size="large"></lightning-icon>
+            <h3 class="empty-title">No Employees Found</h3>
+            <p class="empty-message">No employees with Employee ID configured.</p>
+          </div>
+        </template>
+      </section>
+    </template>
+
+    <!-- LEAVE REPORTS TAB -->
+    <template if:true={isReportsTab}>
+      <section class="content-section">
+        <div class="action-bar">
+          <div class="action-bar-left">
+            <h2 class="section-title">Leave Reports & Export</h2>
+            <span class="record-count">Filter and download leave records</span>
+          </div>
+          <div class="action-bar-right">
+            <lightning-button 
+              label="Clear Filters" 
+              icon-name="utility:clear"
+              onclick={handleClearFilters}>
+            </lightning-button>
+            <lightning-button 
+              variant="brand" 
+              label="Export to Excel" 
+              icon-name="utility:download"
+              onclick={handleExportToExcel}
+              disabled={noFilteredResults}>
+            </lightning-button>
+          </div>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+          <div class="filter-card">
+            <h3 class="filter-title">
+              <lightning-icon icon-name="utility:filterList" size="x-small"></lightning-icon>
+              Search Filters
+            </h3>
+            
+            <div class="filter-grid">
+              <lightning-input
+                type="number"
+                label="Employee ID"
+                value={filterEmployeeId}
+                onchange={handleEmployeeIdFilter}
+                placeholder="Enter Employee ID">
+              </lightning-input>
+
+              <lightning-input
+                type="text"
+                label="Employee Name"
+                value={filterEmployeeName}
+                onchange={handleEmployeeNameFilter}
+                placeholder="Search by name">
+              </lightning-input>
+
+              <lightning-input
+                type="text"
+                label="Department"
+                value={filterDepartment}
+                onchange={handleDepartmentFilter}
+                placeholder="Enter Department">
+              </lightning-input>
+
+              <lightning-combobox
+                label="Leave Type"
+                value={filterLeaveType}
+                placeholder="Select Leave Type"
+                options={leaveTypeFilterOptions}
+                onchange={handleLeaveTypeFilter}>
+              </lightning-combobox>
+
+              <lightning-combobox
+                label="Status"
+                value={filterStatus}
+                placeholder="Select Status"
+                options={statusOptions}
+                onchange={handleStatusFilter}>
+              </lightning-combobox>
+
+              <lightning-input
+                type="date"
+                label="Start Date From"
+                value={filterStartDateFrom}
+                onchange={handleStartDateFromFilter}>
+              </lightning-input>
+
+              <lightning-input
+                type="date"
+                label="Start Date To"
+                value={filterStartDateTo}
+                onchange={handleStartDateToFilter}>
+              </lightning-input>
+            </div>
+
+            <div class="filter-actions">
+              <lightning-button
+                variant="brand"
+                label="Search"
+                icon-name="utility:search"
+                onclick={handleSearchLeaveRequests}>
+              </lightning-button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-section">
+          <div class="results-header">
+            <h3 class="results-title">
+              Search Results
+              <template if:true={hasFilteredResults}>
+                <span class="results-count">({filteredLeaveRequestsCount} records)</span>
+              </template>
+            </h3>
+          </div>
+
+          <template if:true={hasFilteredResults}>
+            <div class="reports-table-container">
+              <table class="reports-table">
+                <thead>
+                  <tr>
+                    <th>Request #</th>
+                    <th>Employee ID</th>
+                    <th>Employee Name</th>
+                    <th>Department</th>
+                    <th>Leave Type</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Total Days</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th>Manager</th>
+                    <th>Manager Comments</th>
+                    <th>Applied Date</th>
+                    <th>Approved/Rejected By</th>
+                    <th>Action Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template for:each={filteredLeaveRequests} for:item="request">
+                    <tr key={request.Id}>
+                      <td>{request.Name}</td>
+                      <td>{request.employeeId}</td>
+                      <td>{request.employeeName}</td>
+                      <td>{request.department}</td>
+                      <td>
+                        <span class="leave-type-badge">{request.leaveTypeCode}</span>
+                        {request.leaveTypeName}
+                      </td>
+                      <td>{request.formattedStartDate}</td>
+                      <td>{request.formattedEndDate}</td>
+                      <td>{request.Total_Days__c}</td>
+                      <td>
+                        <div class="reason-cell">{request.Reason__c}</div>
+                      </td>
+                      <td>
+                        <span class={request.statusClass}>{request.Status__c}</span>
+                      </td>
+                      <td>{request.managerName}</td>
+                      <td>
+                        <div class="comments-cell">{request.Manager_Comments__c}</div>
+                      </td>
+                      <td>{request.formattedAppliedDate}</td>
+                      <td>{request.approvedByName}</td>
+                      <td>{request.formattedActionDate}</td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </template>
+
+          <template if:false={hasFilteredResults}>
+            <div class="empty-state">
+              <lightning-icon icon-name="utility:search" size="large"></lightning-icon>
+              <h3 class="empty-title">No Results Found</h3>
+              <p class="empty-message">Use filters above to search for leave requests</p>
+            </div>
+          </template>
+        </div>
+      </section>
+    </template>
+
+    <!-- ============================================
+         NEW TAB 5: LEAVE BALANCE MATRIX
+         ============================================ -->
+    <template if:true={isBalanceMatrixTab}>
+      <section class="content-section">
+        <div class="leave-matrix-container">
+          
+          <!-- Header Section -->
+          <div class="matrix-header-section">
+            <div class="matrix-header-left">
+              <lightning-icon icon-name="utility:matrix" size="medium"></lightning-icon>
+              <div class="matrix-header-text">
+                <h2>Leave Balance Matrix Report</h2>
+                <p>View all employees' leave balances by month</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filter Section -->
+          <div class="matrix-filter-section">
+            <div class="matrix-filter-container">
+              <lightning-combobox
+                name="month"
+                label="Select Month"
+                value={matrixSelectedMonth}
+                placeholder="Choose Month"
+                options={monthOptions}
+                onchange={handleMatrixMonthChange}
+                class="filter-field">
+              </lightning-combobox>
+
+              <lightning-combobox
+                name="year"
+                label="Select Year"
+                value={matrixSelectedYear}
+                placeholder="Choose Year"
+                options={yearOptions}
+                onchange={handleMatrixYearChange}
+                class="filter-field">
+              </lightning-combobox>
+
+              <div class="matrix-filter-buttons">
+                <lightning-button 
+                  variant="brand" 
+                  label="Generate Report" 
+                  icon-name="utility:search"
+                  onclick={handleGenerateMatrixReport}
+                  disabled={isMatrixLoading}>
+                </lightning-button>
+                <lightning-button 
+                  label="Reset" 
+                  icon-name="utility:refresh"
+                  onclick={handleMatrixReset}>
+                </lightning-button>
+                <lightning-button 
+                  variant="neutral" 
+                  label="Export to CSV" 
+                  icon-name="utility:download"
+                  onclick={exportMatrixToCSV}
+                  disabled={isMatrixLoading}>
+                </lightning-button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Loading -->
+          <template if:true={isMatrixLoading}>
+            <div class="loading-container">
+              <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+            </div>
+          </template>
+
+          <!-- Matrix Table Section -->
+          <template if:false={isMatrixLoading}>
+            <template if:true={hasMatrixData}>
+              
+              <!-- Summary Info -->
+              <div class="matrix-summary-section">
+                <div class="matrix-summary-card">
+                  <lightning-icon icon-name="utility:people" size="small"></lightning-icon>
+                  <div class="matrix-summary-info">
+                    <span class="matrix-summary-label">Total Employees</span>
+                    <span class="matrix-summary-value">{totalMatrixEmployees}</span>
+                  </div>
+                </div>
+                <div class="matrix-summary-card">
+                  <lightning-icon icon-name="utility:layers" size="small"></lightning-icon>
+                  <div class="matrix-summary-info">
+                    <span class="matrix-summary-label">Leave Types</span>
+                    <span class="matrix-summary-value">{totalMatrixLeaveTypes}</span>
+                  </div>
+                </div>
+                <div class="matrix-summary-card">
+                  <lightning-icon icon-name="utility:date_input" size="small"></lightning-icon>
+                  <div class="matrix-summary-info">
+                    <span class="matrix-summary-label">Report Period</span>
+                    <span class="matrix-summary-value">{matrixReportPeriod}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Scrollable Matrix Table -->
+              <div class="matrix-table-container">
+                <table class="matrix-table">
+                  <thead>
+                    <tr>
+                      <th class="sticky-column employee-id-column">Employee ID</th>
+                      <th class="sticky-column-2 employee-column">Employee Name</th>
+                      <template for:each={leaveTypeColumns} for:item="leaveType">
+                        <th key={leaveType.id} class="leave-type-header" title={leaveType.fullName}>
+                          <div class="header-content">
+                            <span class="leave-code">{leaveType.code}</span>
+                            <span class="leave-name">{leaveType.name}</span>
+                          </div>
+                        </th>
+                      </template>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template for:each={matrixData} for:item="employee">
+                      <tr key={employee.employeeId}>
+                        <td class="sticky-column employee-id-cell">{employee.employeeIdDisplay}</td>
+                        <td class="sticky-column-2 employee-cell">
+                          <div class="employee-info">
+                            <lightning-icon icon-name="standard:user" size="x-small"></lightning-icon>
+                            <span class="employee-name">{employee.employeeName}</span>
+                          </div>
+                        </td>
+                        <template for:each={employee.balances} for:item="balance">
+                          <td key={balance.leaveTypeId} class="balance-cell">
+                            <span class={balance.balanceClass}>{balance.displayValue}</span>
+                          </td>
+                        </template>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Scroll Indicator -->
+              <template if:true={showMatrixScrollIndicator}>
+                <div class="scroll-indicator">
+                  Scroll horizontally to see more leave types →
+                </div>
+              </template>
+
+            </template>
+
+            <!-- Empty State -->
+            <template if:false={hasMatrixData}>
+              <div class="empty-state">
+                <lightning-icon icon-name="utility:search" size="large"></lightning-icon>
+                <h3 class="empty-title">No Data Available</h3>
+                <p class="empty-message">
+                  Please select a month and year, then click "Generate Report" to view leave balance matrix.
+                </p>
+              </div>
+            </template>
+          </template>
+
+        </div>
+      </section>
+    </template>
+
+    <!-- ============================================
+         NEW TAB 6: ADMIN LEAVE CANCELLATION
+         ============================================ -->
+    <template if:true={isCancellationTab}>
+      <section class="content-section">
+        <div class="cancellation-container">
+          
+          <!-- Cancellation Card -->
+          <div class="cancellation-card">
+            <div class="cancellation-header">
+              <h2 class="cancellation-title">
+                <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+                Cancel Employee Leave Request
+              </h2>
+              <p class="cancellation-subtitle">
+                Search and cancel approved or pending leave requests for any employee
+              </p>
+            </div>
+
+            <!-- Info Box -->
+            <div class="cancellation-info-box">
+              <p>
+                <strong>Note:</strong> Cancelling a leave request will automatically restore the leave balance, 
+                enable attendance check-in for the employee, and send a notification email.
+              </p>
+            </div>
+
+            <!-- Employee Lookup -->
+            <lightning-record-picker
+              label="Select Employee"
+              placeholder="Search for employee..."
+              object-api-name="User"
+              value={cancellationEmployeeId}
+              onchange={handleCancellationEmployeeSelect}
+              filter={userFilter}>
+            </lightning-record-picker>
+          </div>
+
+          <!-- Loading -->
+          <template if:true={isCancellationLoading}>
+            <div class="loading-container">
+              <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+            </div>
+          </template>
+
+          <!-- Leave Requests List -->
+          <template if:false={isCancellationLoading}>
+            <template if:true={hasCancellableLeaves}>
+              <div class="cancellation-card">
+                <div class="cancellation-header">
+                  <h3 class="cancellation-title">
+                    <lightning-icon icon-name="utility:event" size="small"></lightning-icon>
+                    Active Leave Requests ({cancellableLeaves.length})
+                  </h3>
+                </div>
+                
+                <template for:each={cancellableLeaves} for:item="leave">
+                  <div key={leave.Id} class="leave-item">
+                    <div class="leave-header">
+                      <div>
+                        <div class="leave-name">{leave.Name}</div>
+                        <div class="employee-name">{leave.Employee__r.Name}</div>
+                      </div>
+                      <lightning-badge label={leave.Status__c}></lightning-badge>
+                    </div>
+                    
+                    <div class="leave-details">
+                      <div class="detail-item">
+                        <span class="detail-label">Leave Type:</span>
+                        <span class="detail-value">{leave.Leave_Type__r.Leave_Type_Name__c}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">Period:</span>
+                        <span class="detail-value">{leave.formattedStartDate} to {leave.formattedEndDate}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">Days:</span>
+                        <span class="detail-value">{leave.Total_Days__c}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">Reason:</span>
+                        <span class="detail-value">{leave.Reason__c}</span>
+                      </div>
+                    </div>
+                    
+                    <div class="leave-actions">
+                      <lightning-button
+                        label="Cancel This Leave"
+                        variant="destructive"
+                        icon-name="utility:close"
+                        onclick={handleCancelLeaveClick}
+                        data-id={leave.Id}
+                        data-name={leave.Name}
+                        data-employee={leave.Employee__r.Name}>
+                      </lightning-button>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </template>
+
+            <template if:false={hasCancellableLeaves}>
+              <template if:true={cancellationSearchPerformed}>
+                <div class="empty-state">
+                  <lightning-icon icon-name="utility:info" size="large"></lightning-icon>
+                  <h3 class="empty-title">No Active Leave Requests</h3>
+                  <p class="empty-message">No active leave requests found for this employee</p>
+                </div>
+              </template>
+            </template>
+          </template>
+
+        </div>
+      </section>
+    </template>
+
+    <!-- Leave Type Modal -->
+    <template if:true={showLeaveTypeModal}>
+      <section role="dialog" class="slds-modal slds-fade-in-open">
+        <div class="slds-modal__container modal-large">
+          <header class="slds-modal__header">
+            <button class="slds-button slds-button_icon slds-modal__close" onclick={closeLeaveTypeModal}>
+              <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+            </button>
+            <h2 class="slds-modal__title">{leaveTypeModalTitle}</h2>
+          </header>
+          
+          <div class="slds-modal__content slds-p-around_medium">
+            <div class="modal-form">
+              <div class="form-row">
+                <lightning-input label="Leave Type Name" value={currentLeaveType.Leave_Type_Name__c} onchange={handleLeaveTypeNameChange} required></lightning-input>
+                <lightning-input label="Leave Code" value={currentLeaveType.Leave_Code__c} onchange={handleLeaveCodeChange} required max-length="10"></lightning-input>
+              </div>
+              <div class="form-row">
+                <lightning-input type="number" label="Default Allocation (Days)" value={currentLeaveType.Default_Allocation__c} onchange={handleDefaultAllocationChange} required min="0" step="0.5"></lightning-input>
+                <lightning-input type="number" label="Sort Order" value={currentLeaveType.Sort_Order__c} onchange={handleSortOrderChange} min="0"></lightning-input>
+              </div>
+              <div class="form-row">
+                <lightning-input label="Icon Name" value={currentLeaveType.Icon_Name__c} onchange={handleIconNameChange}></lightning-input>
+                <lightning-input label="Color Code" value={currentLeaveType.Color_Code__c} onchange={handleColorCodeChange}></lightning-input>
+              </div>
+              <div class="form-row">
+                <lightning-combobox label="Accrual Type" value={currentLeaveType.Accrual_Type__c} options={accrualTypeOptions} onchange={handleAccrualTypeChange}></lightning-combobox>
+                <lightning-input type="number" label="Minimum Notice Days" value={currentLeaveType.Minimum_Notice_Days__c} onchange={handleMinNoticeDaysChange} min="0"></lightning-input>
+              </div>
+              <div class="form-row">
+                <lightning-input type="checkbox" label="Requires Approval" checked={currentLeaveType.Requires_Approval__c} onchange={handleRequiresApprovalChange}></lightning-input>
+                <lightning-input type="checkbox" label="Is Active" checked={currentLeaveType.Is_Active__c} onchange={handleIsActiveChange}></lightning-input>
+              </div>
+              <div class="form-row">
+                <lightning-input type="checkbox" label="Carry Forward Allowed" checked={currentLeaveType.Carry_Forward_Allowed__c} onchange={handleCarryForwardChange}></lightning-input>
+                <template if:true={currentLeaveType.Carry_Forward_Allowed__c}>
+                  <lightning-input type="number" label="Max Carry Forward Days" value={currentLeaveType.Max_Carry_Forward_Days__c} onchange={handleMaxCarryForwardChange} min="0" required></lightning-input>
+                </template>
+              </div>
+              <lightning-textarea label="Description" value={currentLeaveType.Description__c} onchange={handleDescriptionChange}></lightning-textarea>
+            </div>
+          </div>
+          
+          <footer class="slds-modal__footer">
+            <lightning-button label="Cancel" onclick={closeLeaveTypeModal}></lightning-button>
+            <lightning-button variant="brand" label="Save" onclick={saveLeaveType}></lightning-button>
+          </footer>
+        </div>
+      </section>
+      <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <!-- Holiday Modal -->
+    <template if:true={showHolidayModal}>
+      <section role="dialog" class="slds-modal slds-fade-in-open">
+        <div class="slds-modal__container">
+          <header class="slds-modal__header">
+            <button class="slds-button slds-button_icon slds-modal__close" onclick={closeHolidayModal}>
+              <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+            </button>
+            <h2 class="slds-modal__title">{holidayModalTitle}</h2>
+          </header>
+          
+          <div class="slds-modal__content slds-p-around_medium">
+            <div class="modal-form">
+              <lightning-input label="Holiday Name" value={currentHoliday.Name} onchange={handleHolidayNameChange} required></lightning-input>
+              <lightning-input type="date" label="Holiday Date" value={currentHoliday.Holiday_Date__c} onchange={handleHolidayDateChange} required></lightning-input>
+              <lightning-combobox label="Holiday Type" value={currentHoliday.Holiday_Type__c} options={holidayTypeOptions} onchange={handleHolidayTypeChange} required></lightning-combobox>
+              <lightning-dual-listbox label="Applicable Departments" source-label="Available" selected-label="Selected" options={departmentOptions} value={currentHoliday.Applicable_Departments__c} onchange={handleDepartmentsChange}></lightning-dual-listbox>
+              <div class="form-row">
+                <lightning-input label="Icon Name" value={currentHoliday.Icon_Name__c} onchange={handleHolidayIconChange}></lightning-input>
+                <lightning-input type="checkbox" label="Is Active" checked={currentHoliday.Is_Active__c} onchange={handleHolidayActiveChange}></lightning-input>
+              </div>
+              <lightning-textarea label="Description" value={currentHoliday.Description__c} onchange={handleHolidayDescriptionChange}></lightning-textarea>
+            </div>
+          </div>
+          
+          <footer class="slds-modal__footer">
+            <lightning-button label="Cancel" onclick={closeHolidayModal}></lightning-button>
+            <lightning-button variant="brand" label="Save" onclick={saveHoliday}></lightning-button>
+          </footer>
+        </div>
+      </section>
+      <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <!-- Edit Allocations Modal -->
+    <template if:true={showEditModal}>
+      <section role="dialog" class="slds-modal slds-fade-in-open">
+        <div class="slds-modal__container modal-large">
+          <header class="slds-modal__header">
+            <button class="slds-button slds-button_icon slds-modal__close" onclick={closeEditModal}>
+              <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+            </button>
+            <h2 class="slds-modal__title">Edit Leave Allocations - {selectedEmployee.Name}</h2>
+          </header>
+          
+          <div class="slds-modal__content slds-p-around_medium">
+            <div class="edit-form">
+              <template for:each={editBalances} for:item="bal">
+                <div key={bal.Id} class="edit-row">
+                  <div class="leave-type-info">
+                    <span class="type-name">{bal.leaveTypeName}</span>
+                    <span class="type-code">({bal.leaveCode})</span>
+                  </div>
+                  <lightning-input type="number" label="Total Allocation" value={bal.allocated} data-balance-id={bal.Id} onchange={handleAllocationChange} min="0" step="0.5"></lightning-input>
+                  <div class="current-usage">
+                    <span>Used: {bal.used}</span>
+                    <span>Available: {bal.available}</span>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+          
+          <footer class="slds-modal__footer">
+            <lightning-button label="Cancel" onclick={closeEditModal}></lightning-button>
+            <lightning-button variant="brand" label="Save Changes" onclick={saveAllocations}></lightning-button>
+          </footer>
+        </div>
+      </section>
+      <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+  </div>
+</template>

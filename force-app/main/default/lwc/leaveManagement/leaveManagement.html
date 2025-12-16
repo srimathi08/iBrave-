@@ -1,0 +1,370 @@
+<template>
+    <div class="leave-management-container">
+
+        <!-- Header -->
+        <div class="header-section">
+            <div class="header-left">
+                <lightning-icon icon-name="utility:event" size="large"></lightning-icon>
+                <div class="header-text">
+                    <h1 class="page-title">Leave Management</h1>
+                    <p class="page-subtitle">Manage your leave requests and view balances</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <lightning-button 
+                    variant="brand" 
+                    label="Apply Leave" 
+                    icon-name="utility:add"
+                    onclick={handleApplyLeave}>
+                </lightning-button>
+                <lightning-button 
+                    label="Refresh" 
+                    icon-name="utility:refresh"
+                    onclick={handleRefresh}>
+                </lightning-button>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <template if:true={isLoading}>
+            <div class="loading-container">
+                <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+            </div>
+        </template>
+
+        <template if:false={isLoading}>
+            <!-- Leave Balance Cards -->
+            <div class="section-header">
+                <h2 class="section-title">Your Leave Balance ({currentYear})</h2>
+            </div>
+
+            <template if:true={hasLeaveBalances}>
+                <div class="leave-cards-grid">
+                    <template for:each={employeeLeaveBalances} for:item="balance">
+                        <div key={balance.Id} class="leave-card">
+                            <div class="leave-card-header">
+                                <lightning-icon icon-name={balance.iconName} size="medium"></lightning-icon>
+                                <div class="leave-type-info">
+                                    <h3 class="leave-type-name">{balance.leaveTypeName}</h3>
+                                    <span class="leave-code">{balance.leaveCode}</span>
+                                </div>
+                            </div>
+                            <div class="leave-card-body">
+                                <div class="balance-row">
+                                    <span class="balance-label">Total Allocated</span>
+                                    <span class="balance-value">{balance.Total_Allocated__c}</span>
+                                </div>
+                                <div class="balance-row">
+                                    <span class="balance-label">Available</span>
+                                    <span class="balance-value available">{balance.Available__c}</span>
+                                </div>
+                                <div class="balance-row">
+                                    <span class="balance-label">Used</span>
+                                    <span class="balance-value used">{balance.Used__c}</span>
+                                </div>
+                                <div class="balance-row">
+                                    <span class="balance-label">Booked</span>
+                                    <span class="balance-value booked">{balance.Booked__c}</span>
+                                </div>
+                                <div class="balance-row">
+                                    <span class="balance-label">Pending</span>
+                                    <span class="balance-value pending">{balance.Pending_Approval__c}</span>
+                                </div>
+                                <!-- NEW: Show Carried Forward if > 0 -->
+                                <template if:true={balance.hasCarryForward}>
+                                    <div class="balance-row">
+                                        <span class="balance-label">Carried Forward</span>
+                                        <span class="balance-value carry-forward">{balance.Carried_Forward__c}</span>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
+
+            <template if:false={hasLeaveBalances}>
+                <div class="empty-state">
+                    <lightning-icon icon-name="utility:layers" size="large"></lightning-icon>
+                    <h3 class="empty-title">No Leave Balances Available</h3>
+                    <p class="empty-message">No eligible leave types found for your profile. Please contact HR if you believe this is an error.</p>
+                </div>
+            </template>
+
+            <!-- Upcoming Holidays Section with Scrollable List -->
+            <div class="section-header">
+                <div class="section-title-with-count">
+                    <h2 class="section-title">Upcoming Holidays</h2>
+                    <template if:true={hasUpcomingHolidays}>
+                        <span class="count-badge">{upcomingHolidaysCount}</span>
+                    </template>
+                </div>
+            </div>
+
+            <template if:true={hasUpcomingHolidays}>
+                <div class="holidays-list">
+                    <template for:each={upcomingHolidays} for:item="holiday">
+                        <div key={holiday.Id} class="holiday-item">
+                            <lightning-icon icon-name={holiday.Icon_Name__c} size="small"></lightning-icon>
+                            <div class="holiday-info">
+                                <span class="holiday-name">{holiday.Name}</span>
+                                <span class="holiday-date">{holiday.formattedDate}</span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                <template if:true={showHolidayScrollIndicator}>
+                    <div class="scroll-indicator">
+                        Scroll to see more holidays ↓
+                    </div>
+                </template>
+            </template>
+
+            <template if:false={hasUpcomingHolidays}>
+                <div class="empty-state">
+                    <lightning-icon icon-name="utility:event" size="large"></lightning-icon>
+                    <h3 class="empty-title">No Upcoming Holidays</h3>
+                    <p class="empty-message">No holidays scheduled.</p>
+                </div>
+            </template>
+
+            <!-- My Leave Requests Section with Scrollable Table -->
+            <div class="section-header">
+                <div class="section-title-with-count">
+                    <h2 class="section-title">My Leave Requests</h2>
+                    <template if:true={hasFilteredRequests}>
+                        <span class="count-badge">{filteredRequestsCount}</span>
+                    </template>
+                </div>
+                <lightning-button-group>
+                    <lightning-button label="All" onclick={handleFilterAll} variant={allFilterVariant}></lightning-button>
+                    <lightning-button label="Pending" onclick={handleFilterPending} variant={pendingFilterVariant}></lightning-button>
+                    <lightning-button label="Approved" onclick={handleFilterApproved} variant={approvedFilterVariant}></lightning-button>
+                    <lightning-button label="Past" onclick={handleFilterPast} variant={pastFilterVariant}></lightning-button>
+                </lightning-button-group>
+            </div>
+
+            <template if:true={hasFilteredRequests}>
+                <div class="past-leave-table-container">
+                    <table class="past-leave-table">
+                        <thead>
+                            <tr>
+                                <th>Request #</th>
+                                <th>Leave Type</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Days</th>
+                                <th>Reason</th>
+                                <th>Status</th>
+                                <th>Manager</th>
+                                <th>Manager Comments</th>
+                                <th>Actioned By</th>
+                                <th>Applied Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+    <template for:each={filteredRequests} for:item="request">
+        <tr key={request.Id}>
+            <td>{request.Name}</td>
+            <td>
+                <div class="leave-type-cell">
+                    <template if:true={request.Leave_Type__r}>
+                        <span class="leave-type-badge">{request.Leave_Type__r.Leave_Code__c}</span>
+                        <span>{request.Leave_Type__r.Leave_Type_Name__c}</span>
+                    </template>
+                    <template if:false={request.Leave_Type__r}>
+                        <span>N/A</span>
+                    </template>
+                </div>
+            </td>
+            <td>{request.formattedStartDate}</td>
+            <td>{request.formattedEndDate}</td>
+            <td>
+                <span class="days-badge">{request.Total_Days__c} {request.daysText}</span>
+            </td>
+            <td>
+                <div class="reason-cell">{request.Reason__c}</div>
+            </td>
+            <td>
+                <span class={request.statusClass}>{request.Status__c}</span>
+            </td>
+            <td>{request.managerName}</td>
+            <td>
+                <div class="comments-cell">{request.managerComments}</div>
+            </td>
+            <td>{request.actionedByName}</td>
+            <td>{request.formattedAppliedDate}</td>
+        </tr>
+    </template>
+</tbody>
+                            
+                    </table>
+                </div>
+                <template if:true={showRequestScrollIndicator}>
+                    <div class="scroll-indicator">
+                        Scroll to see more requests →
+                    </div>
+                </template>
+            </template>
+
+            <template if:false={hasFilteredRequests}>
+                <div class="empty-state">
+                    <lightning-icon icon-name="utility:search" size="large"></lightning-icon>
+                    <h3 class="empty-title">No Data Found</h3>
+                    <p class="empty-message">No leave records available for this filter.</p>
+                </div>
+            </template>
+
+        </template>
+
+        <!-- Apply Leave Modal -->
+        <template if:true={showApplyLeaveModal}>
+            <section role="dialog" class="slds-modal slds-fade-in-open slds-modal_large">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <button class="slds-button slds-button_icon slds-modal__close" onclick={closeApplyLeaveModal}>
+                            <lightning-icon icon-name="utility:close" size="small" alternative-text="Close"></lightning-icon>
+                            <span class="slds-assistive-text">Close</span>
+                        </button>
+                        <h2 class="slds-modal__title slds-hyphenate">Apply for Leave</h2>
+                        <p class="slds-m-top_x-small">Fill in the details to submit your leave request</p>
+                    </header>
+
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <div class="apply-leave-form">
+                            
+                            <!-- Leave Type Selection -->
+                            <div class="form-section">
+                                <lightning-combobox
+                                    name="leaveType"
+                                    label="Leave Type"
+                                    value={leaveRequest.Leave_Type__c}
+                                    placeholder="Select Leave Type"
+                                    options={leaveTypeOptions}
+                                    onchange={handleLeaveTypeChange}
+                                    required>
+                                </lightning-combobox>
+                                
+                                <!-- Show Available Balance -->
+                                <template if:true={selectedLeaveBalance}>
+                                    <div class="balance-info">
+                                        <lightning-icon icon-name="utility:success" size="x-small"></lightning-icon>
+                                        <span class="balance-label">Available Balance:</span>
+                                        <span class="balance-value">{selectedLeaveBalance.Available__c} days</span>
+                                    </div>
+                                </template>
+
+                                <!-- NEW: Show eligibility message if not eligible -->
+                                <template if:true={showEligibilityMessage}>
+                                    <div class="eligibility-message">
+                                        <lightning-icon icon-name="utility:info" size="x-small"></lightning-icon>
+                                        <span>{eligibilityMessage}</span>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <!-- Date Selection -->
+                            <div class="form-row">
+                                <lightning-input
+                                    type="date"
+                                    name="startDate"
+                                    label="Start Date"
+                                    value={leaveRequest.Start_Date__c}
+                                    onchange={handleStartDateChange}
+                                    min={todayDate}
+                                    required>
+                                </lightning-input>
+
+                                <lightning-input
+                                    type="date"
+                                    name="endDate"
+                                    label="End Date"
+                                    value={leaveRequest.End_Date__c}
+                                    onchange={handleEndDateChange}
+                                    min={leaveRequest.Start_Date__c}
+                                    required>
+                                </lightning-input>
+                            </div>
+
+                            <!-- Half Day Option with Type Selection -->
+                            <div class="form-section">
+                                <lightning-input
+                                    type="checkbox"
+                                    name="isHalfDay"
+                                    label="Half Day Leave"
+                                    checked={leaveRequest.Is_Half_Day__c}
+                                    onchange={handleHalfDayChange}>
+                                </lightning-input>
+                                
+                                <!-- Show Half Day Type selector when Half Day is checked -->
+                                <template if:true={leaveRequest.Is_Half_Day__c}>
+                                    <div class="half-day-type-section">
+                                        <lightning-radio-group
+                                            name="halfDayType"
+                                            label="Select Half Day Type"
+                                            options={halfDayTypeOptions}
+                                            value={leaveRequest.Half_Day_Type__c}
+                                            onchange={handleHalfDayTypeChange}
+                                            type="button"
+                                            required>
+                                        </lightning-radio-group>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <!-- Total Days Display -->
+                            <template if:true={calculatedDays}>
+                                <div class="total-days-display">
+                                    <lightning-icon icon-name="utility:date_time" size="small"></lightning-icon>
+                                    <span class="days-text">Total Leave Days: <strong>{calculatedDays}</strong></span>
+                                </div>
+                            </template>
+
+                            <!-- Manager Selection/Display -->
+                            <div class="form-section">
+                                <lightning-input
+                                    type="text"
+                                    name="manager"
+                                    label="Manager"
+                                    value={managerName}
+                                    disabled
+                                    readonly>
+                                </lightning-input>
+                                <p class="field-help-text">Leave request will be sent to this manager for approval</p>
+                            </div>
+
+                            <!-- Reason -->
+                            <div class="form-section">
+                                <lightning-textarea
+                                    name="reason"
+                                    label="Reason for Leave"
+                                    value={leaveRequest.Reason__c}
+                                    onchange={handleReasonChange}
+                                    placeholder="Please provide reason for your leave request"
+                                    max-length="1000"
+                                    required>
+                                </lightning-textarea>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <footer class="slds-modal__footer">
+                        <lightning-button
+                            label="Cancel"
+                            onclick={closeApplyLeaveModal}>
+                        </lightning-button>
+                        <lightning-button
+                            variant="brand"
+                            label="Submit Leave Request"
+                            onclick={submitLeaveRequest}
+                            disabled={isSubmitting}>
+                        </lightning-button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+
+    </div>
+</template>

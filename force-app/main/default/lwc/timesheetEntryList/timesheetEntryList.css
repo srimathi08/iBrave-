@@ -1,0 +1,461 @@
+/*:host {
+    display: block;
+}
+
+.entries-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+    background: transparent;
+}
+
+.entries-table th, .entries-table td {
+    padding: 10px 15px;
+    text-align: left;
+    background: #fff;
+    border-radius: 4px;
+    font-size: 0.98rem;
+    color: #1a1a20;
+}
+
+.entries-table th {
+    font-weight: 600;
+    background: #f1f2fb;
+}
+
+.entries-table td.status-draft {
+    color: #f0ad4e;
+    font-weight: 600;
+}
+.entries-table td.status-submitted {
+    color: #08af65;
+    font-weight: 600;
+}
+.entries-table td.ot-hours {
+    color: #ca0038;
+    font-weight: 600;
+}
+
+.action-icons {
+    display: flex;
+    gap: 12px;
+    font-size: 1.25em;
+}
+/* Approval Status badges 
+.approval-approved {
+    background-color: #04844b;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.approval-submitted {
+    background-color: #0176d3;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.approval-rejected {
+    background-color: #ea001e;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.approval-draft {
+    background-color: #706e6b;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: inline-block;
+}
+@media (max-width: 700px) {
+    .entries-table, .entries-table thead, .entries-table tbody, .entries-table th, .entries-table td, .entries-table tr {
+        display: block;
+    }
+    .entries-table tr {
+        margin-bottom: 13px;
+    }
+    .entries-table th {
+        background: none;
+        font-size: 1em;
+        padding: 4px 12px 0 12px;
+        border-radius: 0;
+    }
+    .entries-table td {
+        font-size: 1em;
+        padding: 6px 12px;
+    }
+    .action-icons {
+        gap: 8px;
+        font-size: 1em;
+    }
+}*/
+/* Container */
+.section-list {
+    display: block;
+    font-family: 'Salesforce Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    padding: 16px;
+    background: #f3f3f3;
+}
+
+/* Table styling */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.data-table thead {
+    background: #f8f9fa;
+}
+
+.data-table th {
+    padding: 14px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    color: #3e3e3c;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #dddbda;
+    white-space: nowrap;
+}
+
+.data-table tbody tr {
+    border-bottom: 1px solid #e5e5e5;
+    transition: background-color 0.2s ease;
+}
+
+.data-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.data-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.data-table td {
+    padding: 14px 12px;
+    font-size: 0.875rem;
+    color: #3e3e3c;
+    vertical-align: middle;
+}
+
+.data-table td small {
+    display: block;
+    color: #706e6b;
+    font-size: 0.75rem;
+    margin-top: 2px;
+}
+
+/* Description column - show full text */
+.data-table td:nth-child(4) {
+    max-width: 300px;
+    white-space: normal;
+    word-wrap: break-word;
+    line-height: 1.5;
+}
+
+/* Status badges */
+.status-draft {
+    background-color: #706e6b;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: inline-block;
+    text-align: center;
+    min-width: 85px;
+}
+
+.status-submitted {
+    background-color: #0176d3;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: inline-block;
+    text-align: center;
+    min-width: 85px;
+}
+
+.status-completed {
+    background-color: #04844b;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: inline-block;
+    text-align: center;
+    min-width: 85px;
+}
+
+/* Approval Status badges */
+.approval-approved {
+    background-color: #04844b;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: inline-block;
+    text-align: center;
+    min-width: 85px;
+}
+
+.approval-submitted {
+    background-color: #0176d3;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: inline-block;
+    text-align: center;
+    min-width: 85px;
+}
+
+.approval-rejected {
+    background-color: #ea001e;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: inline-block;
+    text-align: center;
+    min-width: 85px;
+}
+
+.approval-draft {
+    background-color: #706e6b;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: inline-block;
+    text-align: center;
+    min-width: 85px;
+}
+
+/* Action buttons */
+.data-table td:last-child {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.data-table lightning-button-icon {
+    --slds-c-icon-color-foreground-default: #706e6b;
+}
+
+.data-table lightning-button-icon:hover {
+    --slds-c-icon-color-foreground-default: #0176d3;
+}
+
+/* Pagination controls */
+.pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.pagination-controls span {
+    font-size: 0.875rem;
+    color: #3e3e3c;
+    font-weight: 500;
+}
+
+/* Tablet view */
+@media (max-width: 1024px) {
+    .data-table th,
+    .data-table td {
+        padding: 10px 8px;
+        font-size: 0.8125rem;
+    }
+    
+    .data-table th {
+        font-size: 0.75rem;
+    }
+    
+    .data-table td:nth-child(4) {
+        max-width: 180px;
+        white-space: normal;
+        word-wrap: break-word;
+    }
+}
+
+/* Mobile view */
+@media (max-width: 768px) {
+    .section-list {
+        padding: 12px 8px;
+    }
+    
+    /* Hide table headers */
+    .data-table thead {
+        display: none;
+    }
+    
+    /* Make table, rows and cells block level */
+    .data-table,
+    .data-table tbody,
+    .data-table tr,
+    .data-table td {
+        display: block;
+        width: 100%;
+    }
+    
+    /* Card-style rows */
+    .data-table tbody tr {
+        margin-bottom: 16px;
+        border: 1px solid #dddbda;
+        border-radius: 8px;
+        padding: 16px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        background: #fff;
+    }
+    
+    .data-table tbody tr:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+    }
+    
+    /* Style each cell as a row */
+    .data-table td {
+        padding: 10px 0;
+        border: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        text-align: right;
+    }
+    
+    /* Add labels before content */
+    .data-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #706e6b;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        flex: 0 0 40%;
+        text-align: left;
+        padding-right: 10px;
+    }
+    
+    /* Date cell - special styling */
+    .data-table td:nth-child(1) {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #0176d3;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #e5e5e5;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .data-table td:nth-child(1)::before {
+        content: '📅';
+        font-size: 1.2rem;
+    }
+    
+    .data-table td:nth-child(1) small {
+        margin-top: 0;
+        margin-left: 4px;
+    }
+    
+    /* Description - allow wrapping on mobile */
+    .data-table td:nth-child(4) {
+        max-width: 100%;
+        white-space: normal;
+        word-wrap: break-word;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    
+    .data-table td:nth-child(4)::before {
+        margin-bottom: 4px;
+    }
+    
+    /* Actions cell */
+    .data-table td:last-child {
+        justify-content: flex-end;
+        padding-top: 12px;
+        border-top: 1px solid #e5e5e5;
+        margin-top: 8px;
+    }
+    
+    .data-table td:last-child::before {
+        content: 'Actions';
+    }
+    
+    /* Status badges on mobile */
+    .status-draft,
+    .status-submitted,
+    .status-completed,
+    .approval-draft,
+    .approval-submitted,
+    .approval-approved,
+    .approval-rejected {
+        min-width: 90px;
+        padding: 6px 10px;
+    }
+    
+    /* Pagination on mobile */
+    .pagination-controls {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .pagination-controls lightning-button {
+        width: 100%;
+    }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+    .data-table tbody tr {
+        padding: 12px;
+    }
+    
+    .data-table td {
+        font-size: 0.8125rem;
+        padding: 8px 0;
+    }
+    
+    .data-table td::before {
+        flex: 0 0 45%;
+        font-size: 0.6875rem;
+    }
+    
+    .data-table td:nth-child(1) {
+        font-size: 0.9375rem;
+    }
+}

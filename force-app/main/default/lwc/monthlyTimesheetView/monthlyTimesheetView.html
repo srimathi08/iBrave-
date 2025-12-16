@@ -1,0 +1,165 @@
+<!--<template>
+    <div class="timesheet-section">
+       
+        <table class="timesheet-table">
+            <thead>
+                <tr>
+                    <th>Week</th>
+                    <th>Regular Hours</th>
+                    <th>Overtime Hours</th>
+                    <th>Total Hours</th>
+                    <th>Approval Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template for:each={monthlyWeeks} for:item="week">
+                    <tr key={week.id}>
+                        <td>{week.weekLabel}</td>
+                        <td>{week.regularHours}</td>
+                        <td>{week.overtimeHours}</td>
+                        <td>{week.totalHours}</td>
+                        <td>
+                            <span class={week.approvalStatusClass}>{week.approvalStatus}</span>
+                        </td>
+                        <td>
+                            <lightning-button label="View Details" onclick={handleViewDetails} data-id={week.id}></lightning-button>
+                        </td>
+                    </tr>
+                </template>
+                <template if:false={monthlyWeeks.length}>
+        <tr>
+            <td colspan="6">No entries found</td>
+        </tr>
+    </template>
+            </tbody>
+        </table>
+    </div>
+</template>-->
+<template>
+    <div class="timesheet-section">
+        <!-- Header with Navigation and Actions -->
+        <div class="compact-header">
+            <div class="left-section">
+                <lightning-button-icon
+                    icon-name="utility:chevronleft"
+                    alternative-text="Previous Month"
+                    onclick={handlePrevMonth}
+                    size="small"
+                    class="nav-icon">
+                </lightning-button-icon>
+                
+                <span class="month-display">{monthDisplay}</span>
+                
+                <lightning-button-icon
+                    icon-name="utility:chevronright"
+                    alternative-text="Next Month"
+                    onclick={handleNextMonth}
+                    disabled={isCurrentMonth}
+                    size="small"
+                    class="nav-icon">
+                </lightning-button-icon>
+            </div>
+
+            <div class="right-section">
+                <lightning-button-menu
+                    alternative-text="Export"
+                    icon-name="utility:download"
+                    icon-size="small"
+                    menu-alignment="right"
+                    variant="border-filled">
+                    <lightning-menu-item
+                        value="excel"
+                        label="Export Excel"
+                        icon-name="doctype:excel"
+                        onclick={handleExportExcel}>
+                    </lightning-menu-item>
+                </lightning-button-menu>
+            </div>
+        </div>
+
+        <!-- Monthly Summary Cards -->
+        <div class="summary-cards">
+            <div class="summary-card regular">
+                <div class="card-icon">📊</div>
+                <div class="card-content">
+                    <div class="card-value">{monthlyTotalRegular}</div>
+                    <div class="card-label">Regular Hours</div>
+                </div>
+            </div>
+            
+            <div class="summary-card overtime">
+                <div class="card-icon">⏰</div>
+                <div class="card-content">
+                    <div class="card-value">{monthlyTotalOvertime}</div>
+                    <div class="card-label">Overtime Hours</div>
+                </div>
+            </div>
+            
+            <div class="summary-card total">
+                <div class="card-icon">✓</div>
+                <div class="card-content">
+                    <div class="card-value">{monthlyTotalHours}</div>
+                    <div class="card-label">Total Hours</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Weekly Breakdown Table -->
+        <table class="timesheet-table">
+            <thead>
+                <tr>
+                    <th>Week</th>
+                    <th>Date Range</th>
+                    <th>Regular Hours</th>
+                    <th>Overtime Hours</th>
+                    <th>Total Hours</th>
+                    <th>Approval Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template if:true={hasMonthlyData}>
+                    <template for:each={monthlyWeeks} for:item="week">
+                        <tr key={week.id}>
+                            <td>
+                                <div class="week-label">{week.weekLabel}</div>
+                            </td>
+                            <td>
+                                <div class="date-range">{week.weekDateRange}</div>
+                            </td>
+                            <td class="hours-cell">{week.regularHours}</td>
+                            <td class="hours-cell">{week.overtimeHours}</td>
+                            <td class="hours-cell total-hours">{week.totalHours}</td>
+                            <td>
+                                <span class={week.approvalStatusClass}>{week.approvalStatus}</span>
+                            </td>
+                            <td>
+                                <lightning-button
+                                    label="View Details"
+                                    variant="base"
+                                    onclick={handleViewDetails}
+                                    data-id={week.id}
+                                    size="small">
+                                </lightning-button>
+                            </td>
+                        </tr>
+                    </template>
+                </template>
+                
+                <template if:false={hasMonthlyData}>
+                    <tr>
+                        <td colspan="7" class="no-data-cell">
+                            No timesheet entries found for {monthDisplay}
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+
+        <!-- Loading Spinner -->
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+        </template>
+    </div>
+</template>

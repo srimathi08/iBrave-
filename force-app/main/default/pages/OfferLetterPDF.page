@@ -1,0 +1,499 @@
+<!--<apex:page controller="OfferLetterController" 
+    renderAs="PDF" 
+    applyHtmlTag="false" 
+    showHeader="false" 
+    sidebar="false" 
+    docType="html-5.0">
+
+    <html>
+    <head>
+        <style type="text/css">
+            @page {
+                size: A4;
+                margin: 0.75in 1in;
+                padding: 0;
+            }
+            body { 
+                font-family: Arial, sans-serif; 
+                font-size: 10pt;
+                line-height: 1.6;
+                color: #000;
+            }
+            .header-info { 
+                margin-bottom: 20px; 
+            }
+            .section-heading {
+                font-size: 11pt;
+                font-weight: bold;
+                margin-top: 20px;
+                margin-bottom: 10px;
+            }
+            .signature-block { 
+                margin-top: 40px; 
+            }
+            ol {
+                margin-left: 25px;
+                padding-left: 0;
+            }
+            ol li {
+                margin-bottom: 10px;
+            }
+            .page-break {
+                page-break-after: always;
+            }
+        </style>
+    </head>
+
+    <body>
+        
+        -- Main Offer Letter --
+        <div class="header-info">
+            <p>Date: <apex:outputText value="{0, date, MMMM d, yyyy}"><apex:param value="{!TODAY()}" /></apex:outputText></p>
+            <p>Ref: QBAY Pvt Ltd/HR/202X/000</p>
+        </div>
+
+        <p>Dear {!candidate.Name},</p>
+        
+        <p>This is with reference to your interview followed by the discussions that we have had, and you are selected as "<strong>{!candidate.Designation__c}</strong>" for our organization. Your Joining date is from <strong><apex:outputText value="{0, date, MMMM d, yyyy}"><apex:param value="{!candidate.Joining_Date__c}" /></apex:outputText></strong> in our organization with the following terms and conditions.</p>
+
+        <ol>
+            <li>You have stated your date of birth as <strong><apex:outputText value="{0, date, MMMM d, yyyy}"><apex:param value="{!candidate.Date_Of_Birth__c}" /></apex:outputText></strong> and this has been recorded by the Company as the authenticated date of birth for all purposes. No change in the same will be permitted, under any circumstances, throughout your service with the Company.</li>
+            
+            <li>Your base location shall be Chennai and your place of work will be at our office at Plot No. 4B1, KSR Nagar Main Road, KSR Nagar, Ambattur, Chennai – 600 053.</li>
+            
+            <li>Your Salary Income will be subject to withholding tax as applicable to you.</li>
+            
+            <li>Please refer to <strong>ANNEXURES 1</strong> for applicable rules &amp; Compensation details.</li>
+            
+            <li>Please refer to <strong>ANNEXURES 2</strong> for Brief Role and Responsibilities of your Position.</li>
+            
+            <li>You will work under the supervision of such officers as may be decided upon by the management from time to time. You shall diligently and satisfactorily carry out the assignments given to you by your superiors in connection with the work allocated to you to the best of your skill and ability.</li>
+            
+            <li>Your services will be confirmed on successful completion of the Probation period of 6 months from your date of joining. During your Probation period, if your performance is found unsatisfactory, Company reserves the right to terminate the employment.</li>
+            
+            <li>You will be eligible to participate in the Company's Performance Appraisal after one-year completion.</li>
+            
+            <li>You will need to perform to the best of your ability and will devote your whole time to the work of the company. You will not engage yourself directly or indirectly either honorary or on remuneration any service, trade, business, vocation, or occupation without prior approval of the Management.</li>
+            
+            <li>You will be bound by the rules and regulations of the Company in respect of conduct and discipline. You will be entitled to a paid leave as per Company's policies. You will be bound by the Company's Personnel Policies and other Services Rules which will be communicated to you, from time to time.</li>
+            
+            <li>During the tenure of service, matters pertaining to your emoluments shall be kept confidential by you and you shall not share the same with other members of this organization. All matters regarding the organization and any information given to you either verbally or in writing should be kept strictly confidential by you.</li>
+            
+            <li>Considering the urgency of meeting the deadlines of specific assignments and other conditions prevailing at the time, you may be required to put in extra hours / days at work/ work in any shift as required.</li>
+            
+            <li>Upon confirmation of your employment, the service is terminable as per the company exit policy.</li>
+            
+            <li>In case an employee resigns of his/her own will, The Company reserves the right to release the employee prior to the notice period as defined in the company exit policy.</li>
+            
+            <li>You will be responsible for the proper care of all hardware, software and other related valuables entrusted to you. It will be your responsibility to keep yourself abreast and comply with Code of Conduct &amp; all the company policies which are updated from time to time.</li>
+            
+            <li>Your age of superannuation is 58 years.</li>
+            
+            <li>The company has made the offer of employment on the basis of the bonafide statements and facts provided by you. At the time of employment or during employment if the company finds the information provided to be false or misleading, it reserves the right to take appropriate disciplinary action against you which also includes termination of employment.</li>
+        </ol>
+        
+        <p style="margin-top: 20px;">If the above terms and conditions are acceptable to you, please sign and return a copy of this offer letter and extend the soft copies of the following:</p>
+        
+        <ol type="a" style="margin-left: 40px;">
+            <li>Proof of Age, ID &amp; Address (Temporary &amp; Permanent)</li>
+            <li>All educational qualifications with mark sheets</li>
+            <li>Certificate of Experience, if any</li>
+            <li>Relieving letter, if any</li>
+            <li>Passport size photo</li>
+        </ol>
+        
+        <p>At the time of joining, you would be required to show the originals of all the above.</p>
+        
+        <p>We welcome you to our organization and look forward to your contribution for its success and growth.</p>
+        
+        <div style="margin-top: 30px;">
+            <p>Sincerely,</p>
+            <p style="margin-top: 30px;"><strong>For Quadrobay Technologies Pvt. Ltd.</strong></p>
+            <p style="margin-top: 40px;"><strong>Murugadoss Narayanan<br/>Managing Director</strong></p>
+        </div>
+        
+        <div style="margin-top: 50px;">
+            <p><strong>Accepted</strong></p>
+            <p style="margin-top: 40px; border-top: 1px solid #000; width: 250px; padding-top: 5px;"></p>
+            <p><strong>{!candidate.Name}</strong></p>
+        </div>
+
+        -- Page Break --
+        <div class="page-break"></div>
+        
+        !-- ANNEXURE 1: Compensation Details --
+        <h2 class="section-heading">Annexure - 1</h2>
+        <div style="margin-top: 10px;">
+            <apex:outputText value="{!CompensationTableHTML}" escape="false"/> 
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <p><strong>Accepted</strong></p>
+            <p><strong>Name:</strong> {!candidate.Name}</p>
+            <p style="margin-top: 30px;"><strong>Signature:</strong> ____________________ <strong>Date:</strong> ____________________</p>
+        </div>
+        
+        !-- Page Break --
+        <div class="page-break"></div>
+        
+        !-- ANNEXURE 2: Role & Responsibilities --
+        <h2 class="section-heading">Annexure 2</h2>
+        <h3 style="font-size: 10pt; font-weight: bold; margin-bottom: 10px;">Role &amp; Responsibility</h3>
+        
+        <p>As <strong>{!candidate.Designation__c}</strong> you will manage one or more projects, typically to deliver a specific product or transformation via a multi-disciplinary, highly skilled digital team. You'll be adept at delivering as a individual contributor towards complex digital projects, breaking down barriers for your team, client and both planning at a higher level and getting into the detail to make things happen when needed.</p>
+        
+        <div style="margin-top: 15px;">
+            <apex:outputText value="{!RolesTableHTML}" escape="false"/>
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <p><strong>*Note: The roles and responsibilities attached shall be updated/ upgraded as per the business need/ requirement.</strong></p>
+        </div>
+        
+        <div style="margin-top: 40px;">
+            <p><strong>Accepted By</strong></p>
+            <p style="margin-top: 30px; border-top: 1px solid #000; width: 250px; padding-top: 5px;"></p>
+            <p><strong>{!candidate.Name}</strong></p>
+        </div>
+
+    </body>
+    </html>
+</apex:page>-->
+<apex:page controller="OfferLetterController" 
+    renderAs="PDF" 
+    applyHtmlTag="false" 
+    showHeader="false" 
+    sidebar="false" 
+    docType="html-5.0">
+
+    <html>
+    <head>
+        <style type="text/css">
+
+	            @page {
+                size: A4;
+                margin: 1.25in 1in 0.8in 1in;
+                padding: 0;
+				@top-left {
+                    content: element(header);
+                }
+            }
+            body { 
+                font-family: Arial, sans-serif; 
+                font-size: 10pt;
+                line-height: 1.5;
+                color: #000;
+            }
+		    .pdf-header {
+                text-align: left;
+                margin-bottom: 20px; /* Add space below the logo/header */
+            height: 95px; /* Define the height of the logo/header area */
+                /* THIS IS THE KEY: Defines this element as repeatable on all pages */
+                position: running(header);
+			}
+            .header-info { 
+                margin-bottom: 15px; 
+            }
+            .section-heading {
+                font-size: 11pt;
+                font-weight: bold;
+                margin-top: 25px;
+                margin-bottom: 10px;
+            }
+ /* Styling for the Candidate's Required Documents List */
+            .required-docs {
+                margin-left: 15px; /* Adjust to better align with main content */
+            }
+            .signature-block { 
+                margin-top: 40px; 
+            }
+ .signature-block-candidate {
+                margin-top: 50px;
+                display: block; /* Ensures it takes full width for alignment */
+            }
+            
+	 		.signature-image {
+                width: 150px;
+                height: auto;
+                margin-top: 10px;
+                margin-bottom: 5px;
+            }
+            /* Table spacing for Annexure 1 and 2*/
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            th, td {
+                padding: 8px 10px;
+                text-align: left;
+                vertical-align: top;
+            }
+            ol {
+                margin-left: 20px;
+                padding-left: 0;
+            }
+            ol li {
+                margin-bottom: 8px;
+            }
+            .page-break {
+                page-break-after: always;
+            }
+.footer-block {
+    margin-top: 50px;
+    border-top: 2px solid #000;
+    padding-top: 10px;
+    font-size: 10pt;
+    line-height: 1.4;
+}
+
+        </style>
+    </head>
+
+    <body>
+         <div class="pdf-header">
+    <img src="{!URLFOR($Resource.QbayLogo)}" style="height: 85px;" />
+		</div>
+ 		<div>
+            
+        
+        <!-- ========== ON-ROLE OFFER LETTER ========== -->
+        <apex:outputPanel rendered="{!IsOnRoleOffer}">
+            
+            <!-- Main Offer Letter -->
+            <div class="header-info">
+                <p>Date: <apex:outputText value="{0, date, MMMM d, yyyy}"><apex:param value="{!TODAY()}" /></apex:outputText></p>
+                <p>Ref: QBAY Pvt Ltd/HR/202X/000</p>
+            </div>
+
+           <p>Dear {!candidate.First_Name__c} {!candidate.Last_Name__c},</p>
+            
+            <p>This is with reference to your interview followed by the discussions that we have had, and you are selected as "<strong>{!candidate.Designation__c}</strong>" for our organization. Your Joining date is from <strong><apex:outputText value="{0, date, MMMM d, yyyy}"><apex:param value="{!candidate.Joining_Date__c}" /></apex:outputText></strong> in our organization with the following terms and conditions.</p>
+
+            <ol>
+                <li>You have stated your date of birth as <strong><apex:outputText value="{0, date, MMMM d, yyyy}"><apex:param value="{!candidate.Date_Of_Birth__c}" /></apex:outputText></strong> and this has been recorded by the Company as the authenticated date of birth for all purposes. No change in the same will be permitted, under any circumstances, throughout your service with the Company.</li>
+                
+                <li>Your base location shall be Chennai and your place of work will be at our office at Plot No. 4B1, KSR Nagar Main Road, KSR Nagar, Ambattur, Chennai – 600 053.</li>
+                
+                <li>Your Salary Income will be subject to withholding tax as applicable to you.</li>
+                
+                <li>Please refer to <strong>ANNEXURES 1</strong> for applicable rules &amp; Compensation details.</li>
+                
+                <li>Please refer to <strong>ANNEXURES 2</strong> for Brief Role and Responsibilities of your Position.</li>
+                
+                <li>You will work under the supervision of such officers as may be decided upon by the management from time to time. You shall diligently and satisfactorily carry out the assignments given to you by your superiors in connection with the work allocated to you to the best of your skill and ability.</li>
+                
+                <li>Your services will be confirmed on successful completion of the Probation period of 6 months from your date of joining. During your Probation period, if your performance is found unsatisfactory, Company reserves the right to terminate the employment.</li>
+                
+                <li>You will be eligible to participate in the Company's Performance Appraisal after one-year completion.</li>
+                
+                <li>You will need to perform to the best of your ability and will devote your whole time to the work of the company. You will not engage yourself directly or indirectly either honorary or on remuneration any service, trade, business, vocation, or occupation without prior approval of the Management.</li>
+                
+                <li>You will be bound by the rules and regulations of the Company in respect of conduct and discipline. You will be entitled to a paid leave as per Company's policies. You will be bound by the Company's Personnel Policies and other Services Rules which will be communicated to you, from time to time.</li>
+                
+                <li>During the tenure of service, matters pertaining to your emoluments shall be kept confidential by you and you shall not share the same with other members of this organization. All matters regarding the organization and any information given to you either verbally or in writing should be kept strictly confidential by you.</li>
+                
+                <li>Considering the urgency of meeting the deadlines of specific assignments and other conditions prevailing at the time, you may be required to put in extra hours / days at work/ work in any shift as required.</li>
+                
+                <li>Upon confirmation of your employment, the service is terminable as per the company exit policy.</li>
+                
+                <li>In case an employee resigns of his/her own will, The Company reserves the right to release the employee prior to the notice period as defined in the company exit policy.</li>
+                
+                <li>You will be responsible for the proper care of all hardware, software and other related valuables entrusted to you. It will be your responsibility to keep yourself abreast and comply with Code of Conduct &amp; all the company policies which are updated from time to time.</li>
+                
+                <li>Your age of superannuation is 58 years.</li>
+                
+                <li>The company has made the offer of employment on the basis of the bonafide statements and facts provided by you. At the time of employment or during employment if the company finds the information provided to be false or misleading, it reserves the right to take appropriate disciplinary action against you which also includes termination of employment.</li>
+            </ol>
+            
+            <p style="margin-top: 25px;">If the above terms and conditions are acceptable to you, please sign and return a copy of this offer letter and extend the soft copies of the following:</p>
+            
+            <!--<ol type="a" style="margin-left: 40px;">-->
+			<ol type="a" class="required-docs">
+                <li>Proof of Age, ID &amp; Address (Temporary &amp; Permanent)</li>
+                <li>All educational qualifications with mark sheets</li>
+                <li>Certificate of Experience, if any</li>
+                <li>Relieving letter, if any</li>
+                <li>Passport size photo</li>
+            </ol>
+            
+             <p style="margin-top: 15px;">At the time of joining, you would be required to show the originals of all the above.</p>
+            
+             <p style="margin-top: 15px;">We welcome you to our organization and look forward to your contribution for its success and growth.</p>
+            
+            <!--<div style="margin-top: 30px;">-->
+<div class="signature-block-md">
+                <p>Sincerely,</p>
+                <p style="margin-top: 30px;"><strong>For Quadrobay Technologies Pvt. Ltd.</strong></p>
+				<!-- MD Signature Image -->
+                <!--<apex:image url="{!$Resource.MDSignature}" styleClass="signature-image"/>-->
+                <p style="margin-top: 40px;"><strong>Murugadoss Narayanan<br/>Managing Director</strong></p>
+            </div>
+            
+            <!--<div style="margin-top: 50px;">
+                <p><strong>Accepted</strong></p>
+                <p style="margin-top: 40px; border-top: 1px solid #000; width: 250px; padding-top: 5px;"></p>
+                <p><strong>{!candidate.Name}</strong></p>
+            </div>-->
+<div class="signature-block-candidate">
+                <table style="width: 100%; border: none; margin-top: 50px;">
+                    <tr>
+                        <td style="width: 70%; border: none; padding: 0; vertical-align: bottom;">
+                            <p style="margin-bottom: 0;"><strong>Accepted</strong></p>
+                        </td>
+                        <td style="width: 30%; border: none; padding: 0;">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 70%; border: none; padding: 0;">
+                            <p style="margin-top: 0; margin-bottom: 5px;">{!candidate.First_Name__c} {!candidate.Last_Name__c};</p>
+                        </td>
+                        <td style="width: 30%; border: none; padding: 0;">
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <!-- Page Break -->
+            <div class="page-break"></div>
+            
+            <!-- ANNEXURE 1: Compensation Details -->
+            <h2 class="section-heading">Annexure - 1</h2>
+            <div style="margin-top: 10px;">
+                <apex:outputText value="{!CompensationTableHTML}" escape="false"/> 
+            </div>
+            
+               <div style="margin-top: 30px;">
+                <p style="margin-bottom: 5px;"><strong>Accepted</strong></p>
+                <p style="margin-top: 5px;"><strong>Name:</strong> {!candidate.First_Name__c} {!candidate.Last_Name__c}</p>
+                
+                <table style="width: 100%; border: none; margin-top: 40px;">
+                    <tr>
+                        <td style="width: 50%; border: none; padding: 0;">
+                            <p><strong>Signature:</strong></p>
+                        </td>
+                        <td style="width: 50%; border: none; padding: 0; padding-left: 15px;">
+                            <p><strong>Date:</strong></p>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            
+            <!-- Page Break -->
+            <div class="page-break"></div>
+            
+            <!-- ANNEXURE 2: Role & Responsibilities -->
+            <h2 class="section-heading">Annexure 2</h2>
+            <h3 style="font-size: 10pt; font-weight: bold; margin-bottom: 10px;">Role &amp; Responsibility</h3>
+            
+            <p>As <strong>{!candidate.Designation__c}</strong> you will manage one or more projects, typically to deliver a specific product or transformation via a multi-disciplinary, highly skilled digital team. You'll be adept at delivering as a individual contributor towards complex digital projects, breaking down barriers for your team, client and both planning at a higher level and getting into the detail to make things happen when needed.</p>
+            
+            <div style="margin-top: 15px;">
+                <apex:outputText value="{!RolesTableHTML}" escape="false"/>
+            </div>
+            
+            <div style="margin-top: 25px;">
+                <p><strong>*Note: The roles and responsibilities attached shall be updated/ upgraded as per the business need/ requirement.</strong></p>
+            </div>
+            
+            <div style="margin-top: 40px;">
+                <p><strong>Accepted By</strong></p>
+                
+                <p><strong>{!candidate.First_Name__c} {!candidate.Last_Name__c}</strong></p>
+            </div>
+            
+        </apex:outputPanel>
+        
+        
+        <!-- ========== INTERN OFFER LETTER ========== -->
+        <apex:outputPanel rendered="{!IsInternOffer}">
+            
+            <div class="header-info">
+                <p>Date: <apex:outputText value="{0, date, MMMM d, yyyy}"><apex:param value="{!TODAY()}" /></apex:outputText></p>
+            </div>
+
+            <p>Dear {!candidate.First_Name__c} {!candidate.Last_Name__c}</p>
+            
+            <p>S/D/o Mr. {!candidate.Father_Name__c}</p>
+            
+            <p>Aadhar- {!FormattedAadhar}</p>
+            
+            <p>We are pleased to inform the acceptance of an internship at <strong>Quadrobay Technologies Private Ltd.</strong> Your internship period will be between <strong><apex:outputText value="{0, date, MMM yyyy}"><apex:param value="{!candidate.Internship_Start_Date__c}" /></apex:outputText> - <apex:outputText value="{0, date, MMM yyyy}"><apex:param value="{!candidate.Internship_End_Date__c}" /></apex:outputText></strong> and the timing will be as given below-</p>
+            
+            <p style="margin-top: 20px;"><strong>Internship Period</strong></p>
+            
+            <p><strong><apex:outputText value="{0, date, d'th' MMM yyyy}"><apex:param value="{!candidate.Internship_Start_Date__c}" /></apex:outputText> - <apex:outputText value="{0, date, d'th' MMM yyyy}"><apex:param value="{!candidate.Internship_End_Date__c}" /></apex:outputText></strong></p>
+            
+            <p>Timing- 9.30 am to 6.30pm</p>
+            
+            <p style="margin-top: 15px;">As an intern, you are not the employee of the company. During the internship, you may have access to the company's confidential documents and information, which shall not be shared with anyone outside the company and not use it for personal benefits.</p>
+            
+            <p>Your commitment to maintaining the confidentiality of our company's data is crucial.</p>
+            
+            <p>You will be bound by the rules and regulations of the Company in respect of conduct and discipline.</p>
+            
+            <p>You will be responsible for the proper care of all hardware, software and other related valuables entrusted to you. It will be your responsibility to keep yourself abreast and comply with Code of Conduct &amp; all the company policies which are updated from time to time.</p>
+            
+            <p>You will report to <strong>Lead</strong> of <strong>{!candidate.Department__c}</strong> and will support the team as required during this internship.</p>
+            
+            <p style="margin-top: 20px;">If the above terms and conditions are acceptable to you, please sign and return a copy of this Internship letter and extend the soft copies of the following:</p>
+            
+            <ol style="margin-left: 30px;">
+                <li>Proof of Age, ID &amp; Address (Temporary &amp; Permanent)</li>
+                <li>All educational qualifications with mark sheets</li>
+                <li>Passport size photo</li>
+                <li>NDA</li>
+            </ol>
+            
+            <p style="margin-top: 20px;"><strong>Congratulations on the internship!</strong></p>
+            
+            <div style="margin-top: 40px;">
+                <p>For Quadrobay Technologies Pvt Ltd</p>
+                <p style="margin-top: 30px;"><strong>Murugadoss Narayanan<br/>Managing Director</strong></p>
+            </div>
+            
+            <div style="margin-top: 50px;">
+                    <table style="width: 100%; border: none;">
+                        <tr>
+                            <td style="width: 50%; border: none; padding: 0;">
+                                <p><strong>Accepted By:</strong> {!candidate.First_Name__c} {!candidate.Last_Name__c}</p>
+                            </td>
+                            <td style="width: 50%; border: none; padding: 0;">
+                                <p style="margin-top: 30px;"><strong>Place:</strong></p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width: 50%; border: none; padding: 0; margin-top: 10px;">
+                                <p style="margin-top: 30px;"><strong>Signature:</strong></p>
+                            </td>
+                            <td style="width: 50%; border: none; padding: 0; margin-top: 10px;">
+                                <p style="margin-top: 30px;"><strong>Date:</strong> </p>
+                            </td>
+                        </tr>
+                    </table>
+            </div>
+            
+        </apex:outputPanel>
+ </div>
+    </body>
+    </html>
+<!-- ======== DIGITAL ACCEPTANCE FOOTER ======== -->
+
+<apex:outputPanel rendered="{!candidate.Offer_Accepted__c}">
+        <div class="page-break"></div>
+        <div class="footer-block">
+            <p><strong>
+                Digitally accepted by 
+                {!candidate.First_Name__c} {!candidate.Last_Name__c}
+                on 
+                <apex:outputText value="{0,date,dd-MMM-yyyy}">
+                    <apex:param value="{!candidate.Offer_Accepted_Date__c}"/>
+                </apex:outputText>
+            </strong></p>
+            <p>IP Address: {!candidate.Offer_Acceptance_IP__c}</p>
+            <p>
+                This document constitutes a digital acceptance of the employment offer 
+                under the Information Technology Act, 2000.
+            </p>
+        </div>
+    </apex:outputPanel>
+
+</apex:page>

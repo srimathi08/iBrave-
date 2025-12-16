@@ -1,0 +1,1144 @@
+<template>
+     <template if:false={showSuccess}>
+    <div class="container">
+        <div class="header">
+            <h1>Employee Onboarding Form</h1>
+            <p class="subtitle">Complete all sections to submit your onboarding details</p>
+        </div>
+
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading..." size="large"></lightning-spinner>
+        </template>
+
+        <template if:false={isLoading}>
+            <!-- Progress Indicator -->
+            <div class="progress-container">
+                <lightning-progress-indicator current-step={currentStep} type="path" variant="base">
+                    <lightning-progress-step label="Personal Info" value="personal"></lightning-progress-step>
+                    <lightning-progress-step label="Address & Contact" value="address"></lightning-progress-step>
+                    <lightning-progress-step label="Education" value="education"></lightning-progress-step>
+                    <lightning-progress-step label="Family Details" value="family"></lightning-progress-step>
+                    <lightning-progress-step label="Work Experience" value="work"></lightning-progress-step>
+                    <lightning-progress-step label="Bank Details" value="bank"></lightning-progress-step>
+                    <lightning-progress-step label="Review & Submit" value="review"></lightning-progress-step>
+                </lightning-progress-indicator>
+            </div>
+
+            <div class="form-container">
+                <!-- Step 1: Personal Information -->
+                <template if:true={isPersonalStep}>
+                    <div class="card">
+                        <h2 class="section-title">Personal Information</h2>
+                        
+                        <!-- Name Row -->
+                        <div class="form-row name-row">
+                            <lightning-combobox
+                                name="Salutation__c"
+                                label="Salutation"
+                                value={candidateData.Salutation__c}
+                                options={salutationOptions}
+                                onchange={handleCandidateChange}
+                                class="form-field">
+                            </lightning-combobox>
+
+                            <lightning-input
+                                name="First_Name__c"
+                                label="First Name"
+                                value={candidateData.First_Name__c}
+                                onchange={handleCandidateChange}
+                                required
+                                class="form-field">
+                            </lightning-input>
+
+                            <lightning-input
+                                name="Middle_Name__c"
+                                label="Middle Name"
+                                value={candidateData.Middle_Name__c}
+                                onchange={handleCandidateChange}
+                                class="form-field">
+                            </lightning-input>
+
+                            <lightning-input
+                                name="Last_Name__c"
+                                label="Last Name"
+                                value={candidateData.Last_Name__c}
+                                onchange={handleCandidateChange}
+                                required
+                                class="form-field">
+                            </lightning-input>
+                        </div>
+
+                        <!-- Contact Row -->
+                        <div class="form-row contact-row">
+                            <lightning-input
+                                type="email"
+                                name="Personal_Email__c"
+                                label="Personal Email"
+                                value={candidateData.Personal_Email__c}
+                                onchange={handleCandidateChange}
+                                required
+                                class="form-field">
+                            </lightning-input>
+
+                            <lightning-input
+                                type="tel"
+                                name="Phone_No__c"
+                                label="Phone Number"
+                                value={candidateData.Phone_No__c}
+                                onchange={handleCandidateChange}
+                                required
+                                class="form-field">
+                            </lightning-input>
+
+                            <lightning-input
+                                type="date"
+                                name="Date_Of_Birth__c"
+                                label="Date of Birth"
+                                value={candidateData.Date_Of_Birth__c}
+                                onchange={handleCandidateChange}
+                                required
+                                class="form-field">
+                            </lightning-input>
+                        </div>
+
+                        <!-- Demographic Row -->
+                        <div class="form-row two-column">
+                            <lightning-combobox
+                                name="Gender__c"
+                                label="Gender"
+                                value={candidateData.Gender__c}
+                                options={genderOptions}
+                                onchange={handleCandidateChange}
+                                required
+                                class="form-field">
+                            </lightning-combobox>
+
+                            <lightning-combobox
+                                name="Blood_Group__c"
+                                label="Blood Group"
+                                value={candidateData.Blood_Group__c}
+                                options={bloodGroupOptions}
+                                onchange={handleCandidateChange}
+                                class="form-field">
+                            </lightning-combobox>
+                        </div>
+
+                        <h3 class="section-subtitle">Identity Documents</h3>
+                        <p class="upload-note">**Aadhar and PAN are mandatory. Please upload clear copies.**</p>
+
+                        <!-- Aadhar Row: Number + Upload (single row alignment) -->
+                        <div class="form-row id-with-upload aadhar-row">
+                            <div class="form-field id-input">
+                                <lightning-input
+                                    name="Aadhar_Card_Number__c"
+                                    label="Aadhar Card Number*"
+                                    value={candidateData.Aadhar_Card_Number__c}
+                                    onchange={handleCandidateChange}
+                                    maxlength="12"
+                                    pattern="[0-9]{12}"
+                                    required>
+                                </lightning-input>
+                            </div>
+                            
+                            <div class="upload-field-wrapper file-inline">
+                                <label class="slds-form-element__label">Upload Aadhar Proof*</label>
+                                <div class="file-input-row">
+                                    <input type="file" accept=".pdf,.jpg,.jpeg,.png" onchange={handleFileChangeAadhar} class="slds-input file-compact" />
+                                    <template if:true={aadharFileName}>
+                                        <span class="selected-file">{aadharFileName}</span>
+                                    </template>
+                                    <template if:true={aadharUploaded}>
+                                        <span class="upload-success">✓ Uploaded</span>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- PAN Row: Number + Upload -->
+                        <div class="form-row id-with-upload">
+                            <lightning-input
+                                name="PAN_Number__c"
+                                label="PAN Number*"
+                                value={candidateData.PAN_Number__c}
+                                onchange={handleCandidateChange}
+                                maxlength="10"
+                                required
+                                class="form-field id-input">
+                            </lightning-input>
+                            
+                            <div class="upload-field-wrapper file-inline">
+        <label class="slds-form-element__label">Upload PAN Proof*</label>
+        <div class="file-input-row">
+            <input type="file" accept=".pdf,.jpg,.jpeg,.png" onchange={handleFileChangePAN} class="slds-input file-compact" />
+            <span class="selected-file" if:true={panFileName}>{panFileName}</span>
+            <template if:true={panUploaded}>
+                <span class="upload-success">✓ Uploaded</span>
+            </template>
+        </div>
+    </div>
+                        </div>
+
+                        <!-- UAN Row: Number + Upload -->
+                        <div class="form-row id-with-upload">
+                            <lightning-input
+                                name="UAN_Number__c"
+                                label="UAN Number"
+                                value={candidateData.UAN_Number__c}
+                                onchange={handleCandidateChange}
+                                maxlength="15"
+                                class="form-field id-input">
+                            </lightning-input>
+                            <div class="upload-field-wrapper file-inline">
+                        <label class="slds-form-element__label">Upload UAN Document</label>
+                        <div class="file-input-row">
+                            <input type="file" accept=".pdf,.jpg,.jpeg,.png" onchange={handleFileChangeUAN} class="slds-input file-compact" />
+                            <span class="selected-file" if:true={uanFileName}>{uanFileName}</span>
+                            <template if:true={uanUploaded}>
+                                <span class="upload-success">✓ Uploaded</span>
+                            </template>
+                        </div>
+                            </div>
+                        </div>
+
+                        <!-- Driving License Row: Number + Upload -->
+                        <div class="form-row id-with-upload">
+                            <lightning-input
+                                name="Driving_License_Number__c"
+                                label="Driving License Number"
+                                value={candidateData.Driving_License_Number__c}
+                                onchange={handleCandidateChange}
+                                class="form-field id-input">
+                            </lightning-input>
+                            <div class="upload-field-wrapper file-inline">
+                                <label class="slds-form-element__label">Upload Driving License</label>
+                                <div class="file-input-row">
+                                    <input type="file" accept=".pdf,.jpg,.jpeg,.png" onchange={handleFileChangeDL} class="slds-input file-compact" />
+                                    <span class="selected-file" if:true={dlFileName}>{dlFileName}</span>
+                                    <template if:true={dlUploaded}>
+                                        <span class="upload-success">✓ Uploaded</span>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Step 2: Address & Contact -->
+                <template if:true={isAddressStep}>
+                    <div class="card">
+                        <h2 class="section-title">Communication Address</h2>
+                        
+                        <div class="form-row">
+                            <lightning-textarea
+                                name="Communication_Address__Street__s"
+                                label="Street Address"
+                                value={candidateData.Communication_Address__Street__s}
+                                onchange={handleCandidateChange}
+                                class="form-field full-width">
+                            </lightning-textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <lightning-input
+                                name="Communication_Address__City__s"
+                                label="City"
+                                value={candidateData.Communication_Address__City__s}
+                                onchange={handleCandidateChange}
+                                class="form-field">
+                            </lightning-input>
+
+                            <lightning-input
+                                name="Communication_Address__StateCode__s"
+                                label="State"
+                                value={candidateData.Communication_Address__StateCode__s}
+                                onchange={handleCandidateChange}
+                                class="form-field">
+                            </lightning-input>
+
+                            <lightning-input
+                                name="Communication_Address__CountryCode__s"
+                                label="Country"
+                                value={candidateData.Communication_Address__CountryCode__s}
+                                onchange={handleCandidateChange}
+                                class="form-field">
+                            </lightning-input>
+
+                            <lightning-input
+                                name="Communication_Address__PostalCode__s"
+                                label="Postal Code"
+                                value={candidateData.Communication_Address__PostalCode__s}
+                                onchange={handleCandidateChange}
+                                class="form-field">
+                            </lightning-input>
+                        </div>
+
+                        <div class="checkbox-container">
+                            <lightning-input
+                                type="checkbox"
+                                label="Permanent Address same as Communication Address"
+                                checked={sameAsCommAddress}
+                                onchange={handleSameAddressChange}>
+                            </lightning-input>
+                        </div>
+
+                        <h2 class="section-title">Permanent Address</h2>
+                        
+                        <div class="form-row">
+                            <lightning-textarea
+                                name="Permanent_Address__Street__s"
+                                label="Street Address"
+                                value={candidateData.Permanent_Address__Street__s}
+                                onchange={handleCandidateChange}
+                                disabled={sameAsCommAddress}
+                                class="form-field full-width">
+                            </lightning-textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <lightning-input
+                                name="Permanent_Address__City__s"
+                                label="City"
+                                value={candidateData.Permanent_Address__City__s}
+                                onchange={handleCandidateChange}
+                                disabled={sameAsCommAddress}
+                                class="form-field">
+                            </lightning-input>
+
+                            <lightning-input
+                                name="Permanent_Address__StateCode__s"
+                                label="State"
+                                value={candidateData.Permanent_Address__StateCode__s}
+                                onchange={handleCandidateChange}
+                                disabled={sameAsCommAddress}
+                                class="form-field">
+                            </lightning-input>
+
+                            <lightning-input
+                                name="Permanent_Address__CountryCode__s"
+                                label="Country"
+                                value={candidateData.Permanent_Address__CountryCode__s}
+                                onchange={handleCandidateChange}
+                                disabled={sameAsCommAddress}
+                                class="form-field">
+                            </lightning-input>
+
+                            <lightning-input
+                                name="Permanent_Address__PostalCode__s"
+                                label="Postal Code"
+                                value={candidateData.Permanent_Address__PostalCode__s}
+                                onchange={handleCandidateChange}
+                                disabled={sameAsCommAddress}
+                                class="form-field">
+                            </lightning-input>
+                        </div>
+
+                        <h2 class="section-title">Emergency Contact</h2>
+                        
+                        <div class="form-row">
+                            <lightning-input
+                                name="Emergency_Contact_Name__c"
+                                label="Emergency Contact Name"
+                                value={candidateData.Emergency_Contact_Name__c}
+                                onchange={handleCandidateChange}
+                                required
+                                class="form-field">
+                            </lightning-input>
+
+                            <lightning-input
+                                type="tel"
+                                name="Emergency_Contact_Phone__c"
+                                label="Emergency Contact Phone"
+                                value={candidateData.Emergency_Contact_Phone__c}
+                                onchange={handleCandidateChange}
+                                required
+                                class="form-field">
+                            </lightning-input>
+                        </div>
+
+                        <h2 class="section-title">Additional Information</h2>
+                        
+                        <div class="form-row">
+                            <lightning-combobox
+                                name="Source_Of_Applicant__c"
+                                label="Source of Applicant"
+                                value={candidateData.Source_Of_Applicant__c}
+                                options={sourceOfApplicantOptions}
+                                onchange={handleSourceChange}
+                                class="form-field">
+                            </lightning-combobox>
+                            </div>
+                           <!-- Advertisement -->
+<template if:true={isAdvertisement}>
+    <div class="form-row">
+        <lightning-input
+            name="Mode_Of_Advertising__c"
+            label="Mode of Advertising"
+            value={candidateData.Mode_Of_Advertising__c}
+            onchange={handleSourceChange}
+            class="form-field">
+        </lightning-input>
+    </div>
+</template>
+
+                           <!-- Referred -->
+<template if:true={isReferred}>
+    <div class="form-row">
+        <lightning-input
+            name="Referred_Person_Name__c"
+            label="Referred Person Name"
+            value={candidateData.Referred_Person_Name__c}
+            onchange={handleSourceChange}
+            class="form-field">
+        </lightning-input>
+    </div>
+</template>
+
+                        <!-- Campus -->
+<template if:true={isCampus}>
+    <div class="form-row">
+        <lightning-input
+            name="Campus_Name__c"
+            label="Campus Name"
+            value={candidateData.Campus_Name__c}
+            onchange={handleSourceChange}
+            class="form-field">
+        </lightning-input>
+
+        <lightning-input
+            name="Campus_City__c"
+            label="Campus City"
+            value={candidateData.Campus_City__c}
+            onchange={handleSourceChange}
+            class="form-field">
+        </lightning-input>
+    </div>
+</template>
+
+                            <!-- Consultancy -->
+<template if:true={isConsultancy}>
+    <div class="form-row">
+        <lightning-input
+            name="Consultancy_Name__c"
+            label="Consultancy Name"
+            value={candidateData.Consultancy_Name__c}
+            onchange={handleSourceChange}
+            class="form-field">
+        </lightning-input>
+    </div>
+</template>
+                       
+                    </div>
+                </template>
+
+                <!-- Step 3: Education Details -->
+                <template if:true={isEducationStep}>
+                    <div class="card">
+                        <div class="section-header">
+                            <h2 class="section-title">Education Details</h2>
+                            <lightning-button
+                                label="Add Education"
+                                icon-name="utility:add"
+                                onclick={handleAddEducation}
+                                variant="brand">
+                            </lightning-button>
+                        </div>
+
+                        <template for:each={educationRecords} for:item="edu" for:index="index">
+                            <div key={edu.uniqueId} class="record-card">
+                                <div class="record-header">
+                                    <h3>Education #{edu.displayIndex}</h3>
+                                    <lightning-button-icon
+                                        icon-name="utility:delete"
+                                        alternative-text="Delete"
+                                        onclick={handleDeleteEducation}
+                                        data-index={index}
+                                        variant="bare">
+                                    </lightning-button-icon>
+                                </div>
+
+                                <div class="form-row">
+                                    <lightning-combobox
+                                        name="Education_Type__c"
+                                        label="Education Type"
+                                        value={edu.Education_Type__c}
+                                        options={educationTypeOptions}
+                                        onchange={handleEducationChange}
+                                        data-index={index}
+                                        required
+                                        class="form-field">
+                                    </lightning-combobox>
+
+                                    <lightning-input
+                                        name="Institution_Name__c"
+                                        label="Institution Name"
+                                        value={edu.Institution_Name__c}
+                                        onchange={handleEducationChange}
+                                        data-index={index}
+                                        required
+                                        class="form-field">
+                                    </lightning-input>
+
+                                    <lightning-input
+                                        name="Board_University__c"
+                                        label="Board/University"
+                                        value={edu.Board_University__c}
+                                        onchange={handleEducationChange}
+                                        data-index={index}
+                                        class="form-field">
+                                    </lightning-input>
+                                </div>
+
+                                <div class="form-row">
+                                    <lightning-input
+                                        name="Course_Stream__c"
+                                        label="Course/Stream"
+                                        value={edu.Course_Stream__c}
+                                        onchange={handleEducationChange}
+                                        data-index={index}
+                                        class="form-field">
+                                    </lightning-input>
+
+                                    <lightning-combobox
+                                        name="Mode_of_Study__c"
+                                        label="Mode of Study"
+                                        value={edu.Mode_of_Study__c}
+                                        options={modeOfStudyOptions}
+                                        onchange={handleEducationChange}
+                                        data-index={index}
+                                        class="form-field">
+                                    </lightning-combobox>
+
+                                    <lightning-input
+                                        type="date"
+                                        name="Year_of_Completion__c"
+                                        label="Year of Completion"
+                                        value={edu.Year_of_Completion__c}
+                                        onchange={handleEducationChange}
+                                        data-index={index}
+                                        class="form-field">
+                                    </lightning-input>
+
+                                    <lightning-input
+                                        type="number"
+                                        name="Percentage__c"
+                                        label="Percentage"
+                                        value={edu.Percentage__c}
+                                        onchange={handleEducationChange}
+                                        data-index={index}
+                                        
+                                        step="0.01"
+                                        class="form-field">
+                                    </lightning-input>
+                                </div>
+
+                               
+
+                                <!--<template if:true={edu.Certificate_Attached__c}>-->
+                                    <div class="form-row">
+                                       <label class="slds-form-element__label">Upload Education Certificate</label>
+    <input type="file"
+           accept=".pdf,.jpg,.jpeg,.png"
+           data-index={index}
+           class="edu-file-input"
+           onchange={handleEducationFileUpload}>
+                                    </div>
+                                    <template if:true={edu.uploadedFiles}>
+                                        <div class="uploaded-files">
+                                            <template for:each={edu.uploadedFiles} for:item="file">
+                                                <div key={file.documentId} class="file-row">
+                                                    <span class="file-name">{file.fileName}</span>
+                                                    <lightning-button
+                                                        label="Remove"
+                                                        onclick={removeEducationFile}
+                                                        data-edu-id={edu.uniqueId}
+                                                        data-file-id={file.documentId}
+                                                        data-index={index}
+                                                        variant="destructive-text">
+                                                    </lightning-button>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                <!--</template>-->
+                            </div>
+                        </template>
+
+                        <template if:false={hasEducationRecords}>
+                            <div class="empty-state">
+                                <p>No education records added. Click "Add Education" to begin.</p>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- Step 4: Family Details -->
+                <template if:true={isFamilyStep}>
+                    <div class="card">
+                        <div class="section-header">
+                            <h2 class="section-title">Family Details</h2>
+                        </div>
+
+                        <h3 class="section-subtitle">Marital Information</h3>
+                        <div class="form-row">
+                            <lightning-combobox
+                                name="Marital_Status__c"
+                                label="Marital Status"
+                                value={candidateData.Marital_Status__c}
+                                options={maritalStatusOptions}
+                                onchange={handleCandidateChange}
+                                class="form-field">
+                            </lightning-combobox>
+
+                            <template if:true={isMarried}>
+                                <lightning-input
+                                    type="date"
+                                    name="Anniversary_Date__c"
+                                    label="Anniversary Date"
+                                    value={candidateData.Anniversary_Date__c}
+                                    onchange={handleCandidateChange}
+                                    class="form-field">
+                                </lightning-input>
+
+                                <lightning-input
+                                    type="number"
+                                    name="Number_of_Children__c"
+                                    label="Number of Children"
+                                    value={candidateData.Number_of_Children__c}
+                                    onchange={handleCandidateChange}
+                                    class="form-field">
+                                </lightning-input>
+                            </template>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="section-header">
+                            <h3 class="section-subtitle">Family Members</h3>
+                            <lightning-button
+                                label="Add Family Member"
+                                icon-name="utility:add"
+                                onclick={handleAddFamily}
+                                variant="brand">
+                            </lightning-button>
+                        </div>
+
+                        <template for:each={familyRecords} for:item="fam" for:index="index">
+                            <div key={fam.uniqueId} class="record-card">
+                                <div class="record-header">
+                                    <h4>Family Member #{fam.displayIndex}</h4>
+                                    <lightning-button-icon
+                                        icon-name="utility:delete"
+                                        alternative-text="Delete"
+                                        onclick={handleDeleteFamily}
+                                        data-index={index}
+                                        variant="bare">
+                                    </lightning-button-icon>
+                                </div>
+
+                                <div class="form-row">
+                                    <lightning-input
+                                        name="Name__c"
+                                        label="Full Name"
+                                        value={fam.Name__c}
+                                        onchange={handleFamilyChange}
+                                        data-index={index}
+                                        required
+                                        class="form-field">
+                                    </lightning-input>
+
+                                    <lightning-combobox
+                                        name="Relationship__c"
+                                        label="Relationship"
+                                        value={fam.Relationship__c}
+                                        options={relationshipOptions}
+                                        onchange={handleFamilyChange}
+                                        data-index={index}
+                                        required
+                                        class="form-field">
+                                    </lightning-combobox>
+
+                                    <lightning-input
+                                        type="date"
+                                        name="Date_Of_Birth__c"
+                                        label="Date of Birth"
+                                        value={fam.Date_Of_Birth__c}
+                                        onchange={handleFamilyChange}
+                                        data-index={index}
+                                        class="form-field">
+                                    </lightning-input>
+
+                                    <lightning-input
+                                        type="number"
+                                        name="Age__c"
+                                        label="Age"
+                                        value={fam.Age__c}
+                                        onchange={handleFamilyChange}
+                                        data-index={index}
+                                        class="form-field">
+                                    </lightning-input>
+                                </div>
+
+                                <div class="form-row">
+                                    <lightning-input
+                                        type="tel"
+                                        name="Contact_No__c"
+                                        label="Contact Number"
+                                        value={fam.Contact_No__c}
+                                        onchange={handleFamilyChange}
+                                        data-index={index}
+                                        class="form-field">
+                                    </lightning-input>
+
+                                    <lightning-input
+                                        name="Occupation__c"
+                                        label="Occupation"
+                                        value={fam.Occupation__c}
+                                        onchange={handleFamilyChange}
+                                        data-index={index}
+                                        class="form-field">
+                                    </lightning-input>
+                                </div>
+                            </div>
+                        </template>
+
+                        <template if:false={hasFamilyRecords}>
+                            <div class="empty-state">
+                                <p>No family members added. Click "Add Family Member" to begin.</p>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- Step 5: Work Experience -->
+                <template if:true={isWorkStep}>
+                    <div class="card">
+                        <div class="section-header">
+                            <h2 class="section-title">Work Experience</h2>
+                            <lightning-button
+                                label="Add Work Experience"
+                                icon-name="utility:add"
+                                onclick={handleAddWork}
+                                variant="brand">
+                            </lightning-button>
+                        </div>
+
+                        <template for:each={workRecords} for:item="work" for:index="index">
+                            <div key={work.uniqueId} class="record-card">
+                                <div class="record-header">
+                                    <h3>Experience #{work.displayIndex}</h3>
+                                    <lightning-button-icon
+                                        icon-name="utility:delete"
+                                        alternative-text="Delete"
+                                        onclick={handleDeleteWork}
+                                        data-index={index}
+                                        variant="bare">
+                                    </lightning-button-icon>
+                                </div>
+
+                                <div class="form-row">
+                                    <lightning-input
+                                        name="Company_Name__c"
+                                        label="Company Name"
+                                        value={work.Company_Name__c}
+                                        onchange={handleWorkChange}
+                                        data-index={index}
+                                        required
+                                        class="form-field">
+                                    </lightning-input>
+
+                                    <lightning-input
+                                        name="Designation__c"
+                                        label="Designation"
+                                        value={work.Designation__c}
+                                        onchange={handleWorkChange}
+                                        data-index={index}
+                                        required
+                                        class="form-field">
+                                    </lightning-input>
+
+                                    <lightning-combobox
+                                        name="Employment_Type__c"
+                                        label="Employment Type"
+                                        value={work.Employment_Type__c}
+                                        options={employmentTypeOptions}
+                                        onchange={handleWorkChange}
+                                        data-index={index}
+                                        class="form-field">
+                                    </lightning-combobox>
+                                </div>
+
+                                <div class="form-row">
+                                    <lightning-input
+                                        type="date"
+                                        name="Start_Date__c"
+                                        label="Start Date"
+                                        value={work.Start_Date__c}
+                                        onchange={handleWorkChange}
+                                        data-index={index}
+                                        required
+                                        class="form-field">
+                                    </lightning-input>
+
+                                    <lightning-input
+                                        type="date"
+                                        name="End_Date__c"
+                                        label="End Date"
+                                        value={work.End_Date__c}
+                                        onchange={handleWorkChange}
+                                        data-index={index}
+                                        disabled={work.Currently_Working__c}
+                                        class="form-field">
+                                    </lightning-input>
+
+                                    <lightning-input
+                                        type="number"
+                                        name="Experience_Years__c"
+                                        label="Experience (Years)"
+                                        value={work.Experience_Years__c}
+                                        onchange={handleWorkChange}
+                                        data-index={index}
+                                        step="0.1"
+                                        class="form-field">
+                                    </lightning-input>
+                                </div>
+
+                                <div class="checkbox-container">
+                                    <lightning-input
+                                        type="checkbox"
+                                        name="Currently_Working__c"
+                                        label="Currently Working"
+                                        checked={work.Currently_Working__c}
+                                        onchange={handleWorkChange}
+                                        data-index={index}>
+                                    </lightning-input>
+                                </div>
+
+                                <div class="form-row">
+                                    <lightning-textarea
+                                        name="Skills_Technologies_Used__c"
+                                        label="Skills / Technologies Used"
+                                        value={work.Skills_Technologies_Used__c}
+                                        onchange={handleWorkChange}
+                                        data-index={index}
+                                        class="form-field full-width">
+                                    </lightning-textarea>
+                                </div>
+
+                                <div class="form-row">
+                                    <h4 class="section-subtitle-small">Relieving Letter / Experience Certificate</h4>
+                                    <label class="slds-form-element__label">Upload Experience Certificate</label>
+                                    <div class="file-input-row">
+                                        <input type="file"
+                                            accept=".pdf,.jpg,.jpeg,.png"
+                                            data-index={index}
+                                            class="work-file-input file-compact"
+                                            onchange={handleWorkFileUpload}>
+                                        <span class="selected-file" if:true={work.fileName}>{work.fileName}</span>
+                                    </div>
+                                </div>
+                                <template if:true={work.uploadedFiles}>
+                                    <div class="uploaded-files">
+                                        <template for:each={work.uploadedFiles} for:item="file">
+                                            <div key={file.documentId} class="file-row">
+                                                <span class="file-name">{file.fileName}</span>
+                                                <lightning-button
+                                                    label="Remove"
+                                                    onclick={removeWorkFile}
+                                                    data-work-id={work.uniqueId}
+                                                    data-file-id={file.documentId}
+                                                    data-index={index}
+                                                    variant="destructive-text">
+                                                </lightning-button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <template if:false={hasWorkRecords}>
+                            <div class="empty-state">
+                                <p>No work experience added. Click "Add Work Experience" to begin.</p>
+                            </div>
+                        </template>
+
+                        <div class="divider"></div>
+
+                        <h3 class="section-subtitle">Reference Information</h3>
+                        <div class="form-row">
+                            <lightning-input
+                                name="Reference_Name__c"
+                                label="Reference Name"
+                                value={candidateData.Reference_Name__c}
+                                onchange={handleCandidateChange}
+                                class="form-field">
+                            </lightning-input>
+
+                            <lightning-input
+                                name="Reference_Contact_Info__c"
+                                label="Reference Contact Info"
+                                value={candidateData.Reference_Contact_Info__c}
+                                onchange={handleCandidateChange}
+                                class="form-field">
+                            </lightning-input>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Step 6: Bank Details -->
+                <template if:true={isBankStep}>
+                    <div class="card">
+                        <div class="section-header">
+                            <h2 class="section-title">Bank Details</h2>
+                            <lightning-button
+                                label="Add Bank Account"
+                                icon-name="utility:add"
+                                onclick={handleAddBank}
+                                variant="brand">
+                            </lightning-button>
+                        </div>
+
+                        <template for:each={bankRecords} for:item="bank" for:index="index">
+                            <div key={bank.uniqueId} class="record-card">
+                                <div class="record-header">
+                                    <h3>Bank Account #{bank.displayIndex}</h3>
+                                    <lightning-button-icon
+                                        icon-name="utility:delete"
+                                        alternative-text="Delete"
+                                        onclick={handleDeleteBank}
+                                        data-index={index}
+                                        variant="bare">
+                                    </lightning-button-icon>
+                                </div>
+
+                                <div class="form-row">
+                                    <lightning-input
+                                        name="Bank_Name__c"
+                                        label="Bank Name"
+                                        value={bank.Bank_Name__c}
+                                        onchange={handleBankChange}
+                                        data-index={index}
+                                        required
+                                        class="form-field">
+                                    </lightning-input>
+
+                                    <lightning-input
+                                        name="Branch_Name__c"
+                                        label="Branch Name"
+                                        value={bank.Branch_Name__c}
+                                        onchange={handleBankChange}
+                                        data-index={index}
+                                        class="form-field">
+                                    </lightning-input>
+
+                                    <lightning-input
+                                        name="Account_Holder_Name__c"
+                                        label="Account Holder Name"
+                                        value={bank.Account_Holder_Name__c}
+                                        onchange={handleBankChange}
+                                        data-index={index}
+                                        required
+                                        class="form-field">
+                                    </lightning-input>
+                                </div>
+
+                                <div class="form-row">
+                                    <lightning-input
+                                        name="Account_Number__c"
+                                        label="Account Number"
+                                        value={bank.Account_Number__c}
+                                        onchange={handleBankChange}
+                                        data-index={index}
+                                        required
+                                        maxlength="30"
+                                        class="form-field">
+                                    </lightning-input>
+
+                                    <lightning-input
+                                        name="IFSC_Code__c"
+                                        label="IFSC Code"
+                                        value={bank.IFSC_Code__c}
+                                        onchange={handleBankChange}
+                                        data-index={index}
+                                        required
+                                        maxlength="25"
+                                        class="form-field">
+                                    </lightning-input>
+
+                                    <lightning-combobox
+                                        name="Account_Type__c"
+                                        label="Account Type"
+                                        value={bank.Account_Type__c}
+                                        options={accountTypeOptions}
+                                        onchange={handleBankChange}
+                                        data-index={index}
+                                        required
+                                        class="form-field">
+                                    </lightning-combobox>
+                                </div>
+
+                                <div class="form-row">
+                                    <lightning-combobox
+                                        name="Status__c"
+                                        label="Status"
+                                        value={bank.Status__c}
+                                        options={bankStatusOptions}
+                                        onchange={handleBankChange}
+                                        data-index={index}
+                                        class="form-field">
+                                    </lightning-combobox>
+
+                                    <lightning-textarea
+                                        name="Remarks__c"
+                                        label="Remarks"
+                                        value={bank.Remarks__c}
+                                        onchange={handleBankChange}
+                                        data-index={index}
+                                        class="form-field">
+                                    </lightning-textarea>
+                                </div>
+
+                                <div class="checkbox-container">
+                                    <lightning-input
+                                        type="checkbox"
+                                        name="Primary_Account__c"
+                                        label="Primary Account"
+                                        checked={bank.Primary_Account__c}
+                                        onchange={handleBankChange}
+                                        data-index={index}>
+                                    </lightning-input>
+                                </div>
+    <div class="form-row">
+        <div class="form-row id-with-upload">
+            <h4 class="section-subtitle-small">Bank Proof (Passbook / Cheque Leaf)</h4>
+            <div class="upload-field-wrapper file-inline">
+                <label class="slds-form-element__label">Upload Bank Proof</label>
+                <div class="file-input-row">
+                    <input type="file" 
+                        accept=".pdf,.jpg,.jpeg,.png" 
+                        data-index={index} 
+                        onchange={handleBankFileChange} 
+                        class="slds-input file-compact" />
+                    <span class="selected-file" if:true={bank.fileName}>{bank.fileName}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+                                <template if:true={bank.uploadedFiles}>
+                                    <div class="uploaded-files">
+                                        <template for:each={bank.uploadedFiles} for:item="file">
+                                            <div key={file.documentId} class="file-row">
+                                                <span class="file-name">{file.fileName}</span>
+                                                <lightning-button
+                                                    label="Remove"
+                                                    onclick={removeBankFile}
+                                                    data-bank-id={bank.uniqueId}
+                                                    data-file-id={file.documentId}
+                                                    data-index={index}
+                                                    variant="destructive-text">
+                                                </lightning-button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <template if:false={hasBankRecords}>
+                            <div class="empty-state">
+                                <p>No bank accounts added. Click "Add Bank Account" to begin.</p>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- Step 7: Review & Submit -->
+                <template if:true={isReviewStep}>
+                    <div class="card">
+                        <h2 class="section-title">Review Your Information</h2>
+                        
+                        <div class="review-section">
+                            <h3>Personal Information</h3>
+                            <p><strong>Name:</strong> {candidateData.Salutation__c} {candidateData.First_Name__c} {candidateData.Middle_Name__c} {candidateData.Last_Name__c}</p>
+                            <p><strong>Email:</strong> {candidateData.Personal_Email__c}</p>
+                            <p><strong>Phone:</strong> {candidateData.Phone_No__c}</p>
+                            <p><strong>Date of Birth:</strong> {candidateData.Date_Of_Birth__c}</p>
+                            <p><strong>Gender:</strong> {candidateData.Gender__c}</p>
+                        </div>
+
+                        <div class="review-section">
+                            <h3>Address</h3>
+                            <p><strong>Communication:</strong> {candidateData.Communication_Address__Street__s}, {candidateData.Communication_Address__City__s}, {candidateData.Communication_Address__StateCode__s} {candidateData.Communication_Address__PostalCode__s}</p>
+                            <p><strong>Permanent:</strong> {candidateData.Permanent_Address__Street__s}, {candidateData.Permanent_Address__City__s}, {candidateData.Permanent_Address__StateCode__s} {candidateData.Permanent_Address__PostalCode__s}</p>
+                        </div>
+
+                        <div class="review-section">
+                            <h3>Education Records: {educationRecords.length}</h3>
+                        </div>
+
+                        <div class="review-section">
+                            <h3>Family Members: {familyRecords.length}</h3>
+                        </div>
+
+                        <div class="review-section">
+                            <h3>Work Experience: {workRecords.length}</h3>
+                        </div>
+
+                        <div class="review-section">
+                            <h3>Bank Accounts: {bankRecords.length}</h3>
+                        </div>
+
+                        <div class="checkbox-container">
+                            <lightning-input
+                                type="checkbox"
+                                label="I hereby declare that the information provided is true and correct to the best of my knowledge"
+                                checked={declarationAccepted}
+                                onchange={handleDeclarationChange}
+                                required>
+                            </lightning-input>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Navigation Buttons -->
+                <div class="button-container">
+                    <lightning-button
+                        label="Previous"
+                        onclick={handlePrevious}
+                        disabled={isFirstStep}
+                        variant="neutral">
+                    </lightning-button>
+
+                    <template if:false={isLastStep}>
+                        <lightning-button
+                            label="Next"
+                            onclick={handleNext}
+                            variant="brand">
+                        </lightning-button>
+                    </template>
+
+                    <template if:true={isLastStep}>
+                        <lightning-button
+                            label="Submit"
+                            onclick={handleSubmit}
+                            variant="brand"
+                            disabled={submitDisabled}>
+                        </lightning-button>
+                    </template>
+                </div>
+            </div>
+        </template>
+    </div>
+</template>
+        <!-- Success Message -->
+        <template if:true={showSuccess}>
+            <div class="success-container">
+                <lightning-icon icon-name="utility:success" size="large" alternative-text="Success"></lightning-icon>
+                <h2>Thank You!</h2>
+                <p>Your onboarding form has been submitted successfully.</p>
+                <p>HR will review your information and get back to you shortly.</p>
+            </div>
+        </template>
+    
+</template>

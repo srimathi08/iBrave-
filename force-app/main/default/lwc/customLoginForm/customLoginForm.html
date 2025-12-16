@@ -1,0 +1,41 @@
+<template>
+    <div class="login-container">
+        <div class="left-side">
+            <h1 class="welcome">WELCOME</h1>
+            <p class="headline">YOUR HEADLINE NAME</p>
+        </div>
+        <div class="right-side">
+            <h2 class="sign-in-title">Sign in</h2>
+            <form onsubmit={handleSubmit}>
+                <div class="input-group">
+                    <span class="icon">
+                        <lightning-icon icon-name="utility:user" size="small"></lightning-icon>
+                    </span>
+                    <input type="text" placeholder="User Name" name="username" value={username} onchange={handleInputChange} required/>
+                </div>
+                <div class="input-group">
+                    <span class="icon">
+                        <lightning-icon icon-name="utility:lock" size="small"></lightning-icon>
+                    </span>
+                    <input type="password" placeholder="Password" name="password" value={password} onchange={handleInputChange} required/>
+                </div>
+                <div class="options">
+                    <label>
+                        <input type="checkbox" checked={rememberMe} onchange={handleRememberMe}/> Remember me
+                    </label>
+                    <a class="forgot-link" href="#">Forgot Password?</a>
+                </div>
+                <button type="submit" class="login-btn">Sign in</button>
+            </form>
+            <div class="divider">or</div>
+            <button class="other-login-btn">Sign in with other</button>
+            <div class="signup-link">
+                <span>Don't have an account?</span>
+                <a href="#">Sign up</a>
+            </div>
+            <template if:true={showError}>
+                <div class="error-message">{errorMessage}</div>
+            </template>
+        </div>
+    </div>
+</template>

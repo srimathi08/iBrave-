@@ -1,0 +1,490 @@
+<template>
+    <!-- Main Admin Container -->
+    <div class="admin-attendance-wrapper">
+        
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="header-left">
+                <lightning-icon 
+                    icon-name="custom:custom85" 
+                    size="medium" 
+                    class="header-icon">
+                </lightning-icon>
+                <div class="header-text">
+                    <h1 class="page-title">Attendance Sheets</h1>
+                    <p class="page-subtitle">Manage and export employee attendance records</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <!-- ✅ REMOVED: Export PDF Button -->
+                <lightning-button 
+                    label="Export CSV" 
+                    icon-name="utility:table"
+                    variant="brand"
+                    onclick={handleExportCSV}
+                    disabled={isLoading}
+                    class="export-btn">
+                </lightning-button>
+            </div>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="filters-section">
+            <div class="filters-header">
+                <div class="filters-title">
+                    <lightning-icon 
+                        icon-name="utility:filterList" 
+                        size="x-small">
+                    </lightning-icon>
+                    <span>Filters and Search</span>
+                </div>
+                <div class="filters-actions">
+                    <lightning-button 
+                        label="Clear All" 
+                        icon-name="utility:clear"
+                        variant="neutral"
+                        onclick={handleClearFilters}
+                        disabled={isLoading}
+                        class="clear-filters-btn">
+                    </lightning-button>
+                    <lightning-button-icon
+                        icon-name={filterToggleIcon}
+                        variant="border-filled"
+                        alternative-text="Toggle Filters"
+                        onclick={handleToggleFilters}
+                        class="toggle-filters-btn">
+                    </lightning-button-icon>
+                </div>
+            </div>
+
+            <!-- Collapsible Filter Panel -->
+            <div class={filtersPanelClass}>
+                
+                <!-- Row 1: Employee ID, Employee Name, Date Range, Department -->
+                <div class="filter-row">
+                    <!-- Employee ID Dropdown -->
+                    <div class="filter-col">
+                        <label class="filter-label">Employee ID</label>
+                        <lightning-combobox
+                            name="employeeId"
+                            value={employeeIdFilter}
+                            placeholder="Select Employee ID"
+                            options={employeeIdOptions}
+                            onchange={handleEmployeeIdChange}
+                            class="filter-input">
+                        </lightning-combobox>
+                    </div>
+
+                    <!-- Employee Name Dropdown -->
+                    <div class="filter-col">
+                        <label class="filter-label">Employee Name</label>
+                        <lightning-combobox
+                            name="employeeName"
+                            value={employeeNameFilter}
+                            placeholder="Select Employee Name"
+                            options={employeeNameOptions}
+                            onchange={handleEmployeeNameChange}
+                            class="filter-input">
+                        </lightning-combobox>
+                    </div>
+
+                    <!-- Date Range -->
+                    <div class="filter-col date-range-col">
+                        <label class="filter-label">Date Range</label>
+                        <div class="date-range-picker">
+                            <lightning-input 
+                                type="date" 
+                                name="startDate"
+                                value={startDate}
+                                onchange={handleStartDateChange}
+                                class="date-input">
+                            </lightning-input>
+                            <span class="date-separator">to</span>
+                            <lightning-input 
+                                type="date" 
+                                name="endDate"
+                                value={endDate}
+                                onchange={handleEndDateChange}
+                                class="date-input">
+                            </lightning-input>
+                        </div>
+                    </div>
+
+                    <!-- Department Dropdown -->
+                    <div class="filter-col">
+                        <label class="filter-label">Department</label>
+                        <lightning-combobox
+                            name="department"
+                            value={departmentFilter}
+                            placeholder="Select department"
+                            options={departmentOptions}
+                            onchange={handleDepartmentChange}
+                            class="filter-input">
+                        </lightning-combobox>
+                    </div>
+                </div>
+
+                <!-- Apply Filters Button -->
+                <div class="filter-footer">
+                    <lightning-button 
+                        label="Apply Filters" 
+                        variant="brand"
+                        icon-name="utility:search"
+                        onclick={handleApplyFilters}
+                        disabled={isLoading}
+                        class="apply-filters-btn">
+                    </lightning-button>
+                    <span class="filter-info">
+                        <lightning-icon 
+                            icon-name="utility:info" 
+                            size="xx-small">
+                        </lightning-icon>
+                        Use filters to refine your attendance data search
+                    </span>
+                    <template if:true={filtersApplied}>
+                        <lightning-badge 
+                            label={activeFiltersLabel}
+                            class="active-filters-badge">
+                        </lightning-badge>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-section">
+            
+            <!-- Results Header with Count and Actions -->
+            <div class="results-header">
+                <div class="results-count">
+                    <lightning-icon 
+                        icon-name="utility:table" 
+                        size="x-small">
+                    </lightning-icon>
+                    <span class="count-text">
+                        <strong>{totalRecords}</strong> Records Found
+                    </span>
+                </div>
+                <div class="results-actions">
+                    <lightning-button-icon
+                        icon-name="utility:expand_alt"
+                        variant="border-filled"
+                        alternative-text="Fullscreen"
+                        onclick={handleFullscreen}
+                        disabled={isLoading}
+                        title="Fullscreen View">
+                    </lightning-button-icon>
+                    <lightning-button-icon
+                        icon-name="utility:refresh"
+                        variant="border-filled"
+                        alternative-text="Refresh"
+                        onclick={handleRefresh}
+                        disabled={isLoading}
+                        title="Refresh Data">
+                    </lightning-button-icon>
+                </div>
+            </div>
+
+            <!-- Data Table -->
+            <div class="table-container">
+                
+                <!-- Loading State -->
+                <template if:true={isLoading}>
+                    <div class="loading-container">
+                        <lightning-spinner 
+                            alternative-text="Loading attendance records" 
+                            size="medium">
+                        </lightning-spinner>
+                        <p class="loading-text">Loading attendance data...</p>
+                    </div>
+                </template>
+
+                <!-- Error State -->
+                <template if:true={hasError}>
+                    <div class="error-state">
+                        <lightning-icon 
+                            icon-name="utility:error" 
+                            size="large"
+                            class="error-icon">
+                        </lightning-icon>
+                        <h3 class="error-title">Error Loading Data</h3>
+                        <p class="error-message">{errorMessage}</p>
+                        <lightning-button 
+                            label="Try Again" 
+                            variant="brand"
+                            onclick={handleRetry}
+                            class="error-action-btn">
+                        </lightning-button>
+                    </div>
+                </template>
+
+                <!-- ✅ UPDATED: Show initial state before filters applied -->
+                <template if:false={isLoading}>
+                    <template if:false={hasError}>
+                        
+                        <!-- Show records if filters applied and has data -->
+                        <template if:true={hasRecords}>
+                            <table class="attendance-table">
+                                <thead>
+                                    <tr>
+                                        <th class="sortable" data-field="employeeId" onclick={handleSort}>
+                                            <div class="header-cell">
+                                                <span>Employee ID</span>
+                                                <lightning-icon 
+                                                    icon-name="utility:arrowup"
+                                                    size="xx-small"
+                                                    class="sort-icon">
+                                                </lightning-icon>
+                                            </div>
+                                        </th>
+                                        <th class="sortable" data-field="employeeName" onclick={handleSort}>
+                                            <div class="header-cell">
+                                                <span>Employee Name</span>
+                                                <lightning-icon 
+                                                    icon-name="utility:arrowup"
+                                                    size="xx-small"
+                                                    class="sort-icon">
+                                                </lightning-icon>
+                                            </div>
+                                        </th>
+                                        <th class="sortable" data-field="managerName" onclick={handleSort}>
+                                            <div class="header-cell">
+                                                <span>Manager</span>
+                                                <lightning-icon 
+                                                    icon-name="utility:arrowup"
+                                                    size="xx-small"
+                                                    class="sort-icon">
+                                                </lightning-icon>
+                                            </div>
+                                        </th>
+                                        <th class="sortable" data-field="department" onclick={handleSort}>
+                                            <div class="header-cell">
+                                                <span>Department</span>
+                                                <lightning-icon 
+                                                    icon-name="utility:arrowup"
+                                                    size="xx-small"
+                                                    class="sort-icon">
+                                                </lightning-icon>
+                                            </div>
+                                        </th>
+                                        <th class="sortable" data-field="date" onclick={handleSort}>
+                                            <div class="header-cell">
+                                                <span>Date</span>
+                                                <lightning-icon 
+                                                    icon-name="utility:arrowup"
+                                                    size="xx-small"
+                                                    class="sort-icon">
+                                                </lightning-icon>
+                                            </div>
+                                        </th>
+                                        <th class="sortable numeric" data-field="checkInTime" onclick={handleSort}>
+                                            <div class="header-cell">
+                                                <span>Check-in Time</span>
+                                                <lightning-icon 
+                                                    icon-name="utility:arrowup"
+                                                    size="xx-small"
+                                                    class="sort-icon">
+                                                </lightning-icon>
+                                            </div>
+                                        </th>
+                                        <th class="sortable numeric" data-field="checkOutTime" onclick={handleSort}>
+                                            <div class="header-cell">
+                                                <span>Check-out Time</span>
+                                                <lightning-icon 
+                                                    icon-name="utility:arrowup"
+                                                    size="xx-small"
+                                                    class="sort-icon">
+                                                </lightning-icon>
+                                            </div>
+                                        </th>
+                                        <th class="sortable numeric" data-field="hoursWorked" onclick={handleSort}>
+                                            <div class="header-cell">
+                                                <span>Hours Worked</span>
+                                                <lightning-icon 
+                                                    icon-name="utility:arrowup"
+                                                    size="xx-small"
+                                                    class="sort-icon">
+                                                </lightning-icon>
+                                            </div>
+                                        </th>
+                                        <th class="sortable" data-field="location" onclick={handleSort}>
+                                            <div class="header-cell">
+                                                <span>Location</span>
+                                                <lightning-icon 
+                                                    icon-name="utility:arrowup"
+                                                    size="xx-small"
+                                                    class="sort-icon">
+                                                </lightning-icon>
+                                            </div>
+                                        </th>
+                                        <th class="sortable" data-field="wfhApprovalStatusText" onclick={handleSort}>
+                                            <div class="header-cell">
+                                                <span>WFH Approval</span>
+                                                <lightning-icon 
+                                                    icon-name="utility:arrowup"
+                                                    size="xx-small"
+                                                    class="sort-icon">
+                                                </lightning-icon>
+                                            </div>
+                                        </th>
+                                        <th>
+                                            <div class="header-cell">
+                                                <span>WFH Reason</span>
+                                            </div>
+                                        </th>
+                                       
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={displayedRecords} for:item="record">
+                                        <tr key={record.recordId} class="data-row">
+                                            <td class="employee-id-cell">
+                                                <span class="employee-id-badge">{record.employeeId}</span>
+                                            </td>
+                                            <td class="employee-name-cell">
+                                                <div class="employee-info">
+                                                    <lightning-icon 
+                                                        icon-name="standard:user" 
+                                                        size="x-small"
+                                                        class="employee-icon">
+                                                    </lightning-icon>
+                                                    <span class="employee-name">{record.employeeName}</span>
+                                                </div>
+                                            </td>
+                                            <td class="manager-cell">{record.managerName}</td>
+                                            <td class="department-cell">{record.department}</td>
+                                            <td class="date-cell">{record.date}</td>
+                                            <td class="numeric-cell">{record.checkInTime}</td>
+                                            <td class="numeric-cell">{record.checkOutTime}</td>
+                                            <td class="numeric-cell hours-worked-cell">
+                                                <span class="hours-badge">{record.hoursWorked}</span>
+                                            </td>
+                                            <td class="location-cell">{record.location}</td>
+                                            <td class="wfh-status-cell">
+                                                <span class={record.wfhApprovalStatusClass}>
+                                                    {record.wfhApprovalStatusText}
+                                                </span>
+                                            </td>
+                                            <td class="wfh-reason-cell">
+                                                <template if:true={record.hasWFHReason}>
+                                                    <div class="wfh-reason-text" title={record.wfhReason}>
+                                                        {record.wfhReason}
+                                                    </div>
+                                                </template>
+                                                <template if:false={record.hasWFHReason}>
+                                                    <span class="no-data">--</span>
+                                                </template>
+                                            </td>
+                                            <td class="actions-cell">
+                                                <lightning-button-menu 
+                                                    alternative-text="Actions"
+                                                    icon-size="x-small"
+                                                    menu-alignment="right"
+                                                    variant="border-filled">
+                                                    <lightning-menu-item 
+                                                        value="view" 
+                                                        label="View Details"
+                                                        icon-name="utility:preview"
+                                                        data-id={record.recordId}
+                                                        onclick={handleViewDetails}>
+                                                    </lightning-menu-item>
+                                                    <lightning-menu-item 
+                                                        value="edit" 
+                                                        label="Edit Record"
+                                                        icon-name="utility:edit"
+                                                        data-id={record.recordId}
+                                                        onclick={handleEditRecord}>
+                                                    </lightning-menu-item>
+                                                    <lightning-menu-item 
+                                                        value="export" 
+                                                        label="Export Individual"
+                                                        icon-name="utility:download"
+                                                        data-id={record.recordId}
+                                                        onclick={handleExportIndividual}>
+                                                    </lightning-menu-item>
+                                                </lightning-button-menu>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </template>
+
+                        <!-- ✅ UPDATED: Empty State - Show when no records or no filters applied -->
+                        <template if:false={hasRecords}>
+                            <div class="empty-state">
+                                <lightning-icon 
+                                    icon-name="utility:search" 
+                                    size="large"
+                                    class="empty-icon">
+                                </lightning-icon>
+                                <template if:true={showInitialMessage}>
+                                    <h3 class="empty-title">Ready to Search</h3>
+                                    <p class="empty-message">
+                                        Please select filters and click "Apply Filters" to view attendance records.
+                                    </p>
+                                </template>
+                                <template if:false={showInitialMessage}>
+                                    <h3 class="empty-title">No Records Found</h3>
+                                    <p class="empty-message">
+                                        Try adjusting your filters or search criteria to find attendance records.
+                                    </p>
+                                    <lightning-button 
+                                        label="Clear All Filters" 
+                                        variant="brand"
+                                        onclick={handleClearFilters}
+                                        class="empty-action-btn">
+                                    </lightning-button>
+                                </template>
+                            </div>
+                        </template>
+                    </template>
+                </template>
+            </div>
+
+            <!-- Pagination -->
+            <template if:true={showPagination}>
+                <div class="pagination-section">
+                    <div class="pagination-info">
+                        <span>Showing {paginationStart} to {paginationEnd} of {totalRecords} records</span>
+                    </div>
+                    <div class="pagination-controls">
+                        <lightning-button-group>
+                            <lightning-button 
+                                icon-name="utility:chevronleft"
+                                variant="neutral"
+                                disabled={isFirstPage}
+                                onclick={handlePreviousPage}
+                                title="Previous Page">
+                            </lightning-button>
+                            <lightning-button 
+                                label={currentPageLabel}
+                                variant="neutral"
+                                disabled>
+                            </lightning-button>
+                            <lightning-button 
+                                icon-name="utility:chevronright"
+                                variant="neutral"
+                                disabled={isLastPage}
+                                onclick={handleNextPage}
+                                title="Next Page">
+                            </lightning-button>
+                        </lightning-button-group>
+                    </div>
+                    <!-- ✅ FIXED: Added dropdown-alignment to fix visibility -->
+                    <div class="pagination-size">
+                        <label>Records per page:</label>
+                        <lightning-combobox
+                            value={pageSize}
+                            options={pageSizeOptions}
+                            onchange={handlePageSizeChange}
+                            dropdown-alignment="bottom-right"
+                            class="page-size-select">
+                        </lightning-combobox>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+    </div>
+</template>

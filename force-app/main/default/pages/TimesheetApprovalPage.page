@@ -1,0 +1,299 @@
+<apex:page controller="TimesheetApprovalController" showHeader="false" sidebar="false" standardStylesheets="false">
+    <html>
+    <head>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>Timesheet Approval</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }
+            .container {
+                background: white;
+                border-radius: 15px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                max-width: 700px;
+                width: 100%;
+                padding: 40px;
+            }
+            .header {
+                text-align: center;
+                margin-bottom: 30px;
+            }
+            .status-badge {
+                display: inline-block;
+                padding: 8px 20px;
+                border-radius: 20px;
+                font-weight: bold;
+                margin-bottom: 10px;
+            }
+            .status-success {
+                background-color: #d4edda;
+                color: #155724;
+            }
+            .status-error {
+                background-color: #f8d7da;
+                color: #721c24;
+            }
+            .status-pending {
+                background-color: #fff3cd;
+                color: #856404;
+            }
+            h1 {
+                color: #333;
+                margin-bottom: 10px;
+            }
+            .info-box {
+                background-color: #f8f9fa;
+                padding: 20px;
+                border-radius: 8px;
+                margin: 20px 0;
+            }
+            .info-row {
+                display: flex;
+                justify-content: space-between;
+                padding: 10px 0;
+                border-bottom: 1px solid #dee2e6;
+            }
+            .info-row:last-child {
+                border-bottom: none;
+            }
+            .info-label {
+                font-weight: bold;
+                color: #666;
+            }
+            .info-value {
+                color: #333;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+            }
+            th {
+                background-color: #667eea;
+                color: white;
+                padding: 12px;
+                text-align: left;
+                font-weight: bold;
+            }
+            td {
+                padding: 12px;
+                border-bottom: 1px solid #dee2e6;
+            }
+            tr:hover {
+                background-color: #f8f9fa;
+            }
+            .form-group {
+                margin: 20px 0;
+            }
+            label {
+                display: block;
+                margin-bottom: 8px;
+                font-weight: bold;
+                color: #333;
+            }
+            textarea {
+                width: 100%;
+                padding: 12px;
+                border: 2px solid #dee2e6;
+                border-radius: 8px;
+                font-family: inherit;
+                resize: vertical;
+                min-height: 100px;
+            }
+            textarea:focus {
+                outline: none;
+                border-color: #667eea;
+            }
+            .button-group {
+                display: flex;
+                gap: 15px;
+                justify-content: center;
+                margin-top: 30px;
+            }
+            .btn {
+                padding: 12px 30px;
+                border: none;
+                border-radius: 8px;
+                font-size: 16px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                text-decoration: none;
+                display: inline-block;
+            }
+            .btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            }
+            .btn-approve {
+                background-color: #28a745;
+                color: white;
+            }
+            .btn-approve:hover {
+                background-color: #218838;
+            }
+            .btn-reject {
+                background-color: #dc3545;
+                color: white;
+            }
+            .btn-reject:hover {
+                background-color: #c82333;
+            }
+            .message {
+                padding: 15px;
+                border-radius: 8px;
+                margin: 20px 0;
+                text-align: center;
+            }
+            .message-success {
+                background-color: #d4edda;
+                color: #155724;
+                border: 1px solid #c3e6cb;
+            }
+            .message-error {
+                background-color: #f8d7da;
+                color: #721c24;
+                border: 1px solid #f5c6cb;
+            }
+            .loading {
+                text-align: center;
+                padding: 40px;
+            }
+            .spinner {
+                border: 4px solid #f3f3f3;
+                border-top: 4px solid #667eea;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                animation: spin 1s linear infinite;
+                margin: 0 auto;
+            }
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <apex:form id="approvalForm">
+                <!-- Main container that will be re-rendered -->
+                <apex:outputPanel id="mainPanel">
+                    <!-- Loading State -->
+                    <apex:outputPanel rendered="{!isLoading}">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p style="margin-top: 20px; color: #666;">Processing your request...</p>
+                        </div>
+                    </apex:outputPanel>
+                    
+                    <!-- Success/Error Messages -->
+                    <apex:outputPanel rendered="{!NOT(isLoading)}">
+                    <apex:outputPanel rendered="{!showMessage}">
+                        <div class="message {!IF(isSuccess, 'message-success', 'message-error')}">
+                            <strong><apex:outputText value="{!message}"/></strong>
+                        </div>
+                    </apex:outputPanel>
+                    
+                    <!-- Approval Form -->
+                    <apex:outputPanel rendered="{!showForm}">
+                        <div class="header">
+                            <div class="status-badge status-pending">Pending Approval</div>
+                            <h1>Timesheet Approval</h1>
+                        </div>
+                        
+                        <div class="info-box">
+                            <div class="info-row">
+                                <span class="info-label">Employee:</span>
+                                <span class="info-value"><apex:outputText value="{!employeeName}"/></span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Week:</span>
+                                <span class="info-value">Week {!weekNumber}, {!weekYear}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Total Hours:</span>
+                                <span class="info-value"><apex:outputText value="{!totalHours}"/> hrs</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Submitted:</span>
+                                <span class="info-value"><apex:outputText value="{0,date,MMM dd, yyyy 'at' hh:mm a}">
+                                    <apex:param value="{!submittedDate}"/>
+                                </apex:outputText></span>
+                            </div>
+                        </div>
+                        
+                        <h3 style="margin: 20px 0 10px 0;">Timesheet Entries</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Project</th>
+                                    <th>Task</th>
+                                    <th style="text-align: right;">Hours</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <apex:repeat value="{!entries}" var="entry">
+                                    <tr>
+                                        <td><apex:outputText value="{0,date,MMM dd, yyyy}">
+                                            <apex:param value="{!entry.Date__c}"/>
+                                        </apex:outputText></td>
+                                        <td><apex:outputText value="{!entry.Project__r.Name}"/></td>
+                                        <td><apex:outputText value="{!entry.Task__c}"/></td>
+                                        <td style="text-align: right;"><apex:outputText value="{!entry.Total_Hours__c}"/></td>
+                                    </tr>
+                                </apex:repeat>
+                            </tbody>
+                        </table>
+                        
+                        <div class="form-group">
+                            <label for="comments">Comments (Optional):</label>
+                            <apex:inputTextarea id="comments" value="{!comments}" html-placeholder="Add any comments or feedback..."/>
+                        </div>
+                        
+                        <div class="button-group">
+                            <apex:commandButton value="Approve" 
+                                                styleClass="btn btn-approve" 
+                                                action="{!approveTimesheet}" 
+                                                reRender="mainPanel"
+                                                status="loadingStatus"/>
+                            <apex:commandButton value="Reject" 
+                                                styleClass="btn btn-reject" 
+                                                action="{!rejectTimesheet}" 
+                                                reRender="mainPanel"
+                                                status="loadingStatus"/>
+                        </div>
+                    </apex:outputPanel>
+                </apex:outputPanel>
+                </apex:outputPanel>
+                
+                <!-- Action Status for loading indicator -->
+                <apex:actionStatus id="loadingStatus">
+                    <apex:facet name="start">
+                        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+                            <div style="background: white; padding: 30px; border-radius: 10px; text-align: center;">
+                                <div class="spinner"></div>
+                                <p style="margin-top: 15px; color: #666;">Processing...</p>
+                            </div>
+                        </div>
+                    </apex:facet>
+                </apex:actionStatus>
+            </apex:form>
+        </div>
+    </body>
+    </html>
+</apex:page>

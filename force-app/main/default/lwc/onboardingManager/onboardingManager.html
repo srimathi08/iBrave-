@@ -1,0 +1,179 @@
+<template>
+    <lightning-card title="Employee Onboarding Management" icon-name="standard:employee">
+        
+        <!-- Filter Section -->
+        <div class="slds-p-around_medium">
+            <div class="filter-section">
+                <lightning-combobox
+                    label="Filter by Status"
+                    value={selectedStatus}
+                    options={statusOptions}
+                    onchange={handleStatusChange}
+                    class="filter-dropdown">
+                </lightning-combobox>
+                
+                <lightning-button
+                    label="Refresh"
+                    icon-name="utility:refresh"
+                    onclick={handleRefresh}
+                    class="refresh-button">
+                </lightning-button>
+            </div>
+        </div>
+
+        <!-- Records Table -->
+        <template if:true={hasRecords}>
+            <div class="table-container">
+                <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                    <thead>
+                        <tr class="slds-line-height_reset">
+                            <th scope="col">
+                                <div class="slds-truncate" title="Name">Name</div>
+                            </th>
+                            <th scope="col">
+                                <div class="slds-truncate" title="Email">Email</div>
+                            </th>
+                            <th scope="col">
+                                <div class="slds-truncate" title="Position">Position</div>
+                            </th>
+                            <th scope="col">
+                                <div class="slds-truncate" title="Department">Department</div>
+                            </th>
+                            <th scope="col">
+                                <div class="slds-truncate" title="Submitted Date">Submitted Date</div>
+                            </th>
+                            <th scope="col">
+                                <div class="slds-truncate" title="Status">Status</div>
+                            </th>
+                            <th scope="col">
+                                <div class="slds-truncate" title="Actions">Actions</div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={onboardingRecords} for:item="record">
+                            <tr key={record.Id} class="slds-hint-parent">
+                                <td data-label="Name">
+                                    <div class="slds-truncate">
+                                        {record.First_Name__c} {record.Last_Name__c}
+                                    </div>
+                                </td>
+                                <td data-label="Email">
+                                    <div class="slds-truncate">{record.Email__c}</div>
+                                </td>
+                                <td data-label="Position">
+                                    <div class="slds-truncate">{record.Position_Title__c}</div>
+                                </td>
+                                <td data-label="Department">
+                                    <div class="slds-truncate">{record.Department__c}</div>
+                                </td>
+                                <td data-label="Submitted Date">
+                                    <lightning-formatted-date-time
+                                        value={record.Form_Submitted_Date__c}
+                                        year="numeric"
+                                        month="short"
+                                        day="2-digit">
+                                    </lightning-formatted-date-time>
+                                </td>
+                                <td data-label="Status">
+                                    <span class={record.statusClass}>{record.Status__c}</span>
+                                </td>
+                                <td data-label="Actions">
+                                    <lightning-button-group>
+                                        <lightning-button-icon
+                                            icon-name="utility:preview"
+                                            alternative-text="View"
+                                            title="View Details"
+                                            onclick={handleViewDetails}
+                                            data-id={record.Id}>
+                                        </lightning-button-icon>
+                                        
+                                        <template if:false={record.Converted_to_Contact__c}>
+                                            <lightning-button-icon
+                                                icon-name="utility:success"
+                                                alternative-text="Convert"
+                                                title="Convert to Contact"
+                                                onclick={handleConvert}
+                                                data-id={record.Id}
+                                                variant="brand">
+                                            </lightning-button-icon>
+                                        </template>
+                                        
+                                        <template if:true={record.Converted_to_Contact__c}>
+                                            <lightning-button-icon
+                                                icon-name="utility:open"
+                                                alternative-text="Open Contact"
+                                                title="Open Contact Record"
+                                                onclick={handleOpenContact}
+                                                data-id={record.Contact_Record_ID__c}>
+                                            </lightning-button-icon>
+                                        </template>
+                                    </lightning-button-group>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </template>
+
+        <!-- No Records Message -->
+        <template if:false={hasRecords}>
+            <div class="slds-text-align_center slds-p-around_large">
+                <lightning-icon icon-name="utility:info" size="large"></lightning-icon>
+                <p class="slds-m-top_small">No onboarding records found.</p>
+            </div>
+        </template>
+
+        <!-- Loading Spinner -->
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
+        </template>
+
+    </lightning-card>
+
+    <!-- View Details Modal -->
+    <template if:true={showModal}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" 
+                            title="Close" onclick={handleCloseModal}>
+                        <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+                    </button>
+                    <h2 class="slds-modal__title slds-hyphenate">
+                        Onboarding Details
+                    </h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <template if:true={selectedRecord}>
+                        <lightning-record-view-form record-id={selectedRecord.Id} 
+                                                    object-api-name="Employee_Onboarding__c">
+                            <div class="slds-grid slds-wrap slds-gutters">
+                                <div class="slds-col slds-size_1-of-2">
+                                    <lightning-output-field field-name="First_Name__c"></lightning-output-field>
+                                    <lightning-output-field field-name="Last_Name__c"></lightning-output-field>
+                                    <lightning-output-field field-name="Email__c"></lightning-output-field>
+                                    <lightning-output-field field-name="Phone__c"></lightning-output-field>
+                                    <lightning-output-field field-name="Date_of_Birth__c"></lightning-output-field>
+                                </div>
+                                <div class="slds-col slds-size_1-of-2">
+                                    <lightning-output-field field-name="Position_Title__c"></lightning-output-field>
+                                    <lightning-output-field field-name="Department__c"></lightning-output-field>
+                                    <lightning-output-field field-name="Start_Date__c"></lightning-output-field>
+                                    <lightning-output-field field-name="Employment_Type__c"></lightning-output-field>
+                                    <lightning-output-field field-name="Status__c"></lightning-output-field>
+                                </div>
+                            </div>
+                        </lightning-record-view-form>
+                    </template>
+                </div>
+                <footer class="slds-modal__footer">
+                    <lightning-button label="Close" onclick={handleCloseModal}></lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+</template>

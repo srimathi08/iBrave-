@@ -1,0 +1,223 @@
+<template>
+    <div class="hybrid-schedule-container">
+        <!-- Loading Spinner -->
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading..." size="large" class="main-spinner"></lightning-spinner>
+        </template>
+
+        <!-- Schedule Request Form -->
+        <div class="schedule-form-card">
+            <div class="form-header">
+                <h2 class="form-title">📅 New Schedule Request</h2>
+            </div>
+
+            <div class="form-content">
+                <!-- Month Selection -->
+                <div class="form-row">
+                    <lightning-input
+                        type="month"
+                        label="Schedule Month"
+                        value={selectedMonth}
+                        onchange={handleMonthChange}
+                        required
+                        min={minMonth}
+                        class="input-field">
+                    </lightning-input>
+                    <div class="field-help">
+                        Select the month for which you need a hybrid work schedule
+                    </div>
+                </div>
+
+                <!-- Schedule Type -->
+                <div class="form-row">
+                    <lightning-combobox
+                        label="Schedule Type"
+                        value={scheduleType}
+                        options={scheduleTypeOptions}
+                        onchange={handleScheduleTypeChange}
+                        placeholder="Select schedule type"
+                        required
+                        class="input-field">
+                    </lightning-combobox>
+                </div>
+
+                <!-- WFH Days Selection -->
+                <div class="form-row">
+                    <div class="days-selection-section wfh-section">
+                        <label class="section-label">🏠 Work From Home Days</label>
+                        <div class="days-checkbox-group">
+                            <template for:each={daysOfWeek} for:item="day">
+                                <div key={day.value} class="day-checkbox-item">
+                                    <lightning-input
+                                        type="checkbox"
+                                        label={day.label}
+                                        value={day.value}
+                                        checked={day.isWFH}
+                                        onchange={handleWFHDayChange}
+                                        data-day={day.value}>
+                                    </lightning-input>
+                                </div>
+                            </template>
+                        </div>
+                        <div class="days-summary">
+                            Selected: <strong>{selectedWFHDaysText}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Office Days Selection -->
+                <div class="form-row">
+                    <div class="days-selection-section office-section">
+                        <label class="section-label">🏢 Office Days</label>
+                        <div class="days-checkbox-group">
+                            <template for:each={daysOfWeek} for:item="day">
+                                <div key={day.value} class="day-checkbox-item">
+                                    <lightning-input
+                                        type="checkbox"
+                                        label={day.label}
+                                        value={day.value}
+                                        checked={day.isOffice}
+                                        onchange={handleOfficeDayChange}
+                                        data-day={day.value}>
+                                    </lightning-input>
+                                </div>
+                            </template>
+                        </div>
+                        <div class="days-summary">
+                            Selected: <strong>{selectedOfficeDaysText}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Validation Message -->
+                <template if:true={hasValidationError}>
+                    <div class="validation-error">
+                        <lightning-icon icon-name="utility:warning" size="x-small"></lightning-icon>
+                        <span>{validationErrorMessage}</span>
+                    </div>
+                </template>
+
+                <!-- Reason -->
+                <div class="form-row">
+                    <lightning-textarea
+                        label="Reason for Hybrid Schedule"
+                        value={reason}
+                        onchange={handleReasonChange}
+                        placeholder="Provide a business justification (minimum 20 characters)..."
+                        required
+                        rows="4"
+                        max-length="1000"
+                        class="input-field">
+                    </lightning-textarea>
+                    <div class="char-count">
+                        {reasonCharCount} / 1000 characters
+                        <template if:true={isReasonTooShort}>
+                            <span class="error-text">(Minimum 20 characters required)</span>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Summary Section -->
+                <template if:true={showSummary}>
+                    <div class="summary-section">
+                        <h3 class="summary-title">📊 Schedule Summary</h3>
+                        <div class="summary-grid">
+                            <div class="summary-item">
+                                <span class="summary-label">Month:</span>
+                                <span class="summary-value">{selectedMonthDisplay}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">WFH Days:</span>
+                                <span class="summary-value wfh-count">{totalWFHDays} days</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Office Days:</span>
+                                <span class="summary-value office-count">{totalOfficeDays} days</span>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Action Buttons -->
+                <div class="form-actions">
+                    <lightning-button
+                        label="Reset"
+                        icon-name="utility:refresh"
+                        onclick={handleReset}
+                        class="reset-button">
+                    </lightning-button>
+                    <lightning-button
+                        label="Submit for Approval"
+                        variant="brand"
+                        icon-name="utility:forward"
+                        onclick={handleSubmit}
+                        disabled={isSubmitDisabled}
+                        class="submit-button">
+                    </lightning-button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Existing Schedules Section -->
+        <div class="existing-schedules-card">
+            <div class="schedules-header">
+                <h2 class="schedules-title">📋 Your Schedule Requests</h2>
+                <lightning-button
+                    label="Refresh"
+                    icon-name="utility:refresh"
+                    onclick={handleRefresh}
+                    class="refresh-button">
+                </lightning-button>
+            </div>
+
+            <template if:true={hasExistingSchedules}>
+                <div class="schedules-list">
+                    <template for:each={existingSchedules} for:item="schedule">
+                        <div key={schedule.Id} class="schedule-item">
+                            <div class="schedule-item-header">
+                                <span class="schedule-month">{schedule.monthDisplay}</span>
+                                <lightning-badge 
+                                    label={schedule.Approval_Status__c}
+                                    class={schedule.statusClass}>
+                                </lightning-badge>
+                            </div>
+                            <div class="schedule-item-body">
+                                <div class="schedule-detail">
+                                    <span class="detail-label">🏠 WFH Days:</span>
+                                    <span class="detail-value">{schedule.wfhDaysDisplay}</span>
+                                </div>
+                                <div class="schedule-detail">
+                                    <span class="detail-label">🏢 Office Days:</span>
+                                    <span class="detail-value">{schedule.officeDaysDisplay}</span>
+                                </div>
+                                <div class="schedule-detail">
+                                    <span class="detail-label">Manager:</span>
+                                    <span class="detail-value">{schedule.Manager__r.Name}</span>
+                                </div>
+                                <template if:true={schedule.showApprovalDate}>
+                                    <div class="schedule-detail">
+                                        <span class="detail-label">Approved On:</span>
+                                        <span class="detail-value">{schedule.approvalDateDisplay}</span>
+                                    </div>
+                                </template>
+                                <template if:true={schedule.showRejectionReason}>
+                                    <div class="rejection-reason">
+                                        <strong>Reason:</strong> {schedule.Rejection_Reason__c}
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
+
+            <template if:false={hasExistingSchedules}>
+                <div class="empty-state">
+                    <lightning-icon icon-name="utility:event" size="large" class="empty-icon"></lightning-icon>
+                    <p class="empty-text">No schedule requests yet</p>
+                    <p class="empty-subtext">Submit your first hybrid work schedule above</p>
+                </div>
+            </template>
+        </div>
+    </div>
+</template>

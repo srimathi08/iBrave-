@@ -1,0 +1,446 @@
+<template>
+    <div class="timesheet-container">
+        <!-- Header Section - Separate Box -->
+        <div class="header-box">
+            <div class="header-content">
+                <div class="header-left">
+                    <lightning-icon icon-name="utility:clock" size="large" class="header-icon"></lightning-icon>
+                    <div class="header-text">
+                        <h1 class="header-title">Admin Timesheet Management</h1>
+                        <p class="header-subtitle">Review and manage employee timesheet submissions</p>
+                    </div>
+                </div>
+                <lightning-button 
+                    label="Export CSV" 
+                    icon-name="utility:download" 
+                    onclick={handleExportCSV}
+                    variant="brand"
+                    class="export-btn">
+                </lightning-button>
+            </div>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="stats-section">
+            <div class="stats-grid">
+                <div class="stat-card stat-card-blue">
+                    <lightning-icon icon-name="utility:clock" size="small" class="stat-icon"></lightning-icon>
+                    <div class="stat-content">
+                        <div class="stat-label">Total Hours</div>
+                        <div class="stat-value">{stats.totalHours}</div>
+                    </div>
+                </div>
+                <div class="stat-card stat-card-orange">
+                    <lightning-icon icon-name="utility:warning" size="small" class="stat-icon"></lightning-icon>
+                    <div class="stat-content">
+                        <div class="stat-label">Pending Approvals</div>
+                        <div class="stat-value">{stats.pendingApprovals}</div>
+                    </div>
+                </div>
+                <div class="stat-card stat-card-green">
+                    <lightning-icon icon-name="utility:check" size="small" class="stat-icon"></lightning-icon>
+                    <div class="stat-content">
+                        <div class="stat-label">Approved Hours</div>
+                        <div class="stat-value">{stats.approvedHours}</div>
+                    </div>
+                </div>
+                <div class="stat-card stat-card-red">
+                    <lightning-icon icon-name="utility:close" size="small" class="stat-icon"></lightning-icon>
+                    <div class="stat-content">
+                        <div class="stat-label">Rejected Entries</div>
+                        <div class="stat-value">{stats.rejectedEntries}</div>
+                    </div>
+                </div>
+                <div class="stat-card stat-card-purple">
+                    <lightning-icon icon-name="utility:groups" size="small" class="stat-icon"></lightning-icon>
+                    <div class="stat-content">
+                        <div class="stat-label">Total Employees</div>
+                        <div class="stat-value">{stats.totalEmployees}</div>
+                    </div>
+                </div>
+                <div class="stat-card stat-card-indigo">
+                    <lightning-icon icon-name="utility:chart" size="small" class="stat-icon"></lightning-icon>
+                    <div class="stat-content">
+                        <div class="stat-label">Active Projects</div>
+                        <div class="stat-value">{stats.activeProjects}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+         <!-- Filters Section - Separate Box -->
+        <div class="filters-box">
+            <div class="filter-header">
+                <lightning-icon icon-name="utility:filter" size="small" class="filter-icon"></lightning-icon>
+                <h2 class="filter-title">Filters & Search</h2>
+            </div>
+
+            <div class="filter-content">
+                <!-- All Filters in One Row -->
+                <div class="filter-row filter-row-main">
+                    <!-- Date Range Filter -->
+                    <div class="filter-group">
+                        <label class="filter-label">
+                            <lightning-icon icon-name="utility:date" size="x-small"></lightning-icon>
+                            Date Range
+                        </label>
+                        <div class="date-range-selector">
+                            <lightning-button-icon 
+                                icon-name="utility:chevronleft" 
+                                alternative-text="Previous" 
+                                onclick={handlePreviousMonth}
+                                class="nav-btn">
+                            </lightning-button-icon>
+                            <div class="date-display">
+                                <div class="date-range-text">{dateRangeLabel}</div>
+                                <lightning-button 
+                                    label={viewModeLabel} 
+                                    onclick={handleMonthViewToggle}
+                                    variant="base"
+                                    size="small"
+                                    class="view-toggle-btn">
+                                </lightning-button>
+                            </div>
+                            <lightning-button-icon 
+                                icon-name="utility:chevronright" 
+                                alternative-text="Next" 
+                                onclick={handleNextMonth}
+                                class="nav-btn">
+                            </lightning-button-icon>
+                        </div>
+                    </div>
+
+                    <!-- Employee Filter -->
+                    <!--<div class="filter-group">
+                        <label class="filter-label">
+                            <lightning-icon icon-name="utility:people" size="x-small"></lightning-icon>
+                            Employee
+                        </label>
+                        <lightning-combobox
+                            name="employee"
+                            value={selectedEmployee}
+                            placeholder="Search employee..."
+                            options={employeeOptions}
+                            onchange={handleEmployeeChange}
+                            class="filter-input">
+                        </lightning-combobox>
+                    </div>-->
+                    <!-- Employee Filter -->
+<div class="filter-group">
+    <div class="filter-dropdown-popover">
+    <label class="filter-label">
+        <lightning-icon icon-name="utility:people" size="x-small"></lightning-icon>
+        Employee
+    </label>
+    <lightning-input type="search" 
+        placeholder="Search employee..." 
+        onchange={handleEmployeeSearchChange}
+        value={employeeSearch}
+        class="filter-input">
+    </lightning-input>
+    <template if:true={showEmployeeDropdown}>
+        <div class="custom-dropdown-listbox">
+            <template for:each={filteredEmployeeResults} for:item="emp">
+                <div key={emp.value} 
+                     class="dropdown-item" 
+                     data-value={emp.value}
+                     onclick={handleEmployeeSelect}>
+                     {emp.label}
+                </div>
+            </template>
+        </div>
+    </template>
+</div>
+</div>
+<!-- Department Filter -->
+<div class="filter-group">
+<div class="filter-dropdown-popover">
+    <label class="filter-label">
+        <lightning-icon icon-name="utility:organization" size="x-small"></lightning-icon>
+        Department
+    </label>
+    <lightning-input type="search" 
+        placeholder="Search department..." 
+        onchange={handleDepartmentSearchChange}
+        value={departmentSearch}
+        class="filter-input">
+    </lightning-input>
+    <template if:true={showDepartmentDropdown}>
+        <div class="custom-dropdown-listbox">
+            <template for:each={filteredDepartmentResults} for:item="dep">
+                <div key={dep.value} 
+                     class="dropdown-item" 
+                     data-value={dep.value}
+                     onclick={handleDepartmentSelect}>
+                     {dep.label}
+                </div>
+            </template>
+        </div>
+    </template>
+</div>
+</div>
+<!-- Project Filter -->
+<div class="filter-group">
+   <div class="filter-dropdown-popover">
+    <label class="filter-label">
+        <lightning-icon icon-name="utility:project" size="x-small"></lightning-icon>
+        Project
+    </label>
+    <lightning-input type="search" 
+        placeholder="Search project..." 
+        onchange={handleProjectSearchChange}
+        value={projectSearch}
+        class="filter-input">
+    </lightning-input>
+    <template if:true={showProjectDropdown}>
+        <div class="custom-dropdown-listbox">
+            <template for:each={filteredProjectResults} for:item="proj">
+                <div key={proj.value} 
+                     class="dropdown-item" 
+                     data-value={proj.value}
+                     onclick={handleProjectSelect}>
+                     {proj.label}
+                </div>
+            </template>
+        </div>
+    </template>
+</div>
+</div>
+
+                    <!-- Department Filter -->
+                    <!--<div class="filter-group">
+                        <label class="filter-label">
+                            <lightning-icon icon-name="utility:organization" size="x-small"></lightning-icon>
+                            Department
+                        </label>
+                        <lightning-combobox
+                            name="department"
+                            value={selectedDepartment}
+                            placeholder="Search department..."
+                            options={departmentOptions}
+                            onchange={handleDepartmentChange}
+                            class="filter-input">
+                        </lightning-combobox>
+                    </div>
+
+                    !-- Project Filter --
+                    <div class="filter-group">
+                        <label class="filter-label">
+                            <lightning-icon icon-name="utility:project" size="x-small"></lightning-icon>
+                            Project
+                        </label>
+                        <lightning-combobox
+                            name="project"
+                            value={selectedProject}
+                            placeholder="Search project..."
+                            options={projectOptions}
+                            onchange={handleProjectChange}
+                            class="filter-input">
+                        </lightning-combobox>
+                    </div>-->
+
+                    <!-- Status Filter -->
+                    <div class="filter-group">
+                        <label class="filter-label">
+                            <lightning-icon icon-name="utility:status" size="x-small"></lightning-icon>
+                            Status
+                        </label>
+                        <lightning-combobox
+                            name="status"
+                            value={selectedStatus}
+                            placeholder="Select status..."
+                            options={statusOptions}
+                            onchange={handleStatusChange}
+                            class="filter-input">
+                        </lightning-combobox>
+                    </div>
+                </div>
+
+                <!-- Active Filters Pills -->
+                <div class="active-filters" data-active={hasActiveFilters}>
+                    <div class="pills-label">Active Filters:</div>
+                    <div class="filter-pills">
+                        <template if:true={selectedEmployee}>
+                            <lightning-pill 
+                                label={selectedEmployee}
+                                onremove={handleClearEmployee}
+                                class="filter-pill">
+                            </lightning-pill>
+                        </template>
+                        <template if:true={selectedDepartment}>
+                            <lightning-pill 
+                                label={selectedDepartment}
+                                onremove={handleClearDepartment}
+                                class="filter-pill">
+                            </lightning-pill>
+                        </template>
+                        <template if:true={selectedProject}>
+                            <lightning-pill 
+                                label={selectedProject}
+                                onremove={handleClearProject}
+                                class="filter-pill">
+                            </lightning-pill>
+                        </template>
+                        <template if:true={selectedStatus}>
+                            <lightning-pill 
+                                label={selectedStatus}
+                                onremove={handleClearStatus}
+                                class="filter-pill">
+                            </lightning-pill>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="filter-actions">
+                    <lightning-button 
+                        label="Clear All Filters" 
+                        icon-name="utility:close"
+                        onclick={handleClearFilters}
+                        variant="base"
+                        class="clear-btn">
+                    </lightning-button>
+                </div>
+            </div>
+        </div>
+        <!-- Results Info -->
+        <div class="results-info">
+            <lightning-icon icon-name="utility:info" size="small"></lightning-icon>
+            <span>{filteredEntries.length} timesheet entries found</span>
+            <span>{paginationLabel}</span>
+        </div>
+       
+
+        <!-- Table Section - Separate Box -->
+        <div class="table-box">
+            <div class="table-header">
+                <h2 class="table-title">Timesheet Entries</h2>
+            </div>
+
+            <div class="table-wrapper">
+                <template if:true={isLoading}>
+                    <div class="loading-container">
+                        <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+                    </div>
+                </template>
+
+                <template if:false={isLoading}>
+                    <template if:true={hasEntries}>
+                        <table class="timesheet-table">
+                            <thead>
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Department</th>
+                                    <th>Project</th>
+                                    <th>Date</th>                                   
+                                    <th>Description</th>
+                                    <th>Hours</th>
+                                    <th>Status</th>
+                                    
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!--<template for:each={filteredEntries} for:item="entry">-->
+                                     <template for:each={paginatedEntries} for:item="entry">
+                                <tr key={entry.id} class="table-row">
+                                        <td data-label="Employee">{entry.employeeName}</td>
+                                        <td data-label="Department">{entry.department}</td>
+                                        <td data-label="Project">{entry.projectName}</td>
+                                        <td data-label="Date">
+                                            <lightning-formatted-date-time value={entry.entryDate}></lightning-formatted-date-time>
+                                        </td>
+                                        <td data-label="Description" class="description-cell">{entry.description}</td>
+                                        <td data-label="Hours" class="hours-cell">{entry.hours}h</td>                                       
+                                        <td data-label="Status">
+                                            <lightning-badge 
+                                                label={entry.status} 
+                                                class={entry.statusClass}>
+                                            </lightning-badge>
+                                        </td>
+                                       
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                        <!-- Pagination Controls -->
+                        <div class="pagination-container">
+                          
+
+                            <div class="pagination-controls">
+                                <lightning-button-icon 
+                                    icon-name="utility:chevronleft" 
+                                    alternative-text="First Page"
+                                    onclick={handleFirstPage}
+                                    disabled={disablePreviousPage}
+                                    class="pagination-btn">
+                                </lightning-button-icon>
+                                <lightning-button-icon 
+                                    icon-name="utility:left" 
+                                    alternative-text="Previous Page"
+                                    onclick={handlePreviousPage}
+                                    disabled={disablePreviousPage}
+                                    class="pagination-btn">
+                                </lightning-button-icon>
+
+                                <div class="page-numbers">
+                                    <template for:each={pageNumbers} for:item="pageObj">
+                                        <template if:true={pageObj.isActive}>
+                                            <lightning-button
+                                                key={pageObj.number}
+                                                label={pageObj.number}
+                                                onclick={handlePageSelect}
+                                                data-page={pageObj.number}
+                                                variant="brand"
+                                                size="small"
+                                                class="page-btn">
+                                            </lightning-button>
+                                        </template>
+                                        <template if:false={pageObj.isActive}>
+                                            <lightning-button
+                                                key={pageObj.number}
+                                                label={pageObj.number}
+                                                onclick={handlePageSelect}
+                                                data-page={pageObj.number}
+                                                variant="base"
+                                                size="small"
+                                                class="page-btn">
+                                            </lightning-button>
+                                        </template>
+                                    </template>
+                                </div>
+
+                                <lightning-button-icon 
+                                    icon-name="utility:right" 
+                                    alternative-text="Next Page"
+                                    onclick={handleNextPage}
+                                    disabled={disableNextPage}
+                                    class="pagination-btn">
+                                </lightning-button-icon>
+                                <lightning-button-icon 
+                                    icon-name="utility:chevronright" 
+                                    alternative-text="Last Page"
+                                    onclick={handleLastPage}
+                                    disabled={disableNextPage}
+                                    class="pagination-btn">
+                                </lightning-button-icon>
+                            </div>
+
+                            <div class="pagination-status">
+                                <span class="page-counter">Page {currentPage} of {totalPages}</span>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template if:false={hasEntries}>
+                        <div class="empty-state">
+                            <lightning-icon icon-name="utility:search" size="large"></lightning-icon>
+                            <h3>No Timesheet Entries Found</h3>
+                            <p>Try adjusting your filters or date range</p>
+                        </div>
+                    </template>
+                </template>
+            </div>
+        </div>
+    </div>
+   
+</template>

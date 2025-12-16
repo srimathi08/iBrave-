@@ -1,0 +1,234 @@
+.body-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 50vw; 
+    background: #f4f4f8;
+    box-sizing: border-box;
+}
+
+.video-container {
+    position: relative; 
+    width: 100vw;
+    height: 100vh;
+    min-height: 600px;
+    overflow: hidden;
+    background: #f4f4f8;
+}
+
+.bg-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    min-width: 100%;
+    min-height: 100%;
+    object-fit: cover;
+    z-index: 0;
+    filter: brightness(1.1) saturate(1.1);
+}
+
+.video-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(135deg, rgba(111,46,70,0.5), rgba(212,192,200,0.5));
+    z-index: 1;
+}
+
+.container {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /*min-height: 70vh;
+    padding: 24px;*/
+    width: 100%;
+    max-width: 700px;            /* Optional max width */
+    height: 600px;               /* Match login card height */
+    padding: 24px;
+    box-sizing: border-box;
+}
+
+.login-card {
+    background: #fff;
+    border-radius: 24px;
+    box-shadow: 0 8px 36px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: row;
+    /*overflow: hidden;
+    max-width: 440px;
+    width: 100%;*/
+    overflow: hidden;
+    max-width: 620px;              /* Increased width */
+    width: 90vw;
+    min-height: 350px; 
+    justify-content: center;
+}
+
+/*.left-panel {
+    background: linear-gradient(135deg, #6F2E46 60%, #d4c0c8 100%);
+    width: 36%;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 32px 12px;
+    border-top-right-radius: 100px;
+    border-bottom-right-radius: 100px;
+}*/
+.left-panel {
+    background: linear-gradient(135deg, #6F2E46 60%, #d4c0c8 100%);
+    width: 36%;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 32px 12px;
+    border-top-right-radius: 100px;
+    border-bottom-right-radius: 100px;
+}
+
+.left-panel h1 {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.left-panel p {
+    font-size: 1rem;
+    margin: 0;
+    text-align: center;
+}
+
+.right-panel {
+    width: 64%;
+    padding: 36px 26px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.logo-wrapper {
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+.logo {
+    width: 85px;
+    height: auto;
+}
+
+.input-icon-wrapper {
+    position: relative;
+    margin-bottom: 18px;
+    width: 100%;
+}
+
+.input-field {
+    width: 100%;
+    font-size: 16px;
+    padding: 10px 12px 10px 2.1rem;
+    border: 1px solid #d8dde6;
+    border-radius: 6px;
+    background: #fbfbfe;
+    color: #222;
+    box-sizing: border-box;
+}
+
+.input-icon {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
+    color: #999;
+    z-index: 2;
+}
+
+.password-wrapper .eye-icon {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    color: #6F2E46;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    width: 100%;
+    margin: 0 0 10px 0;
+}
+
+.signin-btn {
+    width: 100%;
+    background: #6F2E46;
+    color: #fff;
+    padding: 11px 0;
+    border: none;
+    border-radius: 8px;
+    font-size: 17px;
+    margin: 7px 0 14px 0;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: background 0.2s;
+}
+
+.signin-btn:hover {
+    background: #522033;
+}
+
+.signin-other-btn {
+    width: 100%;
+    background: #fff;
+    border: 2px solid #6F2E46;
+    color: #6F2E46;
+    padding: 11px 0;
+    border-radius: 8px;
+    font-size: 17px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.signup-text {
+    text-align: center;
+    font-size: 14px;
+    color: #444;
+    margin: 9px 0 0 0;
+    padding-bottom: 2px;
+}
+
+.signup-text a, .forgot-password {
+    color: #6F2E46;
+    text-decoration: underline;
+    font-weight: bold;
+}
+
+/* Responsive */
+@media screen and (max-width: 800px) {
+    .login-card {
+        flex-direction: column;
+        max-width: 98vw;
+        padding: 6px;
+        border-radius: 18px;
+    }
+    .left-panel, .right-panel {
+        width: 100%;
+        border-radius: 0;
+        padding: 24px 12px;
+    }
+}

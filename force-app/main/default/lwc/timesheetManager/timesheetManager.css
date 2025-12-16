@@ -1,0 +1,274 @@
+/*.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    background-color: #f7f3ff; /* Light purple background 
+    border-radius: 0.5rem 0.5rem 0 0; /* Rounded top corners 
+}
+
+.card-title {
+    display: flex;
+    align-items: center;
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #4a4a4a; /* Dark gray color 
+}
+
+.card-title lightning-icon {
+    margin-right: 0.5rem;
+}
+
+.header-buttons lightning-button {
+    /* Styles for the "Voice Assistant" and "New Entry" buttons 
+    --sds-c-button-color-background: #6a0dad; /* Purple for New Entry 
+    --sds-c-button-color-border-brand: #6a0dad;
+    --sds-c-button-text-color: #fff;
+}
+
+.header-buttons .slds-m-right_x-small {
+    --sds-c-button-color-background: transparent;
+    --sds-c-button-color-border: #d4d4d4;
+    --sds-c-button-text-color: #4a4a4a;
+}
+
+.tabs-container {
+    padding: 1rem 1.5rem;
+    background-color: #ffffff; /* White background for the content area 
+}
+
+.tab-content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+}
+
+.tab-content-header h2 {
+    font-size: 1.1rem;
+    font-weight: 500;
+}*/
+/*.header-container {
+    background-color: #f3f6f9;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+    margin-bottom: 1rem;
+}
+.header-content h1 {
+    display: flex;
+    align-items: center;
+}
+.tabs-container {
+    background-color: #ffffff;
+    border: 1px solid #d8dde6;
+    border-radius: 0.25rem;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+}
+.content-container {
+    background-color: #ffffff;
+    border: 1px solid #d8dde6;
+    border-radius: 0.25rem;
+    min-height: 400px;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+/* Responsive adjustments 
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .header-content lightning-button {
+        margin-top: 0.5rem;
+    }
+    .content-container {
+        min-height: 300px;
+        max-height: 400px;
+    }
+}*/
+.header-box {
+  background: #f7fafd;
+  border-radius: 18px;
+  box-shadow: 0 1px 4px rgba(60,80,110,0.09);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.header-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.main-title { font-size: 1.2rem; font-weight: 600; }
+.tabs-box {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(40,60,90,0.09);
+  padding: 0.5rem 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.table-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+.modal-overlay {
+  position: fixed;
+  top:0; left:0; right:0; bottom:0;
+  background: rgba(0,0,0,0.07);
+  z-index: 4000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+@media (max-width: 768px) {
+  .header-box, .tabs-box, .entry-table-box { border-radius: 9px; padding: .5rem; }
+  .main-title { font-size: 1rem; }
+  .table-header-row { flex-direction: column; gap: .5rem; font-size: .9rem; }
+}
+/* Styles for the "My Entries" header */
+.my-entries-title {
+    display: flex;
+    align-items: center;
+}
+
+.my-entries-title h2 {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-left: 0.5rem;
+}
+
+/* You may need to adjust the existing .tab-content-header to ensure consistent spacing if you've been using inline SLDS classes */
+.tab-content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 0 1rem 0;
+}
+/* Styles for the "Weekly View" header */
+.weekly-view-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 0 1rem 0;
+}
+
+.weekly-view-title {
+    display: flex;
+    align-items: center;
+}
+
+.weekly-view-title h2 {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-left: 0.5rem;
+}
+
+.weekly-view-actions {
+    display: flex;
+    align-items: center;
+}
+
+/* Styles for the "Monthly View" header (same as weekly) */
+.monthly-view-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 0 1rem 0;
+}
+
+.monthly-view-title {
+    display: flex;
+    align-items: center;
+}
+
+.monthly-view-title h2 {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-left: 0.5rem;
+}
+
+.monthly-view-actions {
+    display: flex;
+    align-items: center;
+}
+/* ... (previous CSS styles) ... */
+/* Modal overlay sits above page */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999; /* high z-index for topmost layer */
+}
+
+/* Modal content box with padding and styling */
+.modal-content {
+  background: #fff;
+  padding: 2rem 1.5rem;
+  border-radius: .5rem;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.18);
+  max-width: 48rem;  /* Increased max-width for more columns */
+  width: 100%;
+  min-width: 320px;
+  position: relative;
+  overflow-x: auto;   /* Ensures internal scrolling if needed */
+}
+
+.modal-heading {
+  font-size: 1.18rem;
+  margin-bottom: 1.2rem;
+  font-weight: 600;
+}
+.details-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto; /* Allows table to shrink if needed */
+}
+.details-table th,
+.details-table td {
+  border: 1px solid #eaecf0;
+  text-align: left;
+  padding: .5rem .8rem;
+  white-space: nowrap;   /* Prevents text wrapping if only a few columns */
+}
+
+
+.details-table td {
+  max-width: 200px;
+  overflow-x: auto;
+  text-overflow: ellipsis; /* Adds ... for overflow text */
+  white-space: normal; /* Allows wrapping for long text like status */
+}
+
+.modal-close {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width:900px) {
+  .modal-content {
+    max-width: 97vw;
+    padding: 1rem .5rem;
+  }
+  .details-table th,
+  .details-table td {
+    padding: .4rem .5rem;
+    font-size: 94%;
+  }
+}

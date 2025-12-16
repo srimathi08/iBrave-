@@ -1,0 +1,285 @@
+<template>
+    <div class="report-container">
+        
+        <!-- Header Section -->
+        <div class="report-header">
+            <div class="header-left">
+                <lightning-icon icon-name="utility:table" size="large"></lightning-icon>
+                <div class="header-text">
+                    <h1 class="page-title">Monthly Attendance & Leave Report</h1>
+                    <p class="page-subtitle">Comprehensive employee attendance tracking with leave details</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <lightning-button 
+                    variant="brand" 
+                    label="Generate Report" 
+                    icon-name="utility:refresh"
+                    onclick={handleGenerateReport}
+                    disabled={isLoading}>
+                </lightning-button>
+                <lightning-button 
+                    variant="success" 
+                    label="Export to Excel" 
+                    icon-name="utility:download"
+                    onclick={handleExportToExcel}
+                    disabled={isExporting}>
+                </lightning-button>
+            </div>
+        </div>
+
+
+        <!-- Filters Section -->
+        <div class="filters-section">
+            <div class="filters-grid">
+                <!-- Month Selection -->
+                <lightning-combobox
+                    name="month"
+                    label="Select Month"
+                    value={selectedMonth}
+                    placeholder="Select Month"
+                    options={monthOptions}
+                    onchange={handleMonthChange}
+                    required>
+                </lightning-combobox>
+
+
+                <!-- Year Selection -->
+                <lightning-combobox
+                    name="year"
+                    label="Select Year"
+                    value={selectedYear}
+                    placeholder="Select Year"
+                    options={yearOptions}
+                    onchange={handleYearChange}
+                    required>
+                </lightning-combobox>
+
+
+                <!-- Department Filter -->
+                <lightning-combobox
+                    name="department"
+                    label="Department (Optional)"
+                    value={selectedDepartment}
+                    placeholder="All Departments"
+                    options={departmentOptions}
+                    onchange={handleDepartmentChange}>
+                </lightning-combobox>
+
+
+                <!-- Manager Filter -->
+                <lightning-combobox
+                    name="manager"
+                    label="Manager (Optional)"
+                    value={selectedManager}
+                    placeholder="All Managers"
+                    options={managerOptions}
+                    onchange={handleManagerChange}>
+                </lightning-combobox>
+            </div>
+
+
+            <!-- Report Summary Cards -->
+            <template if:true={hasReportData}>
+                <div class="report-summary">
+                    <div class="summary-card">
+                        <lightning-icon icon-name="utility:user" size="small"></lightning-icon>
+                        <div class="summary-content">
+                            <span class="summary-value">{totalEmployees}</span>
+                            <span class="summary-label">Total Employees</span>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <lightning-icon icon-name="utility:date_time" size="small"></lightning-icon>
+                        <div class="summary-content">
+                            <span class="summary-value">{totalWorkingDays}</span>
+                            <span class="summary-label">Working Days</span>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <lightning-icon icon-name="utility:event" size="small"></lightning-icon>
+                        <div class="summary-content">
+                            <span class="summary-value">{totalHolidays}</span>
+                            <span class="summary-label">Holidays</span>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <lightning-icon icon-name="utility:weekend" size="small"></lightning-icon>
+                        <div class="summary-content">
+                            <span class="summary-value">{totalWeekends}</span>
+                            <span class="summary-label">Weekends</span>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+
+        <!-- Loading Spinner -->
+        <template if:true={isLoading}>
+            <div class="loading-container">
+                <lightning-spinner alternative-text="Generating report..." size="large"></lightning-spinner>
+                <p class="loading-text">Processing attendance data...</p>
+            </div>
+        </template>
+
+
+        <!-- Report Table -->
+        <template if:false={isLoading}>
+            <template if:true={hasReportData}>
+                <div class="report-table-wrapper" onscroll={handleScroll}>
+                    <table class="report-table">
+                        <thead>
+                            <tr class="header-row">
+                                <!-- Fixed Columns -->
+                                <th class="fixed-column emp-id-col">Emp ID</th>
+                                <th class="fixed-column emp-name-col">Employee Name</th>
+                                <th class="fixed-column emp-doj-col">DOJ</th>
+                                <th class="fixed-column location-col">Work Location</th>
+                                <th class="fixed-column manager-col">Reporting Manager</th>
+                                
+                                <!-- Date Columns (Dynamic) -->
+                                <template for:each={dateHeaders} for:item="date">
+                                    <th key={date.value} class={date.headerClass}>
+                                        <div class="date-header">
+                                            <div class="date-day">{date.day}</div>
+                                            <div class="date-number">{date.number}</div>
+                                        </div>
+                                    </th>
+                                </template>
+
+
+                                <!-- Summary Columns -->
+                                <th class="summary-col summary-header-text">Total Days</th>
+                                <th class="summary-col summary-header-text">Working Days</th>
+                                <th class="summary-col summary-header-text">Present</th>
+                                <th class="summary-col summary-header-text">Absent</th>
+                                <th class="summary-col summary-header-text">Leaves</th>
+                                <th class="summary-col summary-header-text">Holidays</th>
+                                <th class="summary-col summary-header-text">Days Payable</th> <!-- ✅ NEW -->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={displayedEmployees} for:item="employee">
+                                <tr key={employee.Id} class="data-row">
+                                    <!-- Fixed Columns -->
+                                    <td class="fixed-column emp-id-col">{employee.employeeId}</td>
+                                    <td class="fixed-column emp-name-col">
+                                        <div class="employee-name-cell">
+                                            <lightning-icon icon-name="utility:user" size="x-small"></lightning-icon>
+                                            <span>{employee.employeeName}</span>
+                                        </div>
+                                    </td>
+                                    <td class="fixed-column emp-doj-col">{employee.dateOfJoining}</td>
+                                    <td class="fixed-column location-col">
+                                        <div class="location-cell">
+                                            <template if:true={employee.workLocationDetails}>
+                                                <div class="location-details">
+                                                    <span class="location-main">{employee.workLocationDetails}</span>
+                                                </div>
+                                            </template>
+                                            <template if:false={employee.workLocationDetails}>
+                                                <span>N/A</span>
+                                            </template>
+                                        </div>
+                                    </td>
+                                    <td class="fixed-column manager-col">{employee.managerName}</td>
+                                    
+                                    <!-- Date Columns (Attendance Status) -->
+                                    <template for:each={employee.dailyAttendance} for:item="day">
+                                        <td key={day.dateKey} class={day.cellClass}>
+                                            <span class={day.statusBadgeClass}>{day.statusCode}</span>
+                                        </td>
+                                    </template>
+
+
+                                    <!-- Summary Columns -->
+                                    <td class="summary-col summary-value-cell">{employee.totalDays}</td>
+                                    <td class="summary-col summary-value-cell">{employee.workingDays}</td>
+                                    <td class="summary-col present-value-cell">{employee.presentDays}</td>
+                                    <td class="summary-col absent-value-cell">{employee.absentDays}</td>
+                                    <td class="summary-col leave-value-cell">{employee.totalLeaves}</td>
+                                    <td class="summary-col holiday-value-cell">{employee.holidayCount}</td>
+                                    <td class="summary-col payable-value-cell">{employee.daysPayable}</td> <!-- ✅ NEW -->
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+
+
+                    <!-- Loading More Indicator -->
+                    <template if:true={isLoadingMore}>
+                        <div class="loading-more">
+                            <lightning-spinner alternative-text="Loading more..." size="small"></lightning-spinner>
+                            <span>Loading more employees...</span>
+                        </div>
+                    </template>
+                </div>
+
+
+                <!-- Legend Section -->
+                <div class="legend-section">
+                    <h3 class="legend-title">Legend:</h3>
+                    <div class="legend-items">
+                        <div class="legend-item">
+                            <span class="legend-badge present-badge">P</span>
+                            <span class="legend-text">Present</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-badge late-badge">P*</span>
+                            <span class="legend-text">Present but Late</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-badge absent-badge">A</span>
+                            <span class="legend-text">Absent</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-badge holiday-badge">H</span>
+                            <span class="legend-text">Holiday</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-badge weekend-badge">W</span>
+                            <span class="legend-text">Weekend</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-badge leave-badge">CL</span>
+                            <span class="legend-text">Casual Leave</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-badge leave-badge">SL</span>
+                            <span class="legend-text">Sick Leave</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-badge leave-badge">ML</span>
+                            <span class="legend-text">Maternity Leave</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-badge leave-badge">PL</span>
+                            <span class="legend-text">Privilege Leave</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-badge half-badge">CL-H</span>
+                            <span class="legend-text">Half Day Leave</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-badge absent-badge">LOP</span>
+                            <span class="legend-text">Loss of Pay</span>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+
+            <!-- Empty State -->
+            <template if:false={hasReportData}>
+                <div class="empty-state">
+                    <lightning-icon icon-name="utility:table" size="large"></lightning-icon>
+                    <h3 class="empty-title">No Report Data</h3>
+                    <p class="empty-message">Select a month and year, then click "Generate Report" to view attendance data.</p>
+                </div>
+            </template>
+        </template>
+
+
+    </div>
+</template>

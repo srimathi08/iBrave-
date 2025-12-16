@@ -1,0 +1,406 @@
+.hybrid-schedule-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f3f2f2;
+    min-height: 100vh;
+    font-family: 'Salesforce Sans', Arial, sans-serif;
+}
+
+/* Page Header */
+.page-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.header-icon {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    padding: 15px;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.page-subtitle {
+    font-size: 14px;
+    margin: 8px 0 0 0;
+    opacity: 0.9;
+}
+
+/* Instructions Card */
+.instructions-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.instructions-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.info-icon {
+    color: #007bff;
+}
+
+.instructions-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.instructions-list {
+    margin: 0;
+    padding-left: 20px;
+    line-height: 1.8;
+    color: #555;
+}
+
+.instructions-list li {
+    margin-bottom: 8px;
+}
+
+/* Schedule Form Card */
+.schedule-form-card {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.form-header {
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 15px;
+    margin-bottom: 25px;
+}
+
+.form-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+}
+
+.form-row {
+    margin-bottom: 25px;
+}
+
+.field-help {
+    font-size: 13px;
+    color: #666;
+    margin-top: 8px;
+    font-style: italic;
+}
+
+/* Days Selection */
+.days-selection-section {
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    background: #f9f9f9;
+}
+
+.days-selection-section.wfh-section {
+    border-color: #28a745;
+}
+
+.days-selection-section.office-section {
+    border-color: #007bff;
+}
+
+.section-label {
+    display: block;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.days-checkbox-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.day-checkbox-item {
+    background: white;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    transition: all 0.2s;
+}
+
+.day-checkbox-item:hover {
+    border-color: #667eea;
+    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+}
+
+.days-summary {
+    background: white;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #555;
+}
+
+.days-summary strong {
+    color: #333;
+}
+
+/* Validation Error */
+.validation-error {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 6px;
+    padding: 12px;
+    color: #721c24;
+    margin-bottom: 20px;
+}
+
+.error-text {
+    color: #dc3545;
+    font-size: 13px;
+    font-weight: 600;
+    margin-left: 10px;
+}
+
+.char-count {
+    font-size: 13px;
+    color: #666;
+    margin-top: 8px;
+}
+
+/* Summary Section */
+.summary-section {
+    background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+    border: 2px solid #667eea;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 25px;
+}
+
+.summary-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 15px 0;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.summary-label {
+    font-size: 13px;
+    color: #666;
+    font-weight: 500;
+}
+
+.summary-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: #333;
+}
+
+.summary-value.wfh-count {
+    color: #28a745;
+}
+
+.summary-value.office-count {
+    color: #007bff;
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 2px solid #f0f0f0;
+}
+
+/* Existing Schedules Card */
+.existing-schedules-card {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.schedules-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.schedules-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+}
+
+.schedules-list {
+    display: grid;
+    gap: 15px;
+}
+
+.schedule-item {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    background: #fafafa;
+    transition: all 0.2s;
+}
+
+.schedule-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.schedule-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.schedule-month {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.status-approved {
+    background: #28a745;
+}
+
+.status-pending {
+    background: #ffc107;
+}
+
+.status-rejected {
+    background: #dc3545;
+}
+
+.schedule-detail {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 14px;
+}
+
+.detail-label {
+    color: #666;
+    font-weight: 500;
+}
+
+.detail-value {
+    color: #333;
+    font-weight: 600;
+}
+
+.rejection-reason {
+    background: #f8d7da;
+    border-left: 4px solid #dc3545;
+    padding: 12px;
+    margin-top: 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #721c24;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-icon {
+    opacity: 0.3;
+    margin-bottom: 20px;
+}
+
+.empty-text {
+    font-size: 18px;
+    font-weight: 600;
+    color: #666;
+    margin: 0 0 8px 0;
+}
+
+.empty-subtext {
+    font-size: 14px;
+    color: #999;
+    margin: 0;
+}
+
+/* Loading Spinner */
+.main-spinner {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hybrid-schedule-container {
+        padding: 10px;
+    }
+    
+    .page-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .page-title {
+        font-size: 22px;
+    }
+    
+    .days-checkbox-group {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .schedule-item-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+}

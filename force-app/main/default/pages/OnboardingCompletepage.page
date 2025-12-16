@@ -1,0 +1,19 @@
+<apex:page controller="OnboardingCompleteController" showHeader="false">
+    <html>
+    <head>
+        <style>
+            body { font-family: Arial; background: #f4f4f4; padding: 40px; text-align: center; }
+            .container { max-width: 500px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; }
+            .success { color: #28a745; font-size: 48px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="success">✓</div>
+            <h1>Onboarding Complete!</h1>
+            <p>Thank you for completing your onboarding form.</p>
+            <p>Our HR team will be in touch with you shortly.</p>
+        </div>
+    </body>
+    </html>
+</apex:page>

@@ -1,0 +1,257 @@
+<apex:page controller="OfferLetterAcceptanceController" action="{!processAcceptance}" showHeader="false" sidebar="false" standardStylesheets="false">
+    <html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                padding: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .container {
+                max-width: 650px;
+                width: 100%;
+                background: white;
+                padding: 40px;
+                border-radius: 12px;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            }
+            .header {
+                text-align: center;
+                margin-bottom: 30px;
+            }
+            .logo {
+                font-size: 32px;
+                font-weight: bold;
+                color: #667eea;
+                margin-bottom: 10px;
+            }
+            .success-icon {
+                font-size: 64px;
+                color: #28a745;
+                margin-bottom: 20px;
+            }
+            .error-icon {
+                font-size: 64px;
+                color: #dc3545;
+                margin-bottom: 20px;
+            }
+            h1 {
+                color: #333;
+                font-size: 28px;
+                margin-bottom: 15px;
+            }
+            .info-box {
+                background-color: #f8f9fa;
+                padding: 20px;
+                border-radius: 8px;
+                margin: 20px 0;
+                border-left: 4px solid #667eea;
+            }
+            .info-box p {
+                margin: 8px 0;
+                color: #555;
+                line-height: 1.6;
+            }
+            .info-box strong {
+                color: #333;
+            }
+            .next-steps {
+                background-color: #e7f3ff;
+                padding: 25px;
+                border-radius: 8px;
+                margin: 25px 0;
+                border: 2px solid #0066cc;
+            }
+            .next-steps h2 {
+                color: #0066cc;
+                font-size: 20px;
+                margin-bottom: 15px;
+            }
+            .button {
+                display: inline-block;
+                background-color: #28a745;
+                color: white;
+                padding: 15px 40px;
+                text-decoration: none;
+                border-radius: 6px;
+                font-weight: bold;
+                font-size: 16px;
+                margin-top: 15px;
+                transition: all 0.3s ease;
+                text-align: center;
+            }
+            .button:hover {
+                background-color: #218838;
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+            }
+            .error-message {
+                color: #dc3545;
+                background-color: #f8d7da;
+                padding: 20px;
+                border-radius: 8px;
+                border-left: 4px solid #dc3545;
+                margin: 20px 0;
+            }
+            .contact-info {
+                text-align: center;
+                margin-top: 30px;
+                padding-top: 20px;
+                border-top: 1px solid #ddd;
+                color: #666;
+                font-size: 14px;
+            }
+            .step-indicator {
+                display: flex;
+                justify-content: space-between;
+                margin: 30px 0;
+                position: relative;
+            }
+            .step {
+                flex: 1;
+                text-align: center;
+                position: relative;
+            }
+            .step-number {
+                width: 40px;
+                height: 40px;
+                background-color: #28a745;
+                color: white;
+                border-radius: 50%;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                margin-bottom: 10px;
+            }
+            .step-inactive .step-number {
+                background-color: #ddd;
+                color: #999;
+            }
+            .step-title {
+                font-size: 12px;
+                color: #666;
+                font-weight: 600;
+            }
+            .step-line {
+                position: absolute;
+                top: 20px;
+                left: 50%;
+                width: 100%;
+                height: 2px;
+                background-color: #ddd;
+                z-index: -1;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="logo">Quadrobay Technologies</div>
+            </div>
+            
+            <!-- Success View -->
+            <apex:outputPanel rendered="{!isSuccess}">
+                <div style="text-align: center;">
+                    <div class="success-icon">✓</div>
+                    <h1>Offer Accepted Successfully!</h1>
+                </div>
+                
+                <div class="info-box">
+                    <p><strong>Candidate:</strong> {!candidateName}</p>
+                    <p><strong>Position:</strong> {!designation}</p>
+                    <p><strong>Acceptance Date:</strong> {!acceptanceDate}</p>
+					<p><strong>Onboarding Status:</strong> {!onboardingStatus}</p>
+		
+                </div>
+                
+                <!-- Step Indicator -->
+                <!--<div class="step-indicator">
+                    <div class="step">
+                        <div class="step-line"></div>
+                        <div class="step-number">1</div>
+                        <div class="step-title">Offer Accepted</div>
+                    </div>
+                    <div class="step step-inactive">
+                        <div class="step-number">2</div>
+                        <div class="step-title">Complete Onboarding</div>
+                    </div>
+                </div>-->
+                <div class="step-indicator">
+    <!-- Step 1: Offer Accepted -->
+    <div class="step">
+        <div class="step-line"></div>
+        <div class="step-number" style="background-color: #28a745;">1</div>
+        <div class="step-title">Offer Accepted</div>
+    </div>
+
+     <!-- Step 2: Complete Onboarding -->
+    <div class="step">
+        <!-- Green when onboardingStatus = Submitted or Completed -->
+        <apex:outputPanel rendered="{!OR(onboardingStatus = 'Submitted', onboardingStatus = 'Completed')}">
+            <div class="step-number" style="background-color: #28a745;">2</div>
+            <div class="step-title">Complete Onboarding</div>
+        </apex:outputPanel>
+
+        <!-- Gray when onboarding not yet completed -->
+        <apex:outputPanel rendered="{!NOT(OR(onboardingStatus = 'Submitted', onboardingStatus = 'Completed'))}">
+            <div class="step-number" style="background-color: #ddd; color: #999;">2</div>
+            <div class="step-title">Complete Onboarding</div>
+        </apex:outputPanel>
+    </div>
+</div>
+
+                <!-- Next Steps -->
+                <div class="next-steps">
+                    <h2>🎉 What's Next?</h2>
+                    <p>Congratulations on joining the Quadrobay team! To complete your onboarding process, please fill out the onboarding form.</p>
+                    <p style="margin-top: 15px;"><strong>Important:</strong> This form collects essential information for your employment setup. Please complete all sections accurately.</p>
+                    
+                    <div style="text-align: center;">
+                        <a href="{!onboardingFormUrl}" target="_blank" class="button">
+                            📝 COMPLETE ONBOARDING FORM
+                        </a>
+                    </div>
+                    
+                    <p style="margin-top: 20px; font-size: 13px; color: #666;">
+                        <strong>Note:</strong> After submitting the form, your onboarding status will be automatically updated.
+                    </p>
+                </div>
+                
+                <div class="contact-info">
+                    <p>Questions? Contact our HR team:</p>
+                    <p><strong>Email:</strong> hr@quadrobay.com</p>
+                </div>
+            </apex:outputPanel>
+            
+            <!-- Error View -->
+            <apex:outputPanel rendered="{!!isSuccess}">
+                <div style="text-align: center;">
+                    <div class="error-icon">⚠</div>
+                    <h1>Unable to Process Request</h1>
+                </div>
+                
+                <div class="error-message">
+                    <strong>Error:</strong> {!errorMessage}
+                </div>
+                
+                <div class="contact-info">
+                    <p>If you continue to experience issues, please contact:</p>
+                    <p><strong>HR Team:</strong> hr@quadrobay.com</p>
+                    <p><strong>Phone:</strong> +91-XXX-XXX-XXXX</p>
+                </div>
+            </apex:outputPanel>
+        </div>
+    </body>
+    </html>
+</apex:page>

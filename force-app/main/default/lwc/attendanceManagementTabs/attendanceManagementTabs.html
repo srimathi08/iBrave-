@@ -1,0 +1,35 @@
+<template>
+    <div class="attendance-management-container">
+        
+        <!-- Lightning Tabset with Two Tabs -->
+        <lightning-tabset 
+            variant="scoped" 
+            active-tab-value={activeTab}
+            onselect={handleTabChange}>
+            
+            <!-- Tab 1: Attendance Sheets (Daily View) -->
+            <lightning-tab 
+                label="Attendance Sheets" 
+                value="attendanceSheets"
+                icon-name="standard:file">
+                
+                <!-- ✅ Your existing Admin Attendance View component -->
+                <c-admin-attendance-view></c-admin-attendance-view>
+                
+            </lightning-tab>
+            
+            <!-- Tab 2: Monthly Attendance & Leave Report -->
+            <lightning-tab 
+                label="Monthly Attendance & Leave Report" 
+                value="monthlyReport"
+                icon-name="standard:report">
+                
+                <!-- ✅ Your existing Monthly Attendance Report component -->
+                <c-monthly-attendance-report></c-monthly-attendance-report>
+                
+            </lightning-tab>
+            
+        </lightning-tabset>
+        
+    </div>
+</template>

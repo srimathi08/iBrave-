@@ -1,0 +1,47 @@
+<template>
+  <div class="summary-header">
+    <div class="summary-title">
+      <lightning-icon icon-name="utility:summary" size="small"></lightning-icon>
+      <h2>Current Period Summary</h2>
+    </div>
+    <div class="summary-tab-buttons">
+      <lightning-button-group>
+        <lightning-button label="This Week" onclick={setSummaryPeriod} data-period="weekly" variant={weeklyButtonVariant}></lightning-button>
+        <lightning-button label="This Month" onclick={setSummaryPeriod} data-period="monthly" variant={monthlyButtonVariant}></lightning-button>
+      </lightning-button-group>
+    </div>
+  </div>
+
+  <div class="summary-metrics-container">
+    <div class="summary-metric regular-hours-bg">
+      <p>{regularHours}</p>
+      <span>Regular Hours</span>
+    </div>
+    <div class="summary-metric overtime-hours-bg">
+      <p>{overtimeHours}</p>
+      <span>Overtime Hours</span>
+    </div>
+    <div class="summary-metric total-hours-bg">
+      <p>{totalHours}</p>
+      <span>Total Hours</span>
+    </div>
+    <div class="summary-metric target-hours-bg">
+      <p>{targetHours}</p>
+      <span>Target Hours</span>
+    </div>
+  </div>
+
+  <div class="summary-progress-section">
+    <p>Weekly Progress</p>
+    <div class="progress-bar">
+      <div class="progress-bar-fill" style={progressBarWidth}></div>
+    </div>
+    <p class="progress-label">{totalHours}/{targetHours} hours</p>
+    <template if:true={showOvertimeWarning}>
+      <div class="overtime-warning">
+        <lightning-icon icon-name="utility:warning" size="small"></lightning-icon>
+        <span>Overtime this {summaryPeriodLabel}: {overtimeHours} hours</span>
+      </div>
+    </template>
+  </div>
+</template>

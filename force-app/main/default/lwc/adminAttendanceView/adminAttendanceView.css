@@ -1,0 +1,952 @@
+/* ============================================
+   ADMIN ATTENDANCE VIEW - COMPLETE CSS
+   Version: 1.0
+   Date: 2025-10-10
+   Author: Salesforce Consultant
+   ============================================ */
+
+/* ============================================
+   MAIN CONTAINER
+   ============================================ */
+
+.admin-attendance-wrapper {
+    background: #f3f3f3;
+    min-height: 100vh;
+    padding: 20px;
+    font-family: 'Salesforce Sans', Arial, sans-serif;
+}
+
+/* ============================================
+   PAGE HEADER
+   ============================================ */
+
+.page-header {
+    background: linear-gradient(135deg, #1589ee 0%, #0070d2 100%);
+    border-radius: 12px;
+    padding: 24px 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 12px rgba(0, 112, 210, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.header-icon {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    padding: 12px;
+}
+
+.header-text {
+    color: white;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+    color: white;
+    letter-spacing: -0.5px;
+}
+
+.page-subtitle {
+    font-size: 14px;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 400;
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.export-btn {
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.export-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* ============================================
+   FILTERS SECTION
+   ============================================ */
+
+.filters-section {
+    background: white;
+    border-radius: 12px;
+    padding: 0;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.filters-section:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.filters-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 2px solid #f3f3f3;
+    background: linear-gradient(to right, #fafbfc 0%, white 100%);
+}
+
+.filters-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #181818;
+}
+
+.filters-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.clear-filters-btn {
+    font-size: 13px;
+    transition: all 0.2s ease;
+}
+
+.clear-filters-btn:hover {
+    transform: scale(1.05);
+}
+
+.toggle-filters-btn {
+    transition: transform 0.3s ease;
+}
+
+.toggle-filters-btn:hover {
+    transform: rotate(180deg);
+}
+
+/* Filter Panel Animation */
+.filters-panel {
+    transition: all 0.3s ease-in-out;
+    overflow: hidden;
+}
+
+.filters-panel.expanded {
+    max-height: 1000px;
+    opacity: 1;
+    padding: 24px;
+}
+
+.filters-panel.collapsed {
+    max-height: 0;
+    opacity: 0;
+    padding: 0 24px;
+}
+
+.filter-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.filter-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-col.date-range-col {
+    grid-column: span 2;
+}
+
+.filter-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #3e3e3c;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.filter-input {
+    width: 100%;
+}
+
+/* Date Range Picker */
+.date-range-picker {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.date-input {
+    flex: 1;
+}
+
+.date-separator {
+    font-size: 13px;
+    color: #706e6b;
+    font-weight: 500;
+    padding: 0 4px;
+}
+
+/* Filter Footer */
+.filter-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 16px;
+    border-top: 1px solid #e5e5e5;
+    margin-top: 8px;
+}
+
+.apply-filters-btn {
+    padding: 0 32px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.apply-filters-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 112, 210, 0.3);
+}
+
+.filter-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #706e6b;
+    font-style: italic;
+}
+
+.active-filters-badge {
+    margin-left: auto;
+    font-weight: 600;
+}
+
+/* ============================================
+   RESULTS SECTION
+   ============================================ */
+
+.results-section {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.results-section:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 2px solid #f3f3f3;
+    background: linear-gradient(to right, #fafbfc 0%, white 100%);
+}
+
+.results-count {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.count-text {
+    font-size: 15px;
+    color: #3e3e3c;
+}
+
+.count-text strong {
+    font-weight: 700;
+    color: #0176d3;
+    font-size: 18px;
+}
+
+.results-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* ============================================
+   TABLE CONTAINER
+   ============================================ */
+
+.table-container {
+    position: relative;
+    min-height: 400px;
+    overflow-x: auto;
+}
+
+/* Loading State */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+    gap: 16px;
+}
+
+.loading-text {
+    font-size: 14px;
+    color: #706e6b;
+    margin: 0;
+}
+
+/* Error State */
+.error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 40px;
+    text-align: center;
+}
+
+.error-icon {
+    opacity: 0.3;
+    margin-bottom: 20px;
+    color: #c23934;
+}
+
+.error-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #c23934;
+    margin: 0 0 8px 0;
+}
+
+.error-message {
+    font-size: 14px;
+    color: #706e6b;
+    margin: 0 0 24px 0;
+    max-width: 500px;
+}
+
+.error-action-btn {
+    padding: 0 32px;
+}
+
+/* ============================================
+   TABLE STYLES
+   ============================================ */
+
+.attendance-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.attendance-table thead {
+    background: linear-gradient(to bottom, #fafbfc 0%, #f3f3f3 100%);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.attendance-table th {
+    padding: 16px 20px;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 700;
+    color: #3e3e3c;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #e5e5e5;
+    white-space: nowrap;
+}
+
+.attendance-table th.sortable {
+    cursor: pointer;
+    transition: background 0.2s ease;
+    user-select: none;
+}
+
+.attendance-table th.sortable:hover {
+    background: #e5e5e5;
+}
+
+.attendance-table th.sortable:active {
+    transform: scale(0.98);
+}
+
+.header-cell {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.sort-icon {
+    opacity: 0.4;
+    transition: opacity 0.2s ease;
+}
+
+.attendance-table th.sortable:hover .sort-icon {
+    opacity: 1;
+}
+
+.attendance-table th.numeric {
+    text-align: right;
+}
+
+.attendance-table th.numeric .header-cell {
+    justify-content: flex-end;
+}
+
+.attendance-table th.actions-column {
+    text-align: center;
+    width: 80px;
+}
+
+/* Table Body */
+.attendance-table tbody tr {
+    transition: all 0.2s ease;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.attendance-table tbody tr:hover {
+    background: #f8f9fa;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
+}
+
+.attendance-table tbody tr:nth-child(even) {
+    background: #fafbfc;
+}
+
+.attendance-table tbody tr:nth-child(even):hover {
+    background: #f8f9fa;
+}
+
+.attendance-table td {
+    padding: 16px 20px;
+    font-size: 14px;
+    color: #3e3e3c;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+/* Data Row Animation */
+.data-row {
+    animation: fadeInRow 0.3s ease-in-out;
+}
+
+@keyframes fadeInRow {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Employee ID Cell */
+.employee-id-cell {
+    font-weight: 600;
+}
+
+.employee-id-badge {
+    background: #e8f4f9;
+    color: #0176d3;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+/* Employee Name Cell */
+.employee-name-cell {
+    min-width: 180px;
+}
+
+.employee-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.employee-icon {
+    color: #0176d3;
+}
+
+.employee-name {
+    font-weight: 600;
+    color: #181818;
+}
+
+/* Manager Cell */
+.manager-cell {
+    color: #3e3e3c;
+}
+
+/* Department Cell */
+.department-cell {
+    color: #3e3e3c;
+    font-weight: 500;
+}
+
+/* Date Cell */
+.date-cell {
+    font-weight: 500;
+    color: #3e3e3c;
+}
+
+/* Numeric Cells */
+.numeric-cell {
+    text-align: right;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    color: #3e3e3c;
+}
+
+/* Hours Worked Cell */
+.hours-worked-cell {
+    font-weight: 600;
+}
+
+.hours-badge {
+    background: #e8f5e8;
+    color: #2e844a;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-weight: 700;
+    display: inline-block;
+    font-family: 'Salesforce Sans', Arial, sans-serif;
+}
+
+/* Location Cell */
+.location-cell {
+    color: #3e3e3c;
+}
+
+/* WFH Status Cell */
+.wfh-status-cell {
+    text-align: center;
+}
+
+.wfh-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+}
+
+.wfh-none {
+    background: #f3f3f3;
+    color: #706e6b;
+}
+
+.wfh-pending {
+    background: #fff4e5;
+    color: #b86700;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.wfh-approved {
+    background: #e8f5e8;
+    color: #2e844a;
+}
+
+.wfh-rejected {
+    background: #ffebee;
+    color: #c23934;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* WFH Reason Cell */
+.wfh-reason-cell {
+    max-width: 200px;
+}
+
+.wfh-reason-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: help;
+    color: #3e3e3c;
+}
+
+.no-data {
+    color: #c9c7c5;
+    font-style: italic;
+}
+
+/* Actions Cell */
+.actions-cell {
+    text-align: center;
+}
+
+/* ============================================
+   EMPTY STATE
+   ============================================ */
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 40px;
+    text-align: center;
+}
+
+.empty-icon {
+    opacity: 0.3;
+    margin-bottom: 20px;
+    color: #706e6b;
+}
+
+.empty-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #3e3e3c;
+    margin: 0 0 8px 0;
+}
+
+.empty-message {
+    font-size: 14px;
+    color: #706e6b;
+    margin: 0 0 24px 0;
+    max-width: 400px;
+    line-height: 1.6;
+}
+
+.empty-action-btn {
+    padding: 0 32px;
+}
+
+/* ============================================
+   PAGINATION
+   ============================================ */
+
+.pagination-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-top: 2px solid #f3f3f3;
+    background: linear-gradient(to right, #fafbfc 0%, white 100%);
+}
+
+.pagination-info {
+    font-size: 14px;
+    color: #3e3e3c;
+    font-weight: 500;
+}
+
+.pagination-controls {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.pagination-size {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #3e3e3c;
+    font-weight: 500;
+}
+
+.page-size-select {
+    width: 100px;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+/* Tablet (Portrait) */
+@media (max-width: 1200px) {
+    .filter-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .filter-col.date-range-col {
+        grid-column: span 2;
+    }
+}
+
+/* Mobile (Landscape) */
+@media (max-width: 992px) {
+    .page-header {
+        flex-direction: column;
+        gap: 16px;
+        align-items: flex-start;
+        padding: 20px;
+    }
+    
+    .header-actions {
+        width: 100%;
+    }
+    
+    .attendance-table {
+        font-size: 12px;
+    }
+    
+    .attendance-table th,
+    .attendance-table td {
+        padding: 12px;
+    }
+}
+
+/* Mobile (Portrait) */
+@media (max-width: 768px) {
+    .admin-attendance-wrapper {
+        padding: 12px;
+    }
+    
+    .page-title {
+        font-size: 22px;
+    }
+    
+    .page-subtitle {
+        font-size: 13px;
+    }
+    
+    .filter-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .filter-col.date-range-col {
+        grid-column: span 1;
+    }
+    
+    .date-range-picker {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .date-separator {
+        transform: rotate(90deg);
+    }
+    
+    .filter-footer {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    }
+    
+    .apply-filters-btn {
+        width: 100%;
+    }
+    
+    .results-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    }
+    
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .attendance-table {
+        min-width: 900px;
+    }
+    
+    .pagination-section {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+    }
+    
+    .pagination-controls {
+        justify-content: space-between;
+    }
+    
+    .pagination-size {
+        justify-content: center;
+    }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+    .page-title {
+        font-size: 18px;
+    }
+    
+    .filters-header {
+        padding: 16px;
+    }
+    
+    .filters-panel.expanded {
+        padding: 16px;
+    }
+    
+    .results-header {
+        padding: 16px;
+    }
+    
+    .attendance-table th,
+    .attendance-table td {
+        padding: 8px;
+        font-size: 11px;
+    }
+    
+    .employee-id-badge,
+    .hours-badge,
+    .wfh-badge {
+        padding: 3px 8px;
+        font-size: 11px;
+    }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+/* Focus styles for keyboard navigation */
+.sortable:focus,
+.apply-filters-btn:focus,
+.clear-filters-btn:focus,
+.export-btn:focus {
+    outline: 2px solid #0176d3;
+    outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .attendance-table tbody tr:hover {
+        background: #e5e5e5;
+    }
+    
+    .employee-id-badge,
+    .hours-badge,
+    .wfh-badge {
+        border: 1px solid currentColor;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+    .admin-attendance-wrapper {
+        background: white;
+        padding: 0;
+    }
+    
+    .header-actions,
+    .filters-section,
+    .results-actions,
+    .pagination-section,
+    .actions-cell {
+        display: none !important;
+    }
+    
+    .attendance-table {
+        border: 1px solid #000;
+    }
+    
+    .attendance-table th,
+    .attendance-table td {
+        border: 1px solid #000;
+        padding: 8px;
+    }
+}
+
+/* ============================================
+   SCROLLBAR STYLING (Webkit browsers)
+   ============================================ */
+
+.table-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+    background: #f3f3f3;
+    border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: #c9c7c5;
+    border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+    background: #706e6b;
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.text-left {
+    text-align: left;
+}
+
+.mt-8 {
+    margin-top: 8px;
+}
+
+.mt-16 {
+    margin-top: 16px;
+}
+
+.mb-8 {
+    margin-bottom: 8px;
+}
+
+.mb-16 {
+    margin-bottom: 16px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.visible {
+    display: block !important;
+}
