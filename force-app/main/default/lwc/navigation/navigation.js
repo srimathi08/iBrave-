@@ -25,6 +25,7 @@ export default class EmployeeDashboard extends LightningElement {
     @track currentUserEmail = '';
     @track currentUserProfile = '';
     @track userDataLoaded = false;
+    //Attendancerate populated --sri--
     @track attendanceRatepr
 
     tabOptions = [
@@ -67,7 +68,7 @@ export default class EmployeeDashboard extends LightningElement {
             this.loadDashboardData();
         }
     }
-
+//attendancerate populated --sri--
    async  connectedCallback() {
         console.log('Employee Dashboard component initialized');
         console.log('Employee ID:', this.employeeId);
@@ -385,7 +386,7 @@ export default class EmployeeDashboard extends LightningElement {
     getActiveTabInfo() {
         return this.tabOptions.find(tab => tab.value === this.activeTab) || null;
     }
-
+//logout button --sri--
         logout() {
         // Properly logout the user
         //window.location.href = 'https://innovation-dream-9744--hrmproject.sandbox.my.site.com/employee/login?ec=302&startURL=%2Femployee%2F';
