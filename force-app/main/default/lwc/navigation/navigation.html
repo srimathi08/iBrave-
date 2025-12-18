@@ -37,6 +37,13 @@
                             alternative-text="User Profile">
                         </lightning-icon>
                     </div>
+                    <div>
+                            <lightning-button
+        label="Logout"
+        variant="base"
+        onclick={logout}>
+    </lightning-button>
+                    </div>
                 </div>
             </div>
 
@@ -49,7 +56,7 @@
                     <div class="metric-header">
                         <div class="metric-info">
                             <h3 class="metric-title">Attendance Rate</h3>
-                            <div class="metric-value">{attendanceRate}%</div>
+                            <div class="metric-value">{attendanceRatepr}%</div>
                             <p class="metric-subtitle">this month</p>
                         </div>
                         <div class="metric-icon attendance-icon">
@@ -254,7 +261,7 @@
         </template>
 
 
-        <!-- Error State -->
+    <!-- Error State
         <template if:false={isUserDataReady}>
             <template if:false={isLoading}>
                 <div class="error-state">
@@ -275,7 +282,7 @@
                     </div>
                 </div>
             </template>
-        </template>
+        </template>  -->
 
 
     </div>

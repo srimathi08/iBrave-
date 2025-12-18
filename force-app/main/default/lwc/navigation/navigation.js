@@ -1,6 +1,7 @@
 import { LightningElement, track, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { getRecord } from 'lightning/uiRecordApi';
+import getMonthlySummary from '@salesforce/apex/AttendanceSummaryController.getMonthlySummary';
 
 // User fields - Get current user information
 import USER_ID from '@salesforce/user/Id';
@@ -24,6 +25,7 @@ export default class EmployeeDashboard extends LightningElement {
     @track currentUserEmail = '';
     @track currentUserProfile = '';
     @track userDataLoaded = false;
+    @track attendanceRatepr
 
     tabOptions = [
         { label: 'Overview', value: 'overview', cssClass: 'tab-button active' },
@@ -66,13 +68,20 @@ export default class EmployeeDashboard extends LightningElement {
         }
     }
 
-    connectedCallback() {
+   async  connectedCallback() {
         console.log('Employee Dashboard component initialized');
         console.log('Employee ID:', this.employeeId);
+        const result = await getMonthlySummary({ userId: this.employeeId });
+            console.log('Monthly Summary Result1:', result);
+            if(result.attendanceRate) {
+                this.attendanceRatepr= result.attendanceRate
+          }
         
         // loadDashboardData will be called after user wire service completes
     }
 
+    
+                
     loadDashboardData() {
         // Using static data for now - replace with Apex call later
         this.isLoading = true;
@@ -375,5 +384,11 @@ export default class EmployeeDashboard extends LightningElement {
     // NEW: Method to get active tab information
     getActiveTabInfo() {
         return this.tabOptions.find(tab => tab.value === this.activeTab) || null;
+    }
+
+        logout() {
+        // Properly logout the user
+        //window.location.href = 'https://innovation-dream-9744--hrmproject.sandbox.my.site.com/employee/login?ec=302&startURL=%2Femployee%2F';
+        window.location.href = '/employee/login';
     }
 }
