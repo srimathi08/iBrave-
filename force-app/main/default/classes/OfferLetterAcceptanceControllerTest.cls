@@ -7,11 +7,11 @@ public class OfferLetterAcceptanceControllerTest {
         Candidate__c cand = new Candidate__c(
             First_Name__c = 'Test',
             Last_Name__c = 'Candidate',
-            Designation__c = 'Software Engineer',
+            Designations__c = 'Software Engineer',
             Offer_Acceptance_Token__c = 'VALID_TOKEN_123',
             Onboarding_Status__c = 'Not Started',
             Personal_Email__c = 'testcandidate@example.com',
-Date_Of_Birth__c = Date.newInstance(2020, 12, 1),
+			Date_Of_Birth__c = Date.newInstance(2000, 12, 1),
 			Phone_No__c= '9000000000',
             //onboarding_Form_URL__c = 'https://example.com/onboarding',
             Offer_Accepted__c = false

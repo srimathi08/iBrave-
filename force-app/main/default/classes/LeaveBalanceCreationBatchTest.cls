@@ -17,7 +17,7 @@ private class LeaveBalanceCreationBatchTest {
             LocaleSidKey = 'en_US',
             ProfileId = p.Id,
             IsActive = true,
-            Employee_Id__c = 999999,  // Unique numeric value no real user will have
+            Employee_IDs__c = '999999',  // Unique numeric value no real user will have
             Date_of_Joining__c = Date.newInstance(2023, 1, 15),
             Gender__c = 'Male',
             Marital_Status__c = 'Single',
@@ -49,7 +49,7 @@ private class LeaveBalanceCreationBatchTest {
         Test.stopTest();
         
         // Verify our specific test user is found (ignores real org users)
-        List<User> testUsers = [SELECT Id FROM User WHERE Employee_Id__c = 999999];
+        List<User> testUsers = [SELECT Id FROM User WHERE Employee_IDs__c = '999999'];
         System.assertEquals(1, testUsers.size(), 'Should find exactly 1 test user');
         System.assertNotEquals(null, ql, 'start() should return QueryLocator');
     }

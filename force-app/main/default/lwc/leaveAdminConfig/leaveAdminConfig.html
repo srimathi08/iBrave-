@@ -223,7 +223,7 @@
                     <div class="employee-details">
                       <h3 class="employee-name">{emp.Name}</h3>
                       <p class="employee-email">{emp.Email}</p>
-                      <p class="employee-id">ID: {emp.Employee_Id__c}</p>
+                      <p class="employee-id">ID: {emp.Employee_IDs__c}</p>
                     </div>
                   </div>
                   <lightning-button 
@@ -335,8 +335,8 @@
               Search Filters
             </h3>
             
-            <div class="filter-grid">
-              <lightning-input
+           <!-- <div class="filter-grid">
+             <lightning-input
                 type="number"
                 label="Employee ID"
                 value={filterEmployeeId}
@@ -350,7 +350,71 @@
                 value={filterEmployeeName}
                 onchange={handleEmployeeNameFilter}
                 placeholder="Search by name">
-              </lightning-input>
+              </lightning-input> --> 
+
+
+              <div class="filter-grid">
+ 
+    <lightning-input
+      type="text"
+      label="Employee ID"
+      value={filterEmployeeId}
+      onchange={handleEmployeeIdFilter}
+      placeholder="Search Employee ID">
+    </lightning-input>
+    <template if:true={showEmployeeIdSuggestions}>
+      <div class="suggestions-dropdown">
+        <template for:each={employeeIdSuggestions} for:item="emp">
+          <div key={emp.Id} 
+               class="suggestion-item" 
+               data-id={emp.Id}
+               data-name={emp.Name}
+               data-empid={emp.Employee_IDs__c}
+               onclick={handleEmployeeIdSuggestionClick}>
+            <div class="suggestion-main">
+              <lightning-icon icon-name="standard:user" size="x-small"></lightning-icon>
+              <span class="emp-id">{emp.Employee_IDs__c}</span> - <span class="emp-name">{emp.Name}</span>
+            </div>
+            <template if:true={emp.Department}>
+              <div class="suggestion-meta">{emp.Department}</div>
+            </template>
+          </div>
+        </template>
+      </div>
+    </template>
+  
+
+  
+    <lightning-input
+      type="text"
+      label="Employee Name"
+      value={filterEmployeeName}
+      onchange={handleEmployeeNameFilter}
+      placeholder="Search by name">
+    </lightning-input>
+    <template if:true={showEmployeeNameSuggestions}>
+      <div class="suggestions-dropdown">
+        <template for:each={employeeNameSuggestions} for:item="emp">
+          <div key={emp.Id} 
+               class="suggestion-item" 
+               data-id={emp.Id}
+               data-name={emp.Name}
+               data-empid={emp.Employee_IDs__c}
+               onclick={handleEmployeeNameSuggestionClick}>
+            <div class="suggestion-main">
+              <lightning-icon icon-name="standard:user" size="x-small"></lightning-icon>
+              <span class="emp-name">{emp.Name}</span> - <span class="emp-id">ID: {emp.Employee_IDs__c}</span>
+            </div>
+            <template if:true={emp.Department}>
+              <div class="suggestion-meta">{emp.Department}</div>
+            </template>
+          </div>
+        </template>
+      </div>
+    </template>
+  
+
+              
 
               <lightning-input
                 type="text"
@@ -390,6 +454,7 @@
                 onchange={handleStartDateToFilter}>
               </lightning-input>
             </div>
+             </div>
 
             <div class="filter-actions">
               <lightning-button
@@ -401,6 +466,7 @@
             </div>
           </div>
         </div>
+       
 
         <!-- Results Section -->
         <div class="results-section">

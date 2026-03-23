@@ -1,0 +1,152 @@
+<template>
+    <!-- Floating Chat Bubble Toggle -->
+    <div class={chatBubbleClass} onclick={toggleChat} title="Voice Assistant">
+        <template if:false={isChatOpen}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+                <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z" />
+                <circle cx="8" cy="10" r="1.2" />
+                <circle cx="12" cy="10" r="1.2" />
+                <circle cx="16" cy="10" r="1.2" />
+            </svg>
+        </template>
+        <template if:true={isChatOpen}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                <path
+                    d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+            </svg>
+        </template>
+    </div>
+
+    <!-- Chat Window -->
+    <template if:true={isChatOpen}>
+        <div class="chat-window">
+            <!-- Header -->
+            <div class="chat-header">
+                <div class="chat-header-info">
+                    <div class="bot-avatar">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
+                            <path
+                                d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7h1a1 1 0 011 1v3a1 1 0 01-1 1h-1.07A7 7 0 0113 21h-2a7 7 0 01-6.93-2H3a1 1 0 01-1-1v-3a1 1 0 011-1h1a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2zM7.5 14a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm9 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="chat-title">HR Assistant</h3>
+                        <span class="chat-status">Online • Ready to help</span>
+                    </div>
+                </div>
+                <button class="chat-close-btn" onclick={toggleChat} title="Close">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <button class="quick-chip" onclick={handleQuickCheckIn} data-action="checkin">
+                    ✅ Check In
+                </button>
+                <button class="quick-chip" onclick={handleQuickCheckOut} data-action="checkout">
+                    🚪 Check Out
+                </button>
+                <button class="quick-chip" onclick={handleQuickLeaveBalance} data-action="leavebal">
+                    📊 Leave Balance
+                </button>
+                <button class="quick-chip" onclick={handleQuickAttendance} data-action="attendance">
+                    📋 My Attendance
+                </button>
+                <button class="quick-chip" onclick={handleQuickLogTimesheet} data-action="timesheet">
+                    ⏱️ Log Timesheet
+                </button>
+                <button class="quick-chip" onclick={handleQuickApplyLeave} data-action="applyleave">
+                    📝 Apply Leave
+                </button>
+            </div>
+
+            <!-- Messages Area -->
+            <div class="chat-messages" lwc:ref="chatMessages">
+                <template for:each={messages} for:item="msg">
+                    <div key={msg.id} class={msg.cssClass}>
+                        <template if:true={msg.isBot}>
+                            <div class="msg-bot-avatar">🤖</div>
+                        </template>
+                        <div class="msg-bubble">
+                            <lightning-formatted-rich-text value={msg.html}
+                                disable-linkify></lightning-formatted-rich-text>
+                            <span class="msg-time">{msg.time}</span>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Typing indicator -->
+                <template if:true={isTyping}>
+                    <div class="msg-row bot-msg">
+                        <div class="msg-bot-avatar">🤖</div>
+                        <div class="msg-bubble typing-bubble">
+                            <div class="typing-dots">
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Camera Preview Section -->
+            <template if:true={showCamera}>
+                <div class="camera-section">
+                    <template if:false={capturedPhotoB64}>
+                        <video class="camera-video" autoplay playsinline muted></video>
+                        <div class="camera-actions">
+                            <button class="cam-btn capture-btn" onclick={handleCapturePhoto} type="button">📷
+                                Capture</button>
+                            <button class="cam-btn skip-btn" onclick={handleSkipPhoto} type="button">Skip</button>
+                        </div>
+                    </template>
+                    <template if:true={capturedPhotoB64}>
+                        <img class="photo-preview-img" alt="Captured photo" />
+                        <div class="camera-actions">
+                            <button class="cam-btn use-btn" onclick={handleUsePhoto} type="button">✓ Use Photo</button>
+                            <button class="cam-btn retake-btn" onclick={handleRetakePhoto} type="button">🔄
+                                Retake</button>
+                        </div>
+                    </template>
+                </div>
+            </template>
+
+            <!-- Input Area -->
+            <div class="chat-input-area">
+                <div class="input-wrapper">
+                    <input type="text" class="chat-input" placeholder={inputPlaceholder} value={userInput}
+                        onkeyup={handleInputKeyUp} oninput={handleInputChange} lwc:ref="chatInput" />
+                    <button class={micBtnClass} onclick={toggleVoice} title={micTitle} type="button">
+                        <template if:false={isListening}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5z" />
+                                <path
+                                    d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+                            </svg>
+                        </template>
+                        <template if:true={isListening}>
+                            <div class="mic-pulse"></div>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+                                <path
+                                    d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
+                                <path
+                                    d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+                            </svg>
+                        </template>
+                    </button>
+                </div>
+                <button class="send-btn" onclick={handleSend} title="Send" type="button" disabled={isSendDisabled}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </template>
+</template>

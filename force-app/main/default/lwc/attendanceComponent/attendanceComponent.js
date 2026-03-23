@@ -1,6 +1,7 @@
 import { LightningElement, api, track, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { getRecord } from 'lightning/uiRecordApi';
+import LightningAlert from 'lightning/alert';
 
 // User fields
 import USER_ID from '@salesforce/user/Id';
@@ -15,7 +16,7 @@ import updateAttendance from '@salesforce/apex/EditController.updateAttendance';
 import getReverseGeocode from '@salesforce/apex/LocationService.getReverseGeocode';
 import getMonthlySummary from '@salesforce/apex/AttendanceSummaryController.getMonthlySummary';
 import getEmployeeAttendanceRecords from '@salesforce/apex/AttendanceViewController.getEmployeeAttendanceRecords';
-import submitWFHApproval from '@salesforce/apex/WFHApprovalController.submitWFHApproval';
+//import submitWFHApproval from '@salesforce/apex/WFHApprovalController.submitWFHApproval';
 import getTodayAttendanceRecord from '@salesforce/apex/AttendanceViewController.getTodayAttendanceRecord';
 import getActiveBranches from '@salesforce/apex/BranchController.getActiveBranches';
 import getBranchDetails from '@salesforce/apex/BranchController.getBranchDetails';
@@ -23,6 +24,11 @@ import uploadFile from '@salesforce/apex/FileUploaderClass.uploadFile';
 import checkLeaveForDate from '@salesforce/apex/AttendanceViewController.checkLeaveForDate';
 import checkActiveScheduleForDate from '@salesforce/apex/HybridWorkScheduleController.checkActiveScheduleForDate';
 import submitHybridScheduleRequest from '@salesforce/apex/HybridWorkScheduleController.submitHybridScheduleRequest';
+import getUserDetails from '@salesforce/apex/AttendanceController.getUserDetails';
+import autoCheckOut from '@salesforce/apex/AttendanceViewController.autoCheckOut';
+import checkYesterdayAttendance from '@salesforce/apex/AttendanceViewController.checkYesterdayAttendance';
+import createODAttendance from '@salesforce/apex/NewController.createODAttendance';
+import checkEmployeeWFHRequest from '@salesforce/apex/WFH_Request.checkEmployeeWFHRequest';
 
 const USER_FIELDS = [NAME_FIELD, EMAIL_FIELD, PROFILE_NAME_FIELD, MANAGER_FIELD];
 
@@ -145,6 +151,23 @@ export default class AttendanceComponent extends LightningElement {
     @track scheduledWFHDays = '';
     @track scheduledOfficeDays = '';
 
+    // ✅ NEW: Previous day OD properties
+@track hasMissingYesterdayRecord = false;
+@track yesterdayDate = '';
+@track yesterdayDisplayDate = '';
+@track showODModal = false;
+@track odReason = '';
+@track odReasonCharCount = 0;
+@track odSelectedWorkLocation = '';
+@track odShowBranchDropdown = false;
+@track odSelectedBranchId = '';
+@track odSelectedBranchName = '';
+@track odCheckInTime = '';
+@track odCheckOutTime = '';
+@track odNotes = '';
+@track isSubmittingOD = false;
+@track isCheckingWFHRequest = false;
+
     // Hybrid Schedule Modal Properties
     @track showHybridScheduleModal = false;
     @track hybridScheduleMonth = '';
@@ -159,6 +182,7 @@ export default class AttendanceComponent extends LightningElement {
     ];
     @track hybridValidationError = false;
     @track hybridValidationErrorMessage = '';
+    @track autoCheckoutTimer = null;
 
     // Work location options
     workLocationOptions = [
@@ -166,7 +190,7 @@ export default class AttendanceComponent extends LightningElement {
         { label: 'Work from Home', value: 'Work from Home' },
         { label: 'Client Place', value: 'Client Place' },
         { label: 'Field Work', value: 'Field Work' },
-        { label: 'Remote Work', value: 'Remote Work' },
+        //{ label: 'Remote Work', value: 'Remote Work' },
         { label: 'Business Travel', value: 'Business Travel' }
     ];
 
@@ -196,22 +220,47 @@ export default class AttendanceComponent extends LightningElement {
     @track totalPages = 0;
     @track showPagination = false;
 
+    
+
+
+    //ErrorMessage
+    @track errorMessage = '';
+
+
     // Wire to get current user information
-    @wire(getRecord, { recordId: USER_ID, fields: USER_FIELDS })
-    wiredUser({ error, data }) {
-        if (data) {
-            this.currentUserName = data.fields.Name.value;
-            this.currentUserEmail = data.fields.Email.value;
-            this.currentUserProfile = data.fields.Profile?.value?.fields?.Name?.value || 'User';
-            this.currentUserManagerName = data.fields.Manager?.value?.fields?.Name?.value || 'No Manager Assigned';
-            this.employeeId = this.currentUserId;
+   // @wire(getRecord, { recordId: USER_ID, fields: USER_FIELDS })
+   // wiredUser({ error, data }) {
+     //   if (data) {
+      //      console.log('Afrose',JSON.stringify(data))
+       //     this.currentUserName = data.fields.Name.value;
+         //   this.currentUserEmail = data.fields.Email.value;
+        //    this.currentUserProfile = data.fields.Profile?.value?.fields?.Name?.value || 'User';
+         //   this.currentUserManagerName = data.fields.Manager?.value?.fields?.Name?.value || 'No Manager Assigned';
+          //  this.employeeId = this.currentUserId;
             
-            console.log('User loaded:', this.currentUserName, 'Manager:', this.currentUserManagerName);
-        } else if (error) {
+           // console.log('User loaded:', this.currentUserName, 'Manager:', this.currentUserManagerName);
+     //   } else if (error) {
+           // console.error('Error getting user info:', error);
+         ///   this.showToast('Error', 'Unable to load user information', 'error');
+       // }
+ //   }
+
+    @wire(getUserDetails)
+    wiredUser({ error, data }) {
+        if (data) { 
+            console.log('Afrose User Data:', JSON.stringify(data));
+            this.currentUserName = data.Name;
+
+            this.currentUserEmail = data.Email;
+            this.currentUserProfile = data.Profile.Name || 'User';
+            this.currentUserManagerName = data.Manager.Name || 'No Manager Assigned';
+            this.employeeId = data.Id;
+        }    
+        else if (error) {
             console.error('Error getting user info:', error);
-            this.showToast('Error', 'Unable to load user information', 'error');
+            this.showToast('Error', 'Unable to load user information', error);
         }
-    }
+        }
 
     // ===================================================================
     // LIFECYCLE METHODS
@@ -225,7 +274,9 @@ export default class AttendanceComponent extends LightningElement {
         this.loadBranches();
         
         setTimeout(() => {
-            this.initializeComponent();
+            this.initializeComponent().then(() => {
+             this.scheduleAutoCheckout(); // ← ADD THIS LINE
+         });
         }, 1000);
 
         this.requestPermissions();
@@ -235,6 +286,11 @@ export default class AttendanceComponent extends LightningElement {
         if (this.timeInterval) {
             clearInterval(this.timeInterval);
         }
+
+                 if (this.autoCheckoutTimer) {          // ← ADD THESE 3 LINES
+         clearTimeout(this.autoCheckoutTimer);
+         this.autoCheckoutTimer = null;
+     }
         
         if (this.watchId) {
             navigator.geolocation.clearWatch(this.watchId);
@@ -289,6 +345,255 @@ export default class AttendanceComponent extends LightningElement {
             this.hasActiveHybridSchedule = false;
         }
     }
+
+
+    // ===================================================================
+// ✅ NEW: PREVIOUS DAY OD / MISSED ATTENDANCE FEATURE
+// ===================================================================
+
+
+async checkYesterdayAttendance() {
+    try {
+        const today = new Date();
+        const todayDayOfWeek = today.getDay(); // 0=Sun,1=Mon,2=Tue,3=Wed,4=Thu,5=Fri,6=Sat
+
+        // Sunday → no check at all
+        if (todayDayOfWeek === 0) {
+            this.hasMissingYesterdayRecord = false;
+            console.log('⏭️ Today is Sunday - skipping check');
+            return;
+        }
+
+        const previousDay = new Date(today);
+
+        if (todayDayOfWeek === 1) {
+            // Monday → check Friday (skip Sat & Sun)
+            previousDay.setDate(today.getDate() - 3);
+            console.log('📅 Today is Monday → checking Friday');
+
+        } else if (todayDayOfWeek === 6) {
+            // Saturday → check Friday (yesterday)
+            previousDay.setDate(today.getDate() - 1);
+            console.log('📅 Today is Saturday → checking Friday');
+
+        } else {
+            // Tuesday–Friday → check previous weekday (yesterday)
+            previousDay.setDate(today.getDate() - 1);
+            console.log('📅 Checking yesterday');
+        }
+
+        const previousDayStr = previousDay.toISOString().split('T')[0];
+        this.yesterdayDate = previousDayStr;
+        this.yesterdayDisplayDate = previousDay.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        console.log('🔍 Checking attendance for:', previousDayStr);
+
+        const result = await checkYesterdayAttendance({
+            employeeId: this.employeeId,
+            checkDate: previousDayStr
+        });
+
+        console.log('Previous day check result:', JSON.stringify(result));
+
+        if (result.success) {
+            this.hasMissingYesterdayRecord = !result.hasRecord
+                && !result.hasLeave
+                && !result.hasHoliday
+                && !result.hasODSubmitted;
+        } else {
+            this.hasMissingYesterdayRecord = false;
+        }
+
+    } catch (error) {
+        console.error('Error checking previous working day:', error);
+        this.hasMissingYesterdayRecord = false;
+    }
+}
+
+handleOpenODModal() {
+    this.showODModal = true;
+    this.odReason = '';
+    this.odReasonCharCount = 0;
+    this.odSelectedWorkLocation = '';
+    this.odShowBranchDropdown = false;
+    this.odSelectedBranchId = '';
+    this.odSelectedBranchName = '';
+    this.odCheckInTime = '';
+    this.odCheckOutTime = '';
+    this.odNotes = '';
+}
+
+closeODModal() {
+    this.showODModal = false;
+}
+
+handleODWorkLocationChange(event) {
+    this.odSelectedWorkLocation = event.detail.value;
+    this.odShowBranchDropdown = this.odSelectedWorkLocation === 'Work from Office';
+    if (!this.odShowBranchDropdown) {
+        this.odSelectedBranchId = '';
+        this.odSelectedBranchName = '';
+    }
+}
+
+async handleODBranchChange(event) {
+    this.odSelectedBranchId = event.detail.value;
+    if (this.odSelectedBranchId) {
+        try {
+            const result = await getBranchDetails({ branchId: this.odSelectedBranchId });
+            if (result.success) {
+                this.odSelectedBranchName = result.branchName;
+            }
+        } catch (error) {
+            console.error('Error getting branch for OD:', error);
+        }
+    }
+}
+
+handleODReasonChange(event) {
+    this.odReason = event.detail.value;
+    this.odReasonCharCount = this.odReason ? this.odReason.length : 0;
+}
+
+handleODNotesChange(event) {
+    this.odNotes = event.detail.value;
+}
+
+handleODCheckInTimeChange(event) {
+    this.odCheckInTime = event.detail.value;
+}
+
+handleODCheckOutTimeChange(event) {
+    this.odCheckOutTime = event.detail.value;
+}
+
+
+
+// ✅ Override processPhotoFile to handle OD photo types too
+// (update your existing processPhotoFile method to add these cases)
+// Inside reader.onload, add:
+//   } else if (fieldName === 'od_checkin') {
+//       this.odCheckInPhotoPreview = reader.result;
+//       this.odCheckInPhotoB64 = base64;
+//       this.odCheckInPhotoName = fileName;
+//   } else if (fieldName === 'od_checkout') {
+//       this.odCheckOutPhotoPreview = reader.result;
+//       this.odCheckOutPhotoB64 = base64;
+//       this.odCheckOutPhotoName = fileName;
+//   }
+
+get isODSubmitDisabled() {
+    const base = !this.odSelectedWorkLocation
+        || !this.odReason || this.odReason.trim().length < 20
+        || !this.odCheckInTime
+        || !this.odCheckOutTime
+        || this.isSubmittingOD;
+
+    if (this.odSelectedWorkLocation === 'Work from Office') {
+        return base || !this.odSelectedBranchId;
+    }
+    return base;
+}
+
+get odCheckInTimeFormatted() {
+    if (!this.odCheckInTime) return '--';
+    const [h, m] = this.odCheckInTime.split(':');
+    const hour = parseInt(h);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const h12 = hour % 12 || 12;
+    return `${h12}:${m} ${ampm}`;
+}
+
+get odCheckOutTimeFormatted() {
+    if (!this.odCheckOutTime) return '--';
+    const [h, m] = this.odCheckOutTime.split(':');
+    const hour = parseInt(h);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const h12 = hour % 12 || 12;
+    return `${h12}:${m} ${ampm}`;
+}
+
+
+get previousDayLabel() {
+    const today = new Date();
+    const todayDayOfWeek = today.getDay();
+    // Monday or Saturday → previous working day was Friday
+    if (todayDayOfWeek === 1 || todayDayOfWeek === 6) {
+        return 'Last Friday';
+    }
+    return 'Yesterday';
+}
+async confirmODSubmit() {
+    if (this.isODSubmitDisabled) return;
+
+    this.isSubmittingOD = true;
+
+    try {
+        // Build datetime strings for the previous day
+        const checkInDateTime = `${this.yesterdayDate} ${this.odCheckInTime}:00`;
+        const checkOutDateTime = `${this.yesterdayDate} ${this.odCheckOutTime}:00`;
+
+        const checkInHour = parseInt(this.odCheckInTime.split(':')[0]);
+        const checkInMinute = parseInt(this.odCheckInTime.split(':')[1]);
+        const isLate = checkInHour > 9 || (checkInHour === 9 && checkInMinute > 15);
+
+        const payload = {
+            Employee_Name__c: this.employeeId,
+            Date__c: this.yesterdayDate,
+            Check_In_Time__c: checkInDateTime,
+            Check_Out_Time__c: checkOutDateTime,
+            Work_Location__c: this.odSelectedWorkLocation,
+            Status__c: isLate ? 'Late' : 'Present',
+            OD_Approval_Status__c: 'Pending',
+            Is_OD_Request__c: true,
+            OD_Reason__c: this.odReason,
+            Submitted_For_Approval__c: true,
+            Notes__c: this.odNotes
+                || `OD submission by ${this.currentUserName} for ${this.yesterdayDisplayDate}`,
+            
+        };
+
+        if (this.odSelectedWorkLocation === 'Work from Office' && this.odSelectedBranchId) {
+            payload.Branch_Name__c = this.odSelectedBranchId;
+        }
+
+        console.log('📤 Submitting OD payload:', JSON.stringify(payload, null, 2));
+
+        const result = await createODAttendance({ payload: payload });
+
+        if (result.success) {
+            this.hasMissingYesterdayRecord = false;
+            this.showODModal = false;
+
+            await LightningAlert.open({
+                label: 'OD Request Submitted',
+                message: `Your attendance request for ${this.yesterdayDisplayDate} has been sent to ${this.currentUserManagerName} for approval.`,
+                theme: 'success'
+            });
+
+            await Promise.allSettled([
+                this.loadMonthlySummary().catch(e => console.log(e)),
+                this.loadExistingAttendanceRecords().catch(e => console.log(e))
+            ]);
+        } else {
+            throw new Error(result.error || 'Failed to submit OD request');
+        }
+    } catch (error) {
+        console.error('❌ OD submission error:', error);
+        await LightningAlert.open({
+            label: 'Submission Failed',
+            message: error.body?.message || error.message,
+            theme: 'error'
+        });
+    } finally {
+        this.isSubmittingOD = false;
+    }
+}
 
     // ✅ UPDATED: Reset with session properties
     resetTodayAttendanceState() {
@@ -430,7 +735,11 @@ export default class AttendanceComponent extends LightningElement {
                 }),
                 this.checkHybridSchedule().catch(error => {
                     console.error('Could not check hybrid schedule:', error);
-                })
+                }),
+
+                this.checkYesterdayAttendance().catch(error => {
+    console.error('Could not check yesterday attendance:', error);
+})
             ]);
 
             console.log('✅ Component initialization completed');
@@ -587,6 +896,122 @@ export default class AttendanceComponent extends LightningElement {
         }
     }
 
+
+    /**
+ * Schedules auto-checkout at 11:59 PM.
+ * Call this after every successful check-in.
+ */
+scheduleAutoCheckout() {
+    // Clear any existing timer first
+    if (this.autoCheckoutTimer) {
+        clearTimeout(this.autoCheckoutTimer);
+        this.autoCheckoutTimer = null;
+    }
+
+    // Only schedule if currently checked in
+    if (!this.isCheckedIn || this.isCheckedOut) {
+        console.log('⏰ Auto-checkout not needed - not currently checked in');
+        return;
+    }
+
+    const now       = new Date();
+    const midnight  = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 0, 0);
+    const msLeft    = midnight.getTime() - now.getTime();
+
+    if (msLeft <= 0) {
+        // Already past 11:59 PM - trigger immediately
+        console.log('⚠️ Already past 11:59 PM - triggering auto-checkout now');
+        this.triggerAutoCheckout();
+        return;
+    }
+
+    const h = Math.floor(msLeft / 3600000);
+    const m = Math.floor((msLeft % 3600000) / 60000);
+    console.log(`⏰ Auto-checkout scheduled in ${h}h ${m}m (at 11:59 PM)`);
+
+    // ── Warning toast 30 minutes before (at ~11:29 PM) ────────────
+    const msWarning = msLeft - (30 * 60 * 1000);
+    if (msWarning > 0) {
+        setTimeout(() => {
+            this.showToast(
+                '⚠️ Checkout Reminder',
+                'You will be automatically checked out in 30 minutes at 11:59 PM. Please check out manually if you have finished work.',
+                'warning'
+            );
+        }, msWarning);
+    }
+
+    // ── Main auto-checkout timer ───────────────────────────────────
+    this.autoCheckoutTimer = setTimeout(() => {
+        console.log('⏰ 11:59 PM reached — triggering auto-checkout...');
+        this.triggerAutoCheckout();
+    }, msLeft);
+}
+
+
+/**
+ * Calls Apex autoCheckOut() and updates the UI.
+ */
+async triggerAutoCheckout() {
+    // Guard: only run if still open
+    if (!this.isCheckedIn || this.isCheckedOut) {
+        console.log('✅ Already checked out - auto-checkout skipped');
+        return;
+    }
+    if (!this.todayAttendanceId) {
+        console.log('⚠️ No attendance record ID - cannot auto-checkout');
+        return;
+    }
+
+    try {
+        this.isLoading = true;
+        console.log('📤 Auto-checkout calling Apex for record:', this.todayAttendanceId);
+
+        const result = await autoCheckOut({ recordId: this.todayAttendanceId });
+
+        if (result.success) {
+            console.log('✅ Auto-checkout successful:', result.message);
+
+            // Update local state
+            this.isCheckedOut       = true;
+            this.canStartNewSession = true;
+            this.actualHoursWorked  = result.hoursWorked || '0.0';
+
+            this.showToast(
+                '🕛 Auto Checkout Complete',
+                `You were automatically checked out at 11:59 PM. Hours worked: ${result.hoursWorked}h. Please check out manually next time.`,
+                'warning'
+            );
+
+            // Refresh UI
+            await Promise.allSettled([
+                this.loadTodayAttendance(),
+                this.loadMonthlySummary().catch(e => console.log('Summary refresh error:', e)),
+                this.loadExistingAttendanceRecords().catch(e => console.log('Records refresh error:', e))
+            ]);
+
+        } else {
+            console.error('❌ Auto-checkout failed:', result.error);
+            this.showToast(
+                'Auto Checkout Failed',
+                result.error || 'Could not auto-checkout. Please check out manually.',
+                'error'
+            );
+        }
+
+    } catch (error) {
+        console.error('❌ Auto-checkout error:', error);
+        this.showToast(
+            'Auto Checkout Error',
+            'An error occurred: ' + (error.body?.message || error.message),
+            'error'
+        );
+    } finally {
+        this.isLoading         = false;
+        this.autoCheckoutTimer = null;
+    }
+}
+
     // ===================================================================
     // CONTINUING FROM PREVIOUS MESSAGE...
     // ===================================================================
@@ -605,6 +1030,8 @@ export default class AttendanceComponent extends LightningElement {
                     presentDays: result.presentDays.toString(),
                     lateDays: result.lateDays.toString(),
                     absentDays: result.absentDays.toString(),
+                    approvedLeaveDays: result.approvedLeaveDays.toString(),
+                    lopDays: result.lopDays.toString(),
                     totalHours: result.totalHours,
                     avgHours: result.avgHoursPerDay,
                     attendanceRate: result.attendanceRate
@@ -631,6 +1058,8 @@ export default class AttendanceComponent extends LightningElement {
             presentDays: '0',
             lateDays: '0',
             absentDays: '0',
+            approvedLeaveDays: '0',
+            lopDays: '0',
             totalHours: '0.0',
             avgHours: '0.0',
             attendanceRate: '0'
@@ -680,8 +1109,15 @@ export default class AttendanceComponent extends LightningElement {
                         
                         submittedForApproval: record.submittedForApproval || false,
                         wfhApprovalStatus: record.wfhApprovalStatus || null,
-                        wfhApprovalStatusText: this.getWFHApprovalStatusText(record.wfhApprovalStatus),
-                        wfhApprovalBadgeClass: this.getWFHApprovalBadgeClass(record.wfhApprovalStatus),
+                        wfhApprovalStatusText: record.wfhApprovalStatusText || '--',
+                        wfhApprovalBadgeClass: record.wfhApprovalBadgeClass || 'approval-badge approval-none',
+                        
+                        // ✅ OD Approval Status
+                        isODRequest: record.isODRequest || false,
+                        odApprovalStatus: record.odApprovalStatus || null,
+                        odApprovalStatusText: record.odApprovalStatusText || '--',
+                        odApprovalBadgeClass: record.odApprovalBadgeClass || 'approval-badge approval-none',
+                        
                         approvalComments: record.approvalComments || null,
                         wfhReason: record.wfhReason || null,
                         
@@ -872,77 +1308,105 @@ export default class AttendanceComponent extends LightningElement {
     // WORK LOCATION HANDLERS
     // ===================================================================
 
-    handleWorkLocationChange(event) {
-        this.selectedWorkLocation = event.detail.value;
-        
-        this.showBranchDropdown = false;
-        this.showWFHReasonSection = false;
-        this.showClientPlaceDetails = false;
-        this.showFieldWorkDetails = false;
-        this.showBusinessTravelSection = false;
-        this.requiresApproval = false;
-        
-        console.log('🔄 Work location changed to:', this.selectedWorkLocation);
+   async handleWorkLocationChange(event) {
+    const newLocation = event.detail.value;
 
-        this.selectedBranchId = '';
-        this.selectedBranchName = '';
-        
-        if (this.selectedWorkLocation === 'Work from Office') {
-            this.showBranchDropdown = true;
-            console.log('✅ Showing branch dropdown with ' + this.branchOptions.length + ' options');
-            
-        } else if (this.selectedWorkLocation === 'Work from Home') {
-            if (this.isScheduledWFH && this.autoApproveWFH) {
-                this.showWFHReasonSection = true;
-                this.requiresApproval = false;
-                this.wfhReason = 'Pre-approved hybrid work schedule - ' + this.hybridScheduleMessage;
-                console.log('✅ Today is scheduled WFH day - No approval required');
+    // ── Reset all conditional sections ───────────────────────────────
+    this.selectedWorkLocation      = newLocation;
+    this.showBranchDropdown        = false;
+    this.showWFHReasonSection      = false;
+    this.showClientPlaceDetails    = false;
+    this.showFieldWorkDetails      = false;
+    this.showBusinessTravelSection = false;
+    this.requiresApproval          = false;
+    this.selectedBranchId          = '';
+    this.selectedBranchName        = '';
+    this.wfhReason                 = '';
+    this.wfhReasonCharCount        = 0;
+    this.clientPlaceDetails        = '';
+    this.clientPlaceCharCount      = 0;
+    this.fieldWorkDetails          = '';
+    this.fieldWorkCharCount        = 0;
+    this.businessTravelDetails     = '';
+    this.businessTravelStartDate   = '';
+    this.businessTravelEndDate     = '';
+    this.businessTravelCharCount   = 0;
+    this.fileData                  = null;
+    this.uploadedFileName          = '';
+    this.isFileUploaded            = false;
+
+    // ── WFH: check for existing Pending / Approved request ───────────
+    if (newLocation === 'Work from Home') {
+        this.isCheckingWFHRequest = true;
+
+        try {
+            const today  = new Date().toISOString().split('T')[0];
+            const result = await checkEmployeeWFHRequest({
+                employeeId: this.employeeId,
+                checkDate:  today
+            });
+
+            if (result.success && result.hasValidRequest) {
+                // ✅ Valid WFH request found — allow check-in
+                const statusLabel = result.status === 'Approved' ? '✅ Approved' : '🕐 Pending Approval';
+                this.showToast(
+                    'WFH Request Found',
+                    `Your Work From Home request is ${statusLabel}. You may proceed with check-in.`,
+                    'success'
+                );
+                console.log('✅ WFH request found — status:', result.status);
+
             } else {
-                this.showWFHReasonSection = true;
-                this.requiresApproval = true;
-                console.log('Showing WFH Reason section - Approval required');
+                // ❌ No valid WFH request — block and redirect to WFH tab
+                this.selectedWorkLocation = '';
+
+                await LightningAlert.open({
+                    label: 'WFH Request Required',
+                    message:
+                        'You do not have an active Work From Home request for today. ' +
+                        'Please submit a WFH request first. Redirecting you to the WFH Request page now.',
+                    theme: 'warning'
+                });
+
+                // Close the check-in modal first
+                this.showCheckInModal = false;
+
+                // Fire event up to dashboard to navigate to WFH tab
+                const navigateEvent = new CustomEvent('navigatetowfh', {
+                    bubbles: true,
+                    composed: true
+                });
+                this.dispatchEvent(navigateEvent);
             }
-            
-        } else if (this.selectedWorkLocation === 'Client Place') {
-            this.showClientPlaceDetails = true;
-            console.log('✅ Showing Client Place Details section');
-            
-        } else if (this.selectedWorkLocation === 'Field Work') {
-            this.showFieldWorkDetails = true;
-            console.log('✅ Showing Field Work Details section');
-            
-        } else if (this.selectedWorkLocation === 'Business Travel') {
-            this.showBusinessTravelSection = true;
-            console.log('✅ Showing Business Travel section');
+
+        } catch (error) {
+            console.error('❌ Error checking WFH request:', error);
+            this.selectedWorkLocation = '';
+            this.showToast(
+                'Error',
+                'Unable to verify WFH request. Please try again.',
+                'error'
+            );
+        } finally {
+            this.isCheckingWFHRequest = false;
         }
-        
-        if (!this.showWFHReasonSection) {
-            this.wfhReason = '';
-            this.wfhReasonCharCount = 0;
-        }
-        if (!this.showClientPlaceDetails) {
-            this.clientPlaceDetails = '';
-            this.clientPlaceCharCount = 0;
-        }
-        if (!this.showFieldWorkDetails) {
-            this.fieldWorkDetails = '';
-            this.fieldWorkCharCount = 0;
-        }
-        if (!this.showBusinessTravelSection) {
-            this.businessTravelDetails = '';
-            this.businessTravelStartDate = '';
-            this.businessTravelEndDate = '';
-            this.businessTravelCharCount = 0;
-            this.fileData = null;
-            this.uploadedFileName = '';
-            this.isFileUploaded = false;
-        }
-        if (!this.showBranchDropdown) {
-            this.selectedBranchId = '';
-            this.selectedBranchName = '';
-        }
+        return; // always exit early for WFH branch
     }
 
+    // ── All other work locations ──────────────────────────────────────
+    if (newLocation === 'Work from Office') {
+        this.showBranchDropdown = true;
+
+    } else if (newLocation === 'Client Place') {
+        this.showClientPlaceDetails = true;
+
+    } else if (newLocation === 'Field Work') {
+        this.showFieldWorkDetails = true;
+
+    } else if (newLocation === 'Business Travel') {
+        this.showBusinessTravelSection = true;
+    }
+}
     async handleBranchChange(event) {
         this.selectedBranchId = event.detail.value;
         
@@ -1015,7 +1479,11 @@ export default class AttendanceComponent extends LightningElement {
         
         const maxSize = 5 * 1024 * 1024;
         if (file.size > maxSize) {
-            this.showToast('Error', 'File size must be less than 5MB', 'error');
+         LightningAlert.open({
+        label: 'File Size Limit Exceeded',
+        message: 'File size must be less than 5 MB.',
+        theme: 'error'
+    });
             event.target.value = '';
             return;
         }
@@ -1031,8 +1499,12 @@ export default class AttendanceComponent extends LightningElement {
             this.uploadedFileName = file.name;
             this.isFileUploaded = true;
             
-            console.log('✅ File processed:', this.fileData.filename);
-            this.showToast('Success', `File "${file.name}" ready to upload`, 'success');
+        console.log('✅ File processed:', this.fileData.filename);
+        LightningAlert.open({
+        label: 'Upload Ready',
+        message: `File "${file.name}" is ready to upload.`,
+        theme: 'success'
+    });
         };
         
         reader.onerror = () => {
@@ -1050,7 +1522,12 @@ export default class AttendanceComponent extends LightningElement {
         this.fileData = null;
         this.uploadedFileName = '';
         this.isFileUploaded = false;
-        this.showToast('Success', 'File removed', 'success');
+     LightningAlert.open({
+    label: 'Success',
+    message: 'File removed successfully.',
+    theme: 'success'
+});
+
     }
 
     // ===================================================================
@@ -1132,7 +1609,12 @@ export default class AttendanceComponent extends LightningElement {
             this.hasValidLocation = true;
             this.isGettingLocation = false;
             this.locationErrorMessage = '';
-            this.showToast('Success', `Location captured: ${this.displayLocationName}`, 'success');
+            await LightningAlert.open({
+    label: 'Location Captured',
+    message: `Location captured: ${this.displayLocationName}`,
+    theme: 'success'
+});
+
         }
     }
 
@@ -1161,7 +1643,13 @@ export default class AttendanceComponent extends LightningElement {
         this.displayLocationName = '';
         this.fullLocationAddress = '';
         
-        this.showToast('Warning', message, 'warning');
+     
+    LightningAlert.open({
+    label: 'Warning',
+    message: message,
+    theme: 'warning'
+});
+
     }
 
     getLocationErrorMessage(error) {
@@ -1182,8 +1670,13 @@ export default class AttendanceComponent extends LightningElement {
         1. Click the location icon in your browser's address bar
         2. Allow location access for this site
         3. Refresh the page and try again`;
-        
-        this.showToast('Location Permission Required', message, 'info');
+
+         LightningAlert.open({
+    label: 'Location Permission Required',
+    message: message,
+    theme: 'info'
+});
+
     }
 
     // ===================================================================
@@ -1225,11 +1718,17 @@ export default class AttendanceComponent extends LightningElement {
             this.isCapturingPhoto = false;
             
             if (error.name === 'NotAllowedError') {
-                this.showToast('Camera Permission Required', 
-                    'Please allow camera access in your browser settings.', 'warning');
+          LightningAlert.open({
+        message: 'Please allow camera access in your browser settings.',
+        theme: 'warning',
+        label: 'Camera Permission Required'
+    });
             } else if (error.name === 'NotFoundError') {
-                this.showToast('No Camera Found', 
-                    'No camera device found on this device.', 'error');
+        LightningAlert.open({
+        message: 'No camera device found on this device.',
+        theme: 'error',
+        label: 'No Camera Found'
+    });
             } else {
                 this.openFileInput();
             }
@@ -1270,7 +1769,13 @@ export default class AttendanceComponent extends LightningElement {
                 stream.getTracks().forEach(track => track.stop());
                 
                 this.isCapturingPhoto = false;
-                this.showToast('Success', 'Photo captured successfully!', 'success');
+                //this.showToast('Success', 'Photo captured successfully!', 'success');
+                 LightningAlert.open({
+    label: 'Success',
+    message: 'Photo captured successfully!',
+    theme: 'success'
+});
+
                 
             }, 1000);
         });
@@ -1334,18 +1839,36 @@ export default class AttendanceComponent extends LightningElement {
                 }
                 
                 this.isCapturingPhoto = false;
-                this.showToast('Success', 'Photo captured successfully!', 'success');
+                //this.showToast('Success', 'Photo captured successfully!', 'success');
+                 LightningAlert.open({
+    label: 'Success',
+    message: 'Photo captured successfully!',
+    theme: 'success'
+});
+
                 
             } catch (error) {
                 console.error('❌ Error processing photo:', error);
                 this.isCapturingPhoto = false;
-                this.showToast('Error', 'Failed to process photo. Please try again.', 'error');
+                //this.showToast('Error', 'Failed to process photo. Please try again.', 'error');
+                 LightningAlert.open({
+    label: 'Error',
+    message: 'Failed to process photo. Please try again.',
+    theme: 'error'
+});
+
             }
         };
         
         reader.onerror = () => {
             this.isCapturingPhoto = false;
-            this.showToast('Error', 'Failed to read photo file', 'error');
+            //this.showToast('Error', 'Failed to read photo file', 'error');
+             LightningAlert.open({
+    label: 'Error',
+    message: 'Failed to read photo file',
+    theme: 'error'
+});
+
         };
         
         reader.readAsDataURL(file);
@@ -1359,6 +1882,13 @@ export default class AttendanceComponent extends LightningElement {
     handleCheckAction() {
         if (!this.currentUserName) {
             this.showToast('Error', 'User information not loaded. Please refresh the page.', 'error');
+            LightningAlert.open({
+        label: 'Error',
+        message: 'User information not loaded. Please refresh the page.',
+        theme: 'error'
+    });
+
+
             return;
         }
 
@@ -1367,11 +1897,13 @@ export default class AttendanceComponent extends LightningElement {
 
         // ✅ NEW: Check if user can start a new session
         if (this.canStartNewSession) {
-            this.showToast(
-                'New Session', 
-                `Starting session ${this.todaySessionNumber + 1}. Previous sessions completed.`, 
-                'info'
-            );
+           // this.showToast('New Session', `Starting session ${this.todaySessionNumber + 1}. Previous sessions completed.`,  'info'  );
+            LightningAlert.open({
+    label: 'New Session',
+    message: `Starting session ${this.todaySessionNumber + 1}. Previous sessions completed.`,
+    theme: 'info'
+});
+
             
             // Reset for new session
             this.isCheckedIn = false;
@@ -1393,7 +1925,14 @@ export default class AttendanceComponent extends LightningElement {
             
         } else {
             console.log('ℹ️ Session completed. Click again to start new session.');
-            this.showToast('Session Completed', 'Click "Start New Session" to begin another session today.', 'info');
+            //this.showToast('Session Completed', 'Click "Start New Session" to begin another session today.', 'info');
+     LightningAlert.open({
+        label: 'Session Completed',
+        message: 'Click "Start New Session" to begin another session today.',
+        theme: 'info'
+    });
+
+
         }
     }
 
@@ -1490,55 +2029,93 @@ export default class AttendanceComponent extends LightningElement {
     // ✅ UPDATED: CHECK-IN CONFIRMATION WITH SESSION NUMBER
     // ===================================================================
 
+
     async confirmCheckIn() {
         
         if (!this.selectedWorkLocation) {
-            this.showToast('Error', 'Please select a work location', 'error');
+          //  this.showToast('Error', 'Please select a work location', 'error');
+            LightningAlert.open({
+                message: result.error || 'Please select a work location',
+                theme: 'error',
+                label: 'Error'
+            });
             return;
         }
 
         // Validate branch if Work from Office
         if (this.selectedWorkLocation === 'Work from Office') {
             if (!this.selectedBranchId || !this.selectedBranchName) {
-                this.showToast('Error', 
-                    'Please select your branch office from the dropdown', 
-                    'error');
+              //  this.showToast('Error',   'Please select your branch office from the dropdown', 'error');
+                LightningAlert.open({
+                message: result.error || 'Please select your branch office from the dropdown',
+                theme: 'error',
+                label: 'Error'
+            });
                 return;
             }
         }
 
         // Validate WFH reason if required
         if (this.requiresApproval && (!this.wfhReason || this.wfhReason.trim().length < 10)) {
-            this.showToast('Error', 'Please provide a detailed reason for working from home (minimum 10 characters)', 'error');
+            //this.showToast('Error', 'Please provide a detailed reason for working from home (minimum 10 characters)', 'error');
+            this.errorMessage = 'Please provide a detailed reason for working from home (minimum 10 characters)';
             return;
         }
 
         // Validate Client Place details
         if (this.selectedWorkLocation === 'Client Place' && (!this.clientPlaceDetails || this.clientPlaceDetails.trim().length < 5)) {
-            this.showToast('Error', 'Please provide client place details (minimum 5 characters)', 'error');
+           // this.showToast('Error', 'Please provide client place details (minimum 5 characters)', 'error');
+
+                LightningAlert.open({
+                message: result.error || 'Please provide client place details (minimum 5 characters)',
+                theme: 'error',
+                label: 'Error'
+            });
             return;
         }
 
         // Validate Field Work details
         if (this.selectedWorkLocation === 'Field Work' && (!this.fieldWorkDetails || this.fieldWorkDetails.trim().length < 5)) {
-            this.showToast('Error', 'Please provide field work details (minimum 5 characters)', 'error');
+           // this.showToast('Error', 'Please provide field work details (minimum 5 characters)', 'error');
+            
+               LightningAlert.open({
+                message: result.error || 'Please provide field work details (minimum 5 characters)',
+                theme: 'error',
+                label: 'Error'
+            });
+
             return;
         }
 
         // Validate Business Travel
         if (this.selectedWorkLocation === 'Business Travel') {
             if (!this.businessTravelDetails || this.businessTravelDetails.trim().length < 10) {
-                this.showToast('Error', 'Please provide business travel details (minimum 10 characters)', 'error');
+               // this.showToast('Error', 'Please provide business travel details (minimum 10 characters)', 'error');
+                 LightningAlert.open({
+                message: result.error || 'Please provide business travel details (minimum 10 characters)',
+                theme: 'error',
+                label: 'Error'
+            });
                 return;
             }
             
             if (!this.businessTravelStartDate) {
-                this.showToast('Error', 'Please select travel start date', 'error');
+               // this.showToast('Error', 'Please select travel start date', 'error');
+                 LightningAlert.open({
+                message: result.error || 'Please select travel start date',
+                theme: 'error',
+                label: 'Error'
+            });
                 return;
             }
             
             if (!this.businessTravelEndDate) {
-                this.showToast('Error', 'Please select travel end date', 'error');
+               // this.showToast('Error', 'Please select travel end date', 'error');
+                 LightningAlert.open({
+                message: result.error || 'Please select travel end date',
+                theme: 'error',
+                label: 'Error'
+            });
                 return;
             }
             
@@ -1546,23 +2123,45 @@ export default class AttendanceComponent extends LightningElement {
             const endDate = new Date(this.businessTravelEndDate);
             
             if (endDate < startDate) {
-                this.showToast('Error', 'End date cannot be before start date', 'error');
+               // this.showToast('Error', 'End date cannot be before start date', 'error');
+                 LightningAlert.open({
+                message: result.error || 'End date cannot be before start date',
+                theme: 'error',
+                label: 'Error'
+            });
                 return;
             }
             
             if (!this.fileData || !this.isFileUploaded) {
-                this.showToast('Error', 'Please upload at least one travel document', 'error');
+               // this.showToast('Error', 'Please upload at least one travel document', 'error');
+                LightningAlert.open({
+                message: result.error || 'Please upload at least one travel document',
+                theme: 'error',
+                label: 'Error'
+            });
                 return;
             }
         }
 
         if (!this.hasValidLocation) {
-            this.showToast('Error', 'Valid GPS location is required for check-in', 'error');
+            //this.showToast('Error', 'Valid GPS location is required for check-in', 'error');
+
+            LightningAlert.open({
+                message: result.error || 'Valid GPS location is required for check-in',
+                theme: 'error',
+                 label: 'Error'
+            });
             return;
         }
 
         if (!this.checkInPhotoB64) {
-            this.showToast('Error', 'Photo is required for check-in verification', 'error');
+           // this.showToast('Error', 'Photo is required for check-in verification', 'error');
+
+            LightningAlert.open({
+                message: result.error || 'Photo is required for check-in verification',
+                theme: 'error',
+                 label: 'Error'
+            });
             return;
         }
 
@@ -1630,6 +2229,7 @@ export default class AttendanceComponent extends LightningElement {
                 console.log('✅ Check-in successful - Session ' + sessionNumber + ', record ID:', result.recordId);
                 
                 this.isCheckedIn = true;
+                this.scheduleAutoCheckout(); // ← ADD THIS LINE
                 this.isCheckedOut = false;
                 this.todayAttendanceId = result.recordId;
                 this.currentSessionId = result.recordId;
@@ -1653,10 +2253,12 @@ export default class AttendanceComponent extends LightningElement {
                         
                         if (uploadResult) {
                             console.log('✅ File uploaded successfully');
-                            this.showToast('Success', 
-                                `Session ${sessionNumber} started! Travel document uploaded.`, 
-                                'success'
-                            );
+                           // this.showToast('Success',  `Session ${sessionNumber} started! Travel document uploaded.`,  'success'  );
+                      LightningAlert.open({
+                      message: result.message || `Session ${sessionNumber} started! Travel document uploaded.`,
+                      theme: 'success',
+                       label: 'Success'
+                         });
                         } else {
                             this.showToast('Warning', 
                                 'Check-in successful but file upload failed. Please upload manually.', 
@@ -1665,10 +2267,8 @@ export default class AttendanceComponent extends LightningElement {
                         }
                     } catch (uploadError) {
                         console.error('❌ File upload error:', uploadError);
-                        this.showToast('Warning', 
-                            'Check-in successful but file upload failed: ' + (uploadError.body?.message || uploadError.message), 
-                            'warning'
-                        );
+                        this.showToast('Warning',  'Check-in successful but file upload failed: ' + (uploadError.body?.message || uploadError.message), 'warning'
+   );
                     }
                 } else {
                     // ✅ UPDATED success message with session number
@@ -1686,7 +2286,13 @@ export default class AttendanceComponent extends LightningElement {
                         successMessage += `. Field work recorded`;
                     }
                     
-                    this.showToast('Success', successMessage, 'success');
+                   // this.showToast('Success', successMessage, 'success');
+                     LightningAlert.open({
+    label: 'Success',
+    message: successMessage,
+    theme: 'success'
+});
+
                 }
                 
                 // Submit WFH approval if required
@@ -2051,6 +2657,8 @@ export default class AttendanceComponent extends LightningElement {
     get presentDays() { return this.summaryData.presentDays; }
     get lateDays() { return this.summaryData.lateDays; }
     get absentDays() { return this.summaryData.absentDays; }
+    get approvedLeaveDays() { return this.summaryData.approvedLeaveDays; }
+    get lopDays() { return this.summaryData.lopDays; }
     get totalHours() { return this.summaryData.totalHours; }
     get avgHours() { return this.summaryData.avgHours; }
     get attendanceRate() { return this.summaryData.attendanceRate; }
@@ -2250,53 +2858,53 @@ export default class AttendanceComponent extends LightningElement {
         return true;
     }
 
-    async submitHybridSchedule() {
-        if (!this.validateHybridForm()) {
-            return;
-        }
-
-        this.isLoading = true;
-
-        try {
-            const wfhDays = this.getSelectedHybridWFHDays().join(';');
-            const officeDays = this.getSelectedHybridOfficeDays().join(';');
-            const scheduleMonth = this.hybridScheduleMonth + '-01';
-
-            const result = await submitHybridScheduleRequest({
-                employeeId: this.employeeId,
-                scheduleMonth: scheduleMonth,
-                wfhDays: wfhDays,
-                officeDays: officeDays,
-                scheduleType: this.hybridScheduleType,
-                reason: this.hybridScheduleReason
-            });
-
-            if (result.success) {
-                this.showToast(
-                    'Success!',
-                    result.message || 'Hybrid schedule submitted for approval',
-                    'success'
-                );
-
-                this.closeHybridScheduleModal();
-                this.checkHybridSchedule();
-            } else {
-                this.showToast(
-                    'Error',
-                    result.error || 'Failed to submit hybrid schedule',
-                    'error'
-                );
+      submitHybridSchedule() {
+            if (!this.validateHybridForm()) {
+                return;
             }
 
-        } catch (error) {
-            console.error('Error submitting hybrid schedule:', error);
-            this.showToast(
-                'Error',
-                error.body?.message || 'An error occurred while submitting',
-                'error'
-            );
-        } finally {
-            this.isLoading = false;
+            this.isLoading = true;
+
+            try {
+                const wfhDays = this.getSelectedHybridWFHDays().join(';');
+                const officeDays = this.getSelectedHybridOfficeDays().join(';');
+                const scheduleMonth = this.hybridScheduleMonth + '-01';
+
+                const result = submitHybridScheduleRequest({
+                    employeeId: this.employeeId,
+                    scheduleMonth: scheduleMonth,
+                    wfhDays: wfhDays,
+                    officeDays: officeDays,
+                    scheduleType: this.hybridScheduleType,
+                    reason: this.hybridScheduleReason
+                     
+                });
+                return submitHybridSchedule
+        if (result.success) {
+                LightningAlert.open({
+                    message: result.message || 'Your hybrid work schedule request has been submitted for approval',
+                    theme: 'success',
+                    label: 'Success'
+                });
+
+                    this.closeHybridScheduleModal();
+                    this.checkHybridSchedule();
+                } else {
+                LightningAlert.open({
+                    message: result.error || 'You already have a pending schedule. Please contact your Admin.',
+                    theme: 'info',
+                    label: 'Alert'
+                });
+                }
+
+            } catch (error) {
+            LightningAlert.open({
+                message: 'Unexpected error occurred while submitting your request',
+                theme: 'error',
+                label: 'Error'
+            });
+            } finally {
+                this.isLoading = false;
+            }
         }
-    }
 }

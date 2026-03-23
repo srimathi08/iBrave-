@@ -658,3 +658,58 @@
 .balance-value.carry-forward {
     color: #7b1fa2;
 }
+
+/* Add these styles to your existing leaveManagement.css */
+
+/* Holiday Warning Container */
+.holiday-warning-container {
+    margin: 20px 0;
+}
+
+.slds-alert_warning {
+    background-color: #fef7e6;
+    border-left: 4px solid #fe9339;
+    padding: 16px;
+    border-radius: 4px;
+}
+
+.holiday-list {
+    background: white;
+    padding: 12px;
+    border-radius: 4px;
+    margin-top: 12px;
+    border: 1px solid #dddbda;
+}
+
+.holiday-list strong {
+    color: #080707;
+    font-weight: 600;
+}
+
+.holiday-item {
+    padding: 6px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #3e3e3c;
+}
+
+.holiday-item lightning-icon {
+    color: #fe9339;
+}
+
+.holiday-item strong {
+    color: #fe9339;
+}
+
+/* Override SLDS alert styles for better visibility */
+.slds-notify_alert h2 {
+    color: #080707;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.slds-notify_alert p {
+    color: #3e3e3c;
+    line-height: 1.5;
+}

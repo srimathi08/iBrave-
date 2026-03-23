@@ -1,42 +1,9 @@
-/*public with sharing class AppointmentLetterController {
-    public Contact contact { get; private set; }
-    public Salary_Details__c salaryDetail { get; private set; }
-
-    public AppointmentLetterController(ApexPages.StandardController controller) {
-        Id contactId = ApexPages.currentPage().getParameters().get('id') != null 
-            ? ApexPages.currentPage().getParameters().get('id')
-            : null;
-
-        if (contactId != null) {
-            // Query Contact with related Salary Detail record. 
-            // Assuming Salary_Details__c has a lookup Contact__c.
-            contact = [
-                SELECT Id, Name, Email,Manager__c, MailingStreet, MailingCity, MailingState, MailingPostalCode,
-                       Hire_Date__c, Designation__c
-                FROM Contact WHERE Id = :contactId LIMIT 1
-            ];
-
-            List<Salary_Details__c> salaryList = [
-                SELECT Id, Basic_Pay_PF_Retirement_Benefits__c,House_Rent_Allowance_HRA__c, Other_Basic__c, Gross_Salary_Annual__c, Annual_CTC__c
-                FROM Salary_Details__c WHERE Contact__c = :contactId LIMIT 1
-            ];
-            if (!salaryList.isEmpty()) {
-                salaryDetail = salaryList[0];
-            } else {
-                salaryDetail = new Salary_Details__c();
-            }
-        } else {
-            contact = new Contact();
-            salaryDetail = new Salary_Details__c();
-        }
-    }
-}*/
 public with sharing class AppointmentLetterController {
     public Contact contact { get; private set; }
     public Salary_Details__c salaryDetails { get; private set; }
     public Boolean hasError { get; private set; }
     public String errorMessage { get; private set; }
-
+	public String ctcInWords {get;set;}
     public AppointmentLetterController(ApexPages.StandardController controller) {
         
         hasError = false;
@@ -51,8 +18,8 @@ public with sharing class AppointmentLetterController {
 
         // Get Contact
         contact = [
-            SELECT Id, Name, Email, Manager__c, MailingStreet, MailingCity, MailingState,
-                   MailingPostalCode, Hire_Date__c, Designation__c
+            SELECT Id, Name, Email, Manager__c, Manager__r.Name, MailingStreet, MailingCity, MailingState,
+                   MailingPostalCode, User_Designation__c,Date_of_joining__c
             FROM Contact
             WHERE Id = :contactId
             LIMIT 1
@@ -60,10 +27,10 @@ public with sharing class AppointmentLetterController {
 
         // Get Salary Details
         List<Salary_Details__c> salaryList = [
-           SELECT Id, Annual_CTC__c, Basic_Pay_PF_Retirement_Benefits__c, 
-                    Other_Basic_Pay__c, House_Rent_Allowance_HRA__c, Bucket_Allowance__c,
-                    Gross_Salary_Annual__c, EPF_Employee_Contribution_12__c,
-                    ESI_Employee_contribution_0_75__c, PT_Professional_Tax__c,
+           SELECT Id, Basic_Pay_PF_Retirement_Benefits__c, 
+                    Other_Allowances_Total__c, House_Rent_Allowance_HRA__c, Bucket_Allowances__c,
+                    Gross_Salary__c, EPF_Employee_Contribution_12__c,
+                    ESI_Employee_contribution_0_75__c, PT_Annual__c,
                     ESI_Employer_contribution_3_25__c, PF_Contribution_Employer__c,
                     Health_Policy_Insurance__c, Variable_Pay__c, 
                     Total_company_Contribution__c, Total_Deduction__c, Total_CTC__c
@@ -79,6 +46,12 @@ public with sharing class AppointmentLetterController {
         }
 
         salaryDetails = salaryList[0];
+// Convert CTC to words
+if(salaryDetails.Total_CTC__c != null){
+    ctcInWords = AmountToWordsUtil.convertAmount(
+        salaryDetails.Total_CTC__c.longValue()
+    );
+}
     }
 public String getCompensationTableHTML() {
         if (salaryDetails == null) {
@@ -97,10 +70,10 @@ public String getCompensationTableHTML() {
 
         // Gross Salary Components
         Decimal basicAnnual = salaryDetails.Basic_Pay_PF_Retirement_Benefits__c != null ? salaryDetails.Basic_Pay_PF_Retirement_Benefits__c : 0;
-        Decimal otherBasicAnnual = salaryDetails.Other_Basic_Pay__c != null ? salaryDetails.Other_Basic_Pay__c : 0;
+        Decimal otherBasicAnnual = salaryDetails.Other_Allowances_Total__c != null ? salaryDetails.Other_Allowances_Total__c : 0;
         Decimal hraAnnual = salaryDetails.House_Rent_Allowance_HRA__c != null ? salaryDetails.House_Rent_Allowance_HRA__c : 0;
-        Decimal bucketAnnual = salaryDetails.Bucket_Allowance__c != null ? salaryDetails.Bucket_Allowance__c : 0;
-        Decimal grossAnnual = salaryDetails.Gross_Salary_Annual__c != null ? salaryDetails.Gross_Salary_Annual__c : 0;
+        Decimal bucketAnnual = salaryDetails.Bucket_Allowances__c != null ? salaryDetails.Bucket_Allowances__c : 0;
+        Decimal grossAnnual = salaryDetails.Gross_Salary__c != null ? salaryDetails.Gross_Salary__c : 0;
 
         tableHtml += buildRow('Basic Pay PF & Retirement Benefits', basicAnnual);
         tableHtml += buildRow('Other Basic Pay', otherBasicAnnual);
@@ -115,7 +88,7 @@ public String getCompensationTableHTML() {
         
         Decimal epfEmployeeAnnual = salaryDetails.EPF_Employee_Contribution_12__c != null ? salaryDetails.EPF_Employee_Contribution_12__c : 0;
         Decimal esiEmployeeAnnual = salaryDetails.ESI_Employee_contribution_0_75__c != null ? salaryDetails.ESI_Employee_contribution_0_75__c : 0;
-        Decimal ptAnnual = salaryDetails.PT_Professional_Tax__c != null ? salaryDetails.PT_Professional_Tax__c : 0;
+        Decimal ptAnnual = salaryDetails.PT_Annual__c != null ? salaryDetails.PT_Annual__c : 0;
         Decimal totalDeductionAnnual = salaryDetails.Total_Deduction__c != null ? salaryDetails.Total_Deduction__c : 0;
         
         tableHtml += buildRow('EPF - Employee Contribution @12%', epfEmployeeAnnual);
@@ -150,12 +123,13 @@ public String getCompensationTableHTML() {
         
         // Cost to Company (CTC)
         Decimal ctcAnnual = salaryDetails.Total_CTC__c != null ? salaryDetails.Total_CTC__c : 0;
+
         tableHtml += buildBoldRow('Cost To Company (A+C+D)', ctcAnnual, '#ccffcc');
         
         tableHtml += '</tbody></table>';
         
         // Add Notes
-        tableHtml += '<div style="margin-top: 15px; font-size: 9pt;">';
+        tableHtml += '<div style="margin-top: 10px; font-size: 10pt;">';
         tableHtml += '<p><strong>* Rounded-off to nearest rupee.</strong></p>';
         tableHtml += '<p><strong>Note:</strong></p>';
         tableHtml += '<ol style="margin-left: 20px;">';

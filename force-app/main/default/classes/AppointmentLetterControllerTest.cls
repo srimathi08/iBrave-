@@ -4,25 +4,27 @@ private class AppointmentLetterControllerTest {
     // Helper to create a Contact
     private static Contact createContact() {
         Contact c = new Contact(
-             LastName = 'TestUser ' + Datetime.now().getTime(),   // make name unique
+            LastName = 'TestUser_' + Datetime.now().getTime(),
             Email    = 'test' + Datetime.now().getTime() + '@example.com'
         );
         insert c;
         return c;
     }
 
-    // Helper to create Salary Details for a contact
+    // Helper to create Salary Details for a Contact
     private static Salary_Details__c createSalary(Contact c) {
         Salary_Details__c sal = new Salary_Details__c(
             Contact__c = c.Id,
-            Other_Basic__c                      = 200,
-            Annual_CTC__c                       = 250000
+            Gross_Salary__C = 250000,         
+            Health_Policy_Insurance__c = 5000,
+            Variable_Pay__c = 25000
+            
         );
         insert sal;
         return sal;
     }
 
-  @IsTest
+    @IsTest
     static void testConstructorHappyPath() {
         Contact c = createContact();
         Salary_Details__c sal = createSalary(c);
@@ -38,16 +40,14 @@ private class AppointmentLetterControllerTest {
 
         System.assertEquals(false, ctrl.hasError);
         System.assertEquals(c.Id, ctrl.contact.Id);
-        System.assertEquals(sal.Id, ctrl.salaryDetail.Id);
+        System.assertEquals(sal.Id, ctrl.salaryDetails.Id);
     }
+
     @IsTest
     static void testConstructorInvalidId() {
-        // No id parameter
         PageReference pageRef = new PageReference('/apex/AppointmentLetterPage');
-        // do NOT put id param
-        Test.setCurrentPage(pageRef);
+        Test.setCurrentPage(pageRef); // No ID passed
 
-        // StandardController still needs an sObject instance
         Contact dummy = new Contact(LastName = 'Dummy');
         ApexPages.StandardController sc = new ApexPages.StandardController(dummy);
 
@@ -55,15 +55,15 @@ private class AppointmentLetterControllerTest {
         AppointmentLetterController ctrl = new AppointmentLetterController(sc);
         Test.stopTest();
 
-        System.assertEquals(true, ctrl.hasError, 'hasError should be true when id is null');
+        System.assertEquals(true, ctrl.hasError);
         System.assertEquals('Invalid Contact ID.', ctrl.errorMessage);
         System.assertEquals(null, ctrl.contact);
-        System.assertEquals(null, ctrl.salaryDetail);
+        System.assertEquals(null, ctrl.salaryDetails);
     }
 
     @IsTest
     static void testConstructorNoSalaryDetails() {
-        Contact c = createContact(); // contact without salary
+        Contact c = createContact(); // Contact without salary
 
         PageReference pageRef = new PageReference('/apex/AppointmentLetterPage');
         pageRef.getParameters().put('id', c.Id);
@@ -74,10 +74,34 @@ private class AppointmentLetterControllerTest {
         AppointmentLetterController ctrl = new AppointmentLetterController(sc);
         Test.stopTest();
 
-        System.assertEquals(true, ctrl.hasError, 'hasError should be true when salary missing');
-        System.assert(ctrl.errorMessage.contains('Salary Details are missing'),
-                      'Error message should indicate missing salary');
-        System.assertNotEquals(null, ctrl.contact, 'Contact is still queried even if salary missing');
-        System.assertEquals(null, ctrl.salaryDetail, 'No salaryDetail should be set');
+        System.assertEquals(true, ctrl.hasError);
+        System.assert(ctrl.errorMessage.contains('Salary Details are missing'));
+        System.assertNotEquals(null, ctrl.contact);  // Contact queried successfully
+        System.assertEquals(null, ctrl.salaryDetails);
     }
+@IsTest
+static void testGetCompensationTableHTML() {
+    // Create contact + salary
+    Contact c = createContact();
+    Salary_Details__c sal = createSalary(c);
+
+    // Set page reference
+    PageReference pageRef = new PageReference('/apex/AppointmentLetterPage');
+    pageRef.getParameters().put('id', c.Id);
+    Test.setCurrentPage(pageRef);
+
+    // Instantiate controller
+    ApexPages.StandardController sc = new ApexPages.StandardController(c);
+    AppointmentLetterController ctrl = new AppointmentLetterController(sc);
+
+    // Call the HTML generator
+    String html = ctrl.getCompensationTableHTML();
+
+    // Assertions
+    System.assertNotEquals(null, html, 'HTML should not be null');
+    System.assert(html.contains('<table'), 'HTML must contain table tag');
+    System.assert(html.contains('Variable Pay'), 'HTML must contain expected row');
+    System.assert(html.contains('Cost To Company'), 'HTML must include CTC row');
+}
+
 }

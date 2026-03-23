@@ -1,7 +1,25 @@
 @IsTest
 private class CandidateConversionServiceTest {
 
-    // Utility method to create a full Candidate record
+    // ✅ Create Qbay Employees Account
+    private static Account createQbayAccount() {
+        Account acc = new Account(Name = 'Qbay Employees');
+        insert acc;
+        return acc;
+    }
+
+    // ✅ Get Employee Record Type
+    private static Id getEmployeeContactRecordTypeId() {
+        return [
+            SELECT Id
+            FROM RecordType
+            WHERE SObjectType = 'Contact'
+            AND DeveloperName = 'Employee'
+            LIMIT 1
+        ].Id;
+    }
+
+    // ✅ Create Candidate
     private static Candidate__c createCandidate() {
         Candidate__c c = new Candidate__c(
             First_Name__c = 'John',
@@ -18,7 +36,7 @@ private class CandidateConversionServiceTest {
             Campus_Name__c = 'ABC',
             Consultancy_Name__c = 'XYZ',
             Joining_Date__c = Date.today(),
-            Designation__c = 'Developer',
+            Designations__c = 'Consultant',
             Driving_License_Number__c = 'TN12345',
             Emergency_Contact_Name__c = 'Parent',
             Emergency_Contact_Phone__c = '9876543211',
@@ -30,7 +48,6 @@ private class CandidateConversionServiceTest {
             Salutation__c = 'Mr.',
             Source_Of_Applicant__c = 'Advertisement',
             UAN_Number__c = 'UAN1234567',
-            Work_Location__c = 'Chennai',
             Communication_Address__Street__s = '123 Anna St',
             Communication_Address__City__s = 'Chennai',
             Communication_Address__StateCode__s = 'TN',
@@ -46,7 +63,7 @@ private class CandidateConversionServiceTest {
         return c;
     }
 
-    // Utility to create all child records
+    // ✅ Create Child Records (UPDATED)
     private static void createChildRecords(Id candidateId) {
 
         insert new Education_Detail__c(Candidate__c = candidateId);
@@ -54,31 +71,41 @@ private class CandidateConversionServiceTest {
         insert new Work_Experience__c(Candidate__c = candidateId);
         insert new Bank_Details__c(Candidate__c = candidateId);
 
-        Role_Responsibility__c role = new Role_Responsibility__c(
-            Name = 'Role1',
-            Responsibility_Description__c = 'Test Role',
-            Category__c = 'Category A'
+        // ✅ Role Category
+        Role_Category__c roleCat = new Role_Category__c(
+            Name = 'Developer'
         );
-        insert role;
+        insert roleCat;
 
-        insert new CandidateRoleResponsibility__c(
+        // ✅ Role Responsibilities
+        Role_Responsibilities__c roleResp = new Role_Responsibilities__c(
+            Name = 'Coding',
+            Role_Category__c = roleCat.Id
+        );
+        insert roleResp;
+
+        // ✅ Person Responsibility (MAIN OBJECT)
+        insert new Person_Responsibility__c(
             Candidate__c = candidateId,
-            Role_Responsibility__c = role.Id
+            Role_Category__c = roleCat.Id,
+            Role_Responsibilities__c = roleResp.Id,
+            Responsibility_Text__c = 'Write Apex Classes'
         );
 
-        insert new Salary_Details__c(
-            Candidate__c = candidateId
-        );
+        insert new Salary_Details__c(Candidate__c = candidateId);
     }
 
-    // MAIN TEST METHOD
+    // ✅ MAIN TEST
     @IsTest
     static void testCandidateConversion() {
+
+        Account qbayAcc = createQbayAccount();
+        Id employeeRtId = getEmployeeContactRecordTypeId();
 
         Candidate__c cand = createCandidate();
         createChildRecords(cand.Id);
 
-        CandidateConversionService.CandidateInput input = 
+        CandidateConversionService.CandidateInput input =
             new CandidateConversionService.CandidateInput();
         input.candidateId = cand.Id;
 
@@ -89,52 +116,44 @@ private class CandidateConversionServiceTest {
             );
         Test.stopTest();
 
-        // Assertions
-        System.assertEquals(1, result.size(), 'One output expected');
+        System.assertEquals(1, result.size());
         System.assert(result[0].message.contains('Contact created successfully'));
 
         Contact con = [
-            SELECT Id, Employee_ID__c, Candidate__c
+            SELECT Id, RecordTypeId, Employee_ID__c, Candidate__c, AccountId
             FROM Contact
             WHERE Candidate__c = :cand.Id
             LIMIT 1
         ];
 
-        System.assertNotEquals(null, con.Id, 'Contact should be created');
-        System.assert(con.Employee_ID__c.startsWith('Qbay '), 'Employee ID must start with Qbay');
+        System.assertNotEquals(null, con.Id);
+        System.assert(con.Employee_ID__c.startsWith('Qbay '));
 
-        // Assert Child records updated with Contact__c
+        System.assertEquals(qbayAcc.Id, con.AccountId);
+        System.assertEquals(employeeRtId, con.RecordTypeId);
+
+        // ✅ Child Record Assertions
+        System.assertEquals(1, [SELECT COUNT() FROM Education_Detail__c WHERE Contact__c = :con.Id]);
+        System.assertEquals(1, [SELECT COUNT() FROM Family_Members__c WHERE Contact__c = :con.Id]);
+        System.assertEquals(1, [SELECT COUNT() FROM Work_Experience__c WHERE Contact__c = :con.Id]);
+        System.assertEquals(1, [SELECT COUNT() FROM Bank_Details__c WHERE Contact__c = :con.Id]);
+
+        // ✅ NEW Assertion
         System.assertEquals(1, [
-            SELECT COUNT() FROM Education_Detail__c WHERE Contact__c = :con.Id
+            SELECT COUNT()
+            FROM Person_Responsibility__c
+            WHERE Contact__c = :con.Id
         ]);
 
-        System.assertEquals(1, [
-            SELECT COUNT() FROM Family_Members__c WHERE Contact__c = :con.Id
-        ]);
-
-        System.assertEquals(1, [
-            SELECT COUNT() FROM Work_Experience__c WHERE Contact__c = :con.Id
-        ]);
-
-        System.assertEquals(1, [
-            SELECT COUNT() FROM Bank_Details__c WHERE Contact__c = :con.Id
-        ]);
-
-        System.assertEquals(1, [
-            SELECT COUNT() FROM CandidateRoleResponsibility__c WHERE Contact__c = :con.Id
-        ]);
-
-        System.assertEquals(1, [
-            SELECT COUNT() FROM Salary_Details__c WHERE Contact__c = :con.Id
-        ]);
+        System.assertEquals(1, [SELECT COUNT() FROM Salary_Details__c WHERE Contact__c = :con.Id]);
     }
 
-    // NEGATIVE TEST — NULL Candidate ID
+    // ✅ NEGATIVE TEST
     @IsTest
     static void testNullCandidateId() {
-        CandidateConversionService.CandidateInput input = 
-            new CandidateConversionService.CandidateInput();
 
+        CandidateConversionService.CandidateInput input =
+            new CandidateConversionService.CandidateInput();
         input.candidateId = null;
 
         Test.startTest();

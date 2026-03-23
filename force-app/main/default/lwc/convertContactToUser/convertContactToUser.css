@@ -1,0 +1,83 @@
+
+.existing-user-warning {
+    margin-bottom: 1rem;
+}
+
+.field-mapping-box {
+    background-color: #f3f3f3;
+    border-left: 4px solid #0176d3;
+}
+
+.field-item {
+    margin-bottom: 0.5rem;
+    transition: transform 0.2s ease-in-out;
+}
+
+.field-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.license-info-box {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+}
+
+.license-info-box .info-card {
+    text-align: center;
+    padding: 0.5rem;
+}
+
+.license-info-box lightning-icon {
+    color: white;
+}
+
+.license-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: bold;
+    display: inline-block;
+    text-transform: uppercase;
+}
+
+.salesforce-license {
+    background-color: #00a1e0;
+    color: white;
+}
+
+.partner-license {
+    background-color: #f59e0b;
+    color: white;
+}
+
+.customer-license {
+    background-color: #10b981;
+    color: white;
+}
+
+.default-license {
+    background-color: #6b7280;
+    color: white;
+}
+
+.license-guide-box {
+    background-color: #fef3c7;
+    border-left: 4px solid #f59e0b;
+}
+
+.license-guide-box table {
+    background-color: white;
+}
+
+.convert-button {
+    font-weight: bold;
+    padding: 0.5rem 2rem;
+}
+
+.modal-content {
+    font-family: 'Courier New', monospace;
+    white-space: pre-wrap;
+    font-size: 0.875rem;
+}

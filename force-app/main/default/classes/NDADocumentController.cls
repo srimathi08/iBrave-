@@ -9,7 +9,7 @@ public with sharing class NDADocumentController {
         if (contactId != null) {
             contact = [
                 SELECT Id, Name, Email,Manager__c, MailingStreet, MailingCity, MailingState, MailingPostalCode,
-                       Hire_Date__c, Designation__c, Aadhar_Card_Number__c
+                       User_Designation__c, Aadhar_Card_Number__c,Date_of_joining__c
                 FROM Contact 
                 WHERE Id = :contactId 
                 LIMIT 1

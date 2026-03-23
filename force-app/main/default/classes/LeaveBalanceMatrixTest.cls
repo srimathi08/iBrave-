@@ -1,5 +1,5 @@
 @IsTest
-public class LeaveBalanceMatrixTest {
+    public class LeaveBalanceMatrixTest {
 
     @TestSetup
     static void setupTestData() {

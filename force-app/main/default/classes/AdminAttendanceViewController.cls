@@ -15,7 +15,7 @@
  * - Universal profile access
  * - CSV export functionality
  */
-public with sharing class AdminAttendanceViewController {
+public without sharing class AdminAttendanceViewController {
     
     /**
      * @description Main method to retrieve filtered attendance records for admin view
@@ -168,7 +168,7 @@ public with sharing class AdminAttendanceViewController {
         // Base query with all required fields
         String query = 'SELECT Id, Name, ' +
                       'Employee_Name__c, Employee_Name__r.Name, Employee_Name__r.Email, ' +
-                      'Employee_Name__r.Employee_Id__c, Employee_Name__r.Department, ' +
+                      'Employee_Name__r.Employee_IDs__c, Employee_Name__r.Department, ' +
                       'Employee_Name__r.Manager.Name, ' +
                       'Date__c, Check_In_Time__c, Check_Out_Time__c, Hours_Worked__c, ' +
                       'Work_Location__c, Check_In_Location_Name__c, Check_Out_Location_Name__c, ' +
@@ -181,8 +181,9 @@ public with sharing class AdminAttendanceViewController {
         
         // ✅ FIXED: Employee ID filter - Exact match (Number field - no quotes, no LIKE)
         if (String.isNotBlank(employeeId)) {
-            // Employee_Id__c is a Number field, so no quotes needed
-            whereConditions.add('Employee_Name__r.Employee_Id__c = ' + employeeId);
+            String searchTerm = String.escapeSingleQuotes(employeeId);
+            // Employee_IDs__c is a Number field, so no quotes needed
+            whereConditions.add('Employee_Name__r.Employee_IDs__c = \'' + searchTerm + '\'');
         }
         
         // ✅ FIXED: Employee Name filter - Exact match (String field - needs quotes)
@@ -243,7 +244,9 @@ public with sharing class AdminAttendanceViewController {
         
         // ✅ FIXED: Employee ID - Number field (no quotes, no LIKE)
         if (String.isNotBlank(employeeId)) {
-            whereConditions.add('Employee_Name__r.Employee_Id__c = ' + employeeId);
+            //whereConditions.add('Employee_Name__r.Employee_IDs__c = ' + employeeId);
+             String searchTerm = String.escapeSingleQuotes(employeeId);
+            whereConditions.add('Employee_Name__r.Employee_IDs__c = \'' + searchTerm + '\'');
         }
         
         // ✅ FIXED: Employee Name - String field (with quotes, exact match)
@@ -295,7 +298,7 @@ public with sharing class AdminAttendanceViewController {
             formattedRecord.put('recordNumber', recordIndex);
             
             // Employee information
-            formattedRecord.put('employeeId', record.Employee_Name__r?.Employee_Id__c);
+            formattedRecord.put('employeeId', record.Employee_Name__r?.Employee_IDs__c);
             formattedRecord.put('employeeName', record.Employee_Name__r?.Name);
             formattedRecord.put('employeeEmail', record.Employee_Name__r?.Email);
             formattedRecord.put('department', record.Employee_Name__r?.Department);
@@ -434,11 +437,11 @@ public with sharing class AdminAttendanceViewController {
             
             // Query all active users with Employee IDs
             List<User> users = [
-                SELECT Employee_Id__c, Name
+                SELECT Employee_IDs__c, Name
                 FROM User 
-                WHERE Employee_Id__c != null 
+                WHERE Employee_IDs__c != null 
                 AND IsActive = true
-                ORDER BY Employee_Id__c ASC
+                ORDER BY Employee_IDs__c ASC
                 LIMIT 1000
             ];
             
@@ -446,8 +449,8 @@ public with sharing class AdminAttendanceViewController {
             
             for (User u : users) {
                 Map<String, Object> option = new Map<String, Object>();
-                option.put('label', String.valueOf(u.Employee_Id__c) + ' - ' + u.Name);
-                option.put('value', String.valueOf(u.Employee_Id__c));
+                option.put('label', String.valueOf(u.Employee_IDs__c) + ' - ' + u.Name);
+                option.put('value', String.valueOf(u.Employee_IDs__c));
                 employeeIdOptions.add(option);
             }
             
@@ -473,7 +476,7 @@ public with sharing class AdminAttendanceViewController {
             
             // Query all active users
             List<User> users = [
-                SELECT Id, Name, Employee_Id__c, Department
+                SELECT Id, Name, Employee_IDs__c, Department
                 FROM User 
                 WHERE IsActive = true
                 ORDER BY Name ASC
@@ -486,12 +489,12 @@ public with sharing class AdminAttendanceViewController {
                 Map<String, Object> option = new Map<String, Object>();
                 // Show Employee ID in label if available
                 String label = u.Name;
-                if (u.Employee_Id__c != null) {
-                    label += ' (' + String.valueOf(u.Employee_Id__c) + ')';
+                if (u.Employee_IDs__c != null) {
+                    label += ' (' + String.valueOf(u.Employee_IDs__c) + ')';
                 }
                 option.put('label', label);
                 option.put('value', u.Name);
-                option.put('employeeId', u.Employee_Id__c);
+                option.put('employeeId', u.Employee_IDs__c);
                 option.put('department', u.Department);
                 employeeNameOptions.add(option);
             }
@@ -560,7 +563,7 @@ public with sharing class AdminAttendanceViewController {
             String searchPattern = '%' + String.escapeSingleQuotes(searchTerm) + '%';
             
             List<User> users = [
-                SELECT Id, Name, Email, Employee_Id__c, Department 
+                SELECT Id, Name, Email, Employee_IDs__c, Department 
                 FROM User 
                 WHERE IsActive = true 
                 AND (Name LIKE :searchPattern OR Email LIKE :searchPattern)
@@ -573,9 +576,9 @@ public with sharing class AdminAttendanceViewController {
                 emp.put('userId', u.Id);
                 emp.put('name', u.Name);
                 emp.put('email', u.Email);
-                emp.put('employeeId', u.Employee_Id__c);
+                emp.put('employeeId', u.Employee_IDs__c);
                 emp.put('department', u.Department);
-                emp.put('label', u.Name + (u.Employee_Id__c != null ? ' (' + u.Employee_Id__c + ')' : ''));
+                emp.put('label', u.Name + (u.Employee_IDs__c != null ? ' (' + u.Employee_IDs__c + ')' : ''));
                 employees.add(emp);
             }
             
@@ -776,4 +779,277 @@ public with sharing class AdminAttendanceViewController {
         }
         return str;
     }
+    
+
+    
+    /**
+ * @description Enhanced Admin Access Controller with Employee Category Check
+ * @author Salesforce Consultant
+ * @date 2025-01-10
+ * @version 3.0 - Added Employee_Category__c based access control
+ * 
+ * Access Rules:
+ * - HR Manager: Full access to Admin Attendance & Admin Leave
+ * - HR Team: Full access to Admin Attendance & Admin Leave
+ * - All other categories: No access (Access Restricted message)
+ */
+
+// Add this method to your existing AdminAttendanceViewController class
+
+/**
+ * @description Check if current user has admin access based on Employee_Category__c
+ * @param userId User ID to check
+ * @return Map containing access status and user details
+ */
+@AuraEnabled(cacheable=false)
+public static Map<String, Object> checkAdminAccess(Id userId) {
+    Map<String, Object> accessInfo = new Map<String, Object>();
+    
+    try {
+        System.debug('=== CHECKING ADMIN ACCESS FOR USER ===');
+        System.debug('User ID: ' + userId);
+        
+        // Query user with Employee_Category__c field
+        User currentUser = [
+            SELECT Id, Name, Email, Employee_Category__c, 
+                   Employee_IDs__c, Department, Profile.Name
+            FROM User
+            WHERE Id = :userId
+            LIMIT 1
+        ];
+        
+        System.debug('User Name: ' + currentUser.Name);
+        System.debug('Employee Category: ' + currentUser.Employee_Category__c);
+        System.debug('Department: ' + currentUser.Department);
+        System.debug('Profile: ' + currentUser.Profile.Name);
+        
+        // Determine access based on Employee_Category__c
+        Boolean hasAccess = false;
+        String accessLevel = '';
+        String categoryType = '';
+        
+        if (currentUser.Employee_Category__c == 'HR Manager') {
+            hasAccess = true;
+            accessLevel = 'Full Admin Access';
+            categoryType = 'HR Manager';
+            
+        } else if (currentUser.Employee_Category__c == 'HR Team') {
+            hasAccess = true;
+            accessLevel = 'Full Admin Access';
+            categoryType = 'HR Team (Assistant HR)';
+            
+        } else {
+            hasAccess = false;
+            accessLevel = 'No Access';
+            categoryType = currentUser.Employee_Category__c != null ? 
+                          currentUser.Employee_Category__c : 'Not Set';
+        }
+        
+        // Build response
+        accessInfo.put('hasAccess', hasAccess);
+        accessInfo.put('userName', currentUser.Name);
+        accessInfo.put('userEmail', currentUser.Email);
+        accessInfo.put('employeeCategory', currentUser.Employee_Category__c);
+        accessInfo.put('categoryType', categoryType);
+        accessInfo.put('accessLevel', accessLevel);
+        accessInfo.put('department', currentUser.Department);
+        accessInfo.put('profileName', currentUser.Profile.Name);
+        accessInfo.put('employeeId', currentUser.Employee_IDs__c);
+        
+        // Access message
+        if (hasAccess) {
+            accessInfo.put('message', 'Access granted as ' + categoryType);
+        } else {
+            accessInfo.put('message', 'Access restricted. Only HR Manager and HR Team members can view this section.');
+        }
+        
+        System.debug('✅ Access Check Result: ' + (hasAccess ? 'GRANTED' : 'DENIED'));
+        System.debug('Access Level: ' + accessLevel);
+        System.debug('Category Type: ' + categoryType);
+        
+    } catch (Exception e) {
+        System.debug('❌ Error checking admin access: ' + e.getMessage());
+        System.debug('Stack Trace: ' + e.getStackTraceString());
+        
+        // Default to no access on error
+        accessInfo.put('hasAccess', false);
+        accessInfo.put('message', 'Error checking access permissions');
+        accessInfo.put('error', e.getMessage());
+    }
+    
+    return accessInfo;
+}
+
+/**
+ * @description Legacy method - Now uses Employee_Category__c instead of Admin__c checkbox
+ * @param userId User ID to check
+ * @return Boolean True if user is HR Manager or HR Team
+ */
+@AuraEnabled(cacheable=false)
+public static Boolean isCurrentUserAdmin(Id userId) {
+    try {
+        User u = [
+            SELECT Employee_Category__c
+            FROM User
+            WHERE Id = :userId
+            LIMIT 1
+        ];
+
+        // Check if user is HR Manager or HR Team
+        return (u.Employee_Category__c == 'HR Manager' || 
+                u.Employee_Category__c == 'HR Team');
+                
+    } catch (Exception e) {
+        System.debug('Error in isCurrentUserAdmin: ' + e.getMessage());
+        return false;
+    }
+}
+
+/**
+ * @description Get detailed access information for UI display
+ * @param userId User ID to check
+ * @return Map containing detailed access info
+ */
+@AuraEnabled(cacheable=false)
+public static Map<String, Object> getAdminAccessDetails(Id userId) {
+    Map<String, Object> details = new Map<String, Object>();
+    
+    try {
+        User u = [
+            SELECT Name, Email, Employee_Category__c, Employee_IDs__c, 
+                   Department, Profile.Name, ManagerId, Manager.Name
+            FROM User
+            WHERE Id = :userId
+            LIMIT 1
+        ];
+        
+        Boolean isHRManager = u.Employee_Category__c == 'HR Manager';
+        Boolean isHRTeam = u.Employee_Category__c == 'HR Team';
+        Boolean hasAdminAccess = isHRManager || isHRTeam;
+        
+        details.put('hasAccess', hasAdminAccess);
+        details.put('isHRManager', isHRManager);
+        details.put('isHRTeam', isHRTeam);
+        details.put('userName', u.Name);
+        details.put('userEmail', u.Email);
+        details.put('employeeCategory', u.Employee_Category__c);
+        details.put('employeeId', u.Employee_IDs__c);
+        details.put('department', u.Department);
+        details.put('profileName', u.Profile.Name);
+        details.put('managerName', u.Manager?.Name);
+        
+        // Determine access message
+        if (isHRManager) {
+            details.put('accessMessage', 'Full Admin Access - HR Manager');
+            details.put('accessIcon', 'utility:shield');
+            details.put('accessVariant', 'success');
+        } else if (isHRTeam) {
+            details.put('accessMessage', 'Full Admin Access - HR Team');
+            details.put('accessIcon', 'utility:user');
+            details.put('accessVariant', 'success');
+        } else {
+            details.put('accessMessage', 'Access Restricted - Not an HR Admin');
+            details.put('accessIcon', 'utility:block_visitor');
+            details.put('accessVariant', 'error');
+        }
+        
+        // List of allowed categories
+        List<String> allowedCategories = new List<String>{'HR Manager', 'HR Team'};
+        details.put('allowedCategories', allowedCategories);
+        
+        // List of restricted categories
+        List<String> restrictedCategories = new List<String>{
+            'Management', 
+            'On-Role(Manager)', 
+            'On-Role(Team Member)', 
+            'Intern-Stipend', 
+            'Unpaid Intern'
+        };
+        details.put('restrictedCategories', restrictedCategories);
+        
+    } catch (Exception e) {
+        System.debug('Error getting admin access details: ' + e.getMessage());
+        details.put('hasAccess', false);
+        details.put('error', e.getMessage());
+    }
+    
+    return details;
+}
+    
+    
+    
+/**
+ * @description Search employees for autocomplete (lightweight version)
+ * @param searchType Type of search: 'employeeId' or 'name'
+ * @param searchTerm Search term entered by user
+ * @return List of matching employees with minimal data
+ */
+@AuraEnabled(cacheable=true)
+public static List<Map<String, Object>> searchEmployeesLightweight(String searchType, String searchTerm) {
+    List<Map<String, Object>> employees = new List<Map<String, Object>>();
+    
+    try {
+        if (String.isBlank(searchTerm) || searchTerm.length() < 1) {
+            return employees;
+        }
+        
+        String searchPattern = '%' + String.escapeSingleQuotes(searchTerm) + '%';
+        List<User> users = new List<User>();
+        
+        if (searchType == 'employeeId') {
+            // Search by Employee ID (number field)
+            String numericSearch = searchTerm.replaceAll('[^0-9]', '');
+            
+            if (String.isNotBlank(numericSearch)) {
+                String empIdNum = String.valueOf(numericSearch);
+                users = [
+                    SELECT Id, Name, Employee_IDs__c, Department, Email
+                    FROM User
+                    WHERE  IsActive = true
+                    AND (Employee_IDs__c = :empIdNum OR Name LIKE :searchPattern)
+                    ORDER BY Employee_IDs__c ASC NULLS LAST
+                    LIMIT 10
+                ];
+            } else {
+                users = [
+                    SELECT Id, Name, Employee_IDs__c, Department, Email
+                    FROM User
+                    WHERE IsActive = true
+                    AND Name LIKE :searchPattern
+                    ORDER BY Name ASC
+                    LIMIT 10
+                ];
+            }
+        } else if (searchType == 'name') {
+            // Search by Name
+            users = [
+                SELECT Id, Name, Employee_IDs__c, Department, Email
+                FROM User
+                WHERE IsActive = true
+                AND Name LIKE :searchPattern
+                ORDER BY Name ASC
+                LIMIT 10
+            ];
+        }
+        
+        // Format results
+        for (User u : users) {
+            Map<String, Object> emp = new Map<String, Object>();
+            emp.put('Id', u.Id);
+            emp.put('Name', u.Name);
+            emp.put('Employee_IDs__c', u.Employee_IDs__c);
+            emp.put('Department', u.Department);
+            emp.put('Email', u.Email);
+            employees.add(emp);
+        }
+        
+        System.debug('Search results: ' + employees.size() + ' employees found');
+        
+    } catch (Exception e) {
+        System.debug('Error searching employees: ' + e.getMessage());
+    }
+    
+    return employees;
+}
+
 }

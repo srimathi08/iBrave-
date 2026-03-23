@@ -142,7 +142,7 @@ public with sharing class MonthlyAttendanceReportController {
      */
     private static List<User> getFilteredEmployeesWithDOJ(String departmentFilter, String managerFilter) {
         String query = 'SELECT Id, Name, Email, Department, ManagerId, ' +
-                       'Employee_Id__c, Date_of_Joining__c ' +
+                       'Employee_IDs__c, Date_of_Joining__c ' +
                        'FROM User ' +
                        'WHERE IsActive = true ';
         
@@ -387,8 +387,8 @@ public with sharing class MonthlyAttendanceReportController {
         
         // ✅ Employee basic info
         employeeData.put('Id', employee.Id);
-        employeeData.put('employeeId', employee.Employee_Id__c != null ? 
-            String.valueOf(employee.Employee_Id__c) : 'N/A');
+        employeeData.put('employeeId', employee.Employee_IDs__c != null ? 
+            String.valueOf(employee.Employee_IDs__c) : 'N/A');
         employeeData.put('employeeName', employee.Name);
         employeeData.put('managerName', managerName);
         

@@ -11,7 +11,7 @@ private class ContactDocEmailServiceTest {
             LastName = 'Test User',
             Email = 'testuser@example.com',
             FirstName = 'Test',
-            Designation__c = 'Developer',
+            User_Designation__c = 'Consultant',
             Send_Appointment_Letter__c = true
         );
         insert con;

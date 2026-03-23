@@ -19,11 +19,11 @@ public class AttendanceReminderBatch implements Database.Batchable<SObject>, Dat
         System.debug('=== ATTENDANCE REMINDER BATCH STARTED ===');
         System.debug('Start Time: ' + System.now());
         
-        // Query all active users with Employee_Id__c (actual employees)
-        String query = 'SELECT Id, Name, Email, Employee_Id__c ' +
+        // Query all active users with Employee_IDs__c (actual employees)
+        String query = 'SELECT Id, Name, Email, Employee_IDs__c ' +
                       'FROM User ' +
                       'WHERE IsActive = true ' +
-                      'AND Employee_Id__c != null ' +
+                      'AND Employee_IDs__c != null ' +
                       'AND Email != null';
         
         return Database.getQueryLocator(query);

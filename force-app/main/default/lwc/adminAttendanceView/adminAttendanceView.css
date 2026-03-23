@@ -950,3 +950,68 @@
 .visible {
     display: block !important;
 }
+
+/* Search Field Wrapper with Suggestions */
+.search-field-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.suggestions-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #d8dde6;
+    border-radius: 0.25rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    margin-top: 4px;
+}
+
+.suggestion-item {
+    padding: 10px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #f3f3f3;
+    transition: background-color 0.2s;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-item:hover {
+    background-color: #f3f6fa;
+}
+
+.suggestion-main {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.875rem;
+    color: #181818;
+    font-weight: 500;
+}
+
+.suggestion-main lightning-icon {
+    flex-shrink: 0;
+}
+
+.suggestion-main .emp-id {
+    color: #0176d3;
+    font-weight: 600;
+}
+
+.suggestion-main .emp-name {
+    color: #181818;
+}
+
+.suggestion-meta {
+    margin-top: 4px;
+    margin-left: 28px;
+    font-size: 0.75rem;
+    color: #706e6b;
+}

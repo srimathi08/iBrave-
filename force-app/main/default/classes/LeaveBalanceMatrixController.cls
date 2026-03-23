@@ -24,7 +24,7 @@ public with sharing class LeaveBalanceMatrixController {
                        Employee__c,
                        Employee__r.Name,
                        Employee__r.Email,
-                       Employee__r.Employee_Id__c,
+                       Employee__r.Employee_IDs__c,
                        Employee__r.Department,
                        Employee__r.Gender__c,
                        Employee__r.Marital_Status__c,

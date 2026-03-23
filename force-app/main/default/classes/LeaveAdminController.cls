@@ -1,4 +1,4 @@
-public with sharing class LeaveAdminController {
+public without sharing class LeaveAdminController {
     
     @AuraEnabled(cacheable=true)
     public static List<Leave_Type__c> getLeaveTypes() {
@@ -100,10 +100,10 @@ private static Integer createBalancesForLeaveType(Id leaveTypeId) {
     
     // Get all active users with Employee_Id
     List<User> users = [
-        SELECT Id, Name, Employee_Id__c
+        SELECT Id, Name,Employee_IDs__c
         FROM User 
         WHERE IsActive = true 
-        AND Employee_Id__c != null
+        AND Employee_IDs__c != null
     ];
     
     System.debug('Found ' + users.size() + ' active users with Employee_Id');
@@ -177,10 +177,10 @@ public static String syncAllBalances() {
         
         // Get all active users with Employee_Id
         List<User> users = [
-            SELECT Id, Name, Employee_Id__c
+            SELECT Id, Name, Employee_IDs__c
             FROM User 
             WHERE IsActive = true 
-            AND Employee_Id__c != null
+            AND Employee_IDs__c != null
             LIMIT 1000
         ];
         
@@ -279,7 +279,7 @@ public static String syncAllBalances() {
     @AuraEnabled
 public static List<Leave_Request__c> searchLeaveRequests(Map<String, String> filters) {
     try {
-        String query = 'SELECT Id, Name, Employee__c, Employee__r.Name, Employee__r.Employee_Id__c, ' +
+        String query = 'SELECT Id, Name, Employee__c, Employee__r.Name, Employee__r.Employee_IDs__c, ' +
                       'Employee__r.Department, Leave_Type__c, Leave_Type__r.Leave_Type_Name__c, ' +
                       'Leave_Type__r.Leave_Code__c, Start_Date__c, End_Date__c, Total_Days__c, ' +
                       'Reason__c, Status__c, Manager__c, Manager__r.Name, Manager_Comments__c, ' +
@@ -292,7 +292,7 @@ public static List<Leave_Request__c> searchLeaveRequests(Map<String, String> fil
         if (String.isNotBlank(filters.get('employeeId'))) {
             try {
                 Decimal empId = Decimal.valueOf(filters.get('employeeId'));
-                query += ' AND Employee__r.Employee_Id__c = ' + empId;
+                query += ' AND Employee__r.Employee_IDs__c = ' + empId;
             } catch (Exception e) {
                 // Invalid number format - skip filter
                 System.debug('Invalid Employee ID format: ' + filters.get('employeeId'));
@@ -343,7 +343,7 @@ public static String exportLeaveRequestsToCSV(Map<String, String> filters) {
         
         for (Leave_Request__c req : requests) {
             csv += '"' + (req.Name != null ? req.Name : '') + '",';
-            csv += '"' + (req.Employee__r.Employee_Id__c != null ? String.valueOf(req.Employee__r.Employee_Id__c) : '') + '",';
+            csv += '"' + (req.Employee__r.Employee_IDs__c != null ? String.valueOf(req.Employee__r.Employee_IDs__c) : '') + '",';
             csv += '"' + (req.Employee__r.Name != null ? req.Employee__r.Name : '') + '",';
             csv += '"' + (req.Employee__r.Department != null ? req.Employee__r.Department : '') + '",';
             
@@ -382,5 +382,55 @@ public static String exportLeaveRequestsToCSV(Map<String, String> filters) {
     }
 }
 
+    @AuraEnabled(cacheable=false)  // Note: SOSL queries cannot be cached
+public static List<User> searchEmployees(String searchType, String searchTerm) {
+    try {
+        if (String.isBlank(searchTerm)) {
+            return new List<User>();
+        }
+        
+        List<User> users = new List<User>();
+        String searchQuery = searchTerm + '*';
+        
+        if (searchType == 'employeeId') {
+            // Search by Employee ID or Name using SOSL
+            List<List<SObject>> searchResults = [
+                FIND :searchQuery 
+                IN ALL FIELDS 
+                RETURNING User(
+                    Id, Name, Employee_IDs__c, Department, Email 
+                    WHERE Employee_IDs__c != null AND IsActive = true
+                    ORDER BY Name ASC
+                    LIMIT 10
+                )
+            ];
+            
+            if (!searchResults.isEmpty()) {
+                users = (List<User>)searchResults[0];
+            }
+        } else if (searchType == 'name') {
+            // Search by Name using SOSL
+            List<List<SObject>> searchResults = [
+                FIND :searchQuery 
+                IN NAME FIELDS 
+                RETURNING User(
+                    Id, Name, Employee_IDs__c, Department, Email 
+                    WHERE Employee_IDs__c != null AND IsActive = true
+                    ORDER BY Name ASC
+                    LIMIT 10
+                )
+            ];
+            
+            if (!searchResults.isEmpty()) {
+                users = (List<User>)searchResults[0];
+            }
+        }
+        
+        return users;
+    } catch (Exception e) {
+        System.debug('Error in searchEmployees: ' + e.getMessage());
+        throw new AuraHandledException('Error searching employees: ' + e.getMessage());
+    }
+}
 
 }

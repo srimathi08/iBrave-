@@ -346,7 +346,7 @@ public without sharing class EmployeeLeaveController {
     public static Map<String, Object> getLeaveBalanceSummary(Id employeeId, String year) {
         try {
             List<Employee_Leave_Balance__c> balances = [
-                SELECT Id, Total_Allocated__c, Used__c, Available__c,
+                SELECT Id, Total_Allocated__c, Used__c, Booked__c, Available__c,
                        Leave_Type__r.Leave_Type_Name__c, Leave_Type__r.Leave_Code__c
                 FROM Employee_Leave_Balance__c
                 WHERE Employee__c = :employeeId
@@ -361,7 +361,8 @@ public without sharing class EmployeeLeaveController {
             
             for (Employee_Leave_Balance__c bal : balances) {
                 totalAllocated += (bal.Total_Allocated__c != null ? bal.Total_Allocated__c : 0);
-                totalUsed += (bal.Used__c != null ? bal.Used__c : 0);
+                // Booked__c = deducted from available (what portal labels as "Used")
+                totalUsed += (bal.Booked__c != null ? bal.Booked__c : 0);
                 totalAvailable += (bal.Available__c != null ? bal.Available__c : 0);
             }
             
@@ -541,4 +542,34 @@ public without sharing class EmployeeLeaveController {
             throw new AuraHandledException('Error: ' + e.getMessage());
         }
     }
+    
+    
+    @AuraEnabled(cacheable=true)
+public static Map<String, Object> getLeaveBalanceSummary1(Id employeeId, String year) {
+    try {
+        List<Employee_Leave_Balance__c> balances = [
+            SELECT Available__c
+            FROM Employee_Leave_Balance__c
+            WHERE Employee__c = :employeeId
+            AND Year__c = :year
+            AND Is_Active__c = true
+            AND Is_Eligible__c = true
+            AND Leave_Type__r.Leave_Type_Name__c IN ('Sick Leave','Casual Leave','Earned Leave','Loss of Pay')
+        ];
+
+        Decimal totalAvailable = 0;
+
+        for (Employee_Leave_Balance__c bal : balances) {
+            totalAvailable += (bal.Available__c != null ? bal.Available__c : 0);
+        }
+
+        return new Map<String, Object>{
+            'totalAvailable' => totalAvailable
+        };
+
+    } catch (Exception e) {
+        throw new AuraHandledException(e.getMessage());
+    }
+}
+
 }

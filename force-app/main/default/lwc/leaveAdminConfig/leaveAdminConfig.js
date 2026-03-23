@@ -27,6 +27,9 @@ import getAllActiveLeaveTypes from '@salesforce/apex/LeaveBalanceMatrixControlle
 import getCancellableLeaveRequests from '@salesforce/apex/LeaveRequestController.getCancellableLeaveRequests';
 import cancelLeaveRequest from '@salesforce/apex/LeaveRequestController.cancelLeaveRequest';
 
+// Add this import at the top
+import searchEmployees from '@salesforce/apex/LeaveAdminController.searchEmployees';
+
 export default class LeaveAdminConfig extends LightningElement {
     @track activeTab = 'leavetypes';
     @track isLoading = false;
@@ -64,6 +67,14 @@ export default class LeaveAdminConfig extends LightningElement {
     @track filterStatus = '';
     @track filterStartDateFrom = '';
     @track filterStartDateTo = '';
+
+    // Employee Search Suggestions
+@track employeeIdSuggestions = [];
+@track employeeNameSuggestions = [];
+@track showEmployeeIdSuggestions = false;
+@track showEmployeeNameSuggestions = false;
+@track selectedEmployeeFromId = null;
+@track selectedEmployeeFromName = null;
     
     // ============================================
     // NEW: LEAVE BALANCE MATRIX TAB PROPERTIES
@@ -198,7 +209,7 @@ export default class LeaveAdminConfig extends LightningElement {
         .then(result => {
             this.employees = result.employees.map(emp => ({
                 ...emp,
-                Employee_Id__c: emp.EmployeeId,
+                Employee_IDs__c: emp.EmployeeId,
                 balances: emp.balances.map(bal => ({
                     Id: bal.Id,
                     leaveTypeName: bal.Leave_Type__r.Leave_Type_Name__c,
@@ -714,44 +725,114 @@ export default class LeaveAdminConfig extends LightningElement {
     // LEAVE REPORTS TAB HANDLERS
     // ============================================
     
-    handleEmployeeIdFilter(event) {
-        this.filterEmployeeId = event.target.value;
-    }
+    // 
+    
+    // ============================================
+// LEAVE REPORTS TAB HANDLERS
+// ============================================
 
-    handleEmployeeNameFilter(event) {
-        this.filterEmployeeName = event.target.value;
+handleEmployeeIdFilter(event) {
+    this.filterEmployeeId = event.target.value;
+    
+    if (this.filterEmployeeId && this.filterEmployeeId.length >= 1) {
+        this.searchEmployeesByField('employeeId', this.filterEmployeeId);
+    } else {
+        this.showEmployeeIdSuggestions = false;
+        this.employeeIdSuggestions = [];
     }
+}
 
-    handleDepartmentFilter(event) {
-        this.filterDepartment = event.target.value;
+handleEmployeeNameFilter(event) {
+    this.filterEmployeeName = event.target.value;
+    
+    if (this.filterEmployeeName && this.filterEmployeeName.length >= 2) {
+        this.searchEmployeesByField('name', this.filterEmployeeName);
+    } else {
+        this.showEmployeeNameSuggestions = false;
+        this.employeeNameSuggestions = [];
     }
+}
 
-    handleLeaveTypeFilter(event) {
-        this.filterLeaveType = event.detail.value;
-    }
+searchEmployeesByField(fieldType, searchTerm) {
+    searchEmployees({ 
+        searchType: fieldType,
+        searchTerm: searchTerm
+    })
+    .then(result => {
+        if (fieldType === 'employeeId') {
+            this.employeeIdSuggestions = result;
+            this.showEmployeeIdSuggestions = result.length > 0;
+        } else if (fieldType === 'name') {
+            this.employeeNameSuggestions = result;
+            this.showEmployeeNameSuggestions = result.length > 0;
+        }
+    })
+    //.catch(error => {
+        //console.error('Error searching employees:', error);
+        //this.showToast('Error', 'Failed to search employees', 'error');
+   // });
+}
 
-    handleStatusFilter(event) {
-        this.filterStatus = event.detail.value;
-    }
+handleEmployeeIdSuggestionClick(event) {
+    const selectedId = event.currentTarget.dataset.id;
+    const selectedName = event.currentTarget.dataset.name;
+    const selectedEmpId = event.currentTarget.dataset.empid;
+    
+    this.filterEmployeeId = selectedEmpId;
+    this.filterEmployeeName = selectedName;
+    this.selectedEmployeeFromId = selectedId;
+    this.showEmployeeIdSuggestions = false;
+    this.employeeIdSuggestions = [];
+}
 
-    handleStartDateFromFilter(event) {
-        this.filterStartDateFrom = event.target.value;
-    }
+handleEmployeeNameSuggestionClick(event) {
+    const selectedId = event.currentTarget.dataset.id;
+    const selectedName = event.currentTarget.dataset.name;
+    const selectedEmpId = event.currentTarget.dataset.empid;
+    
+    this.filterEmployeeName = selectedName;
+    this.filterEmployeeId = selectedEmpId;
+    this.selectedEmployeeFromName = selectedId;
+    this.showEmployeeNameSuggestions = false;
+    this.employeeNameSuggestions = [];
+}
 
-    handleStartDateToFilter(event) {
-        this.filterStartDateTo = event.target.value;
-    }
+handleDepartmentFilter(event) {
+    this.filterDepartment = event.target.value;
+}
 
-    handleClearFilters() {
-        this.filterEmployeeId = '';
-        this.filterEmployeeName = '';
-        this.filterDepartment = '';
-        this.filterLeaveType = '';
-        this.filterStatus = '';
-        this.filterStartDateFrom = '';
-        this.filterStartDateTo = '';
-        this.filteredLeaveRequests = [];
-    }
+handleLeaveTypeFilter(event) {
+    this.filterLeaveType = event.detail.value;
+}
+
+handleStatusFilter(event) {
+    this.filterStatus = event.detail.value;
+}
+
+handleStartDateFromFilter(event) {
+    this.filterStartDateFrom = event.target.value;
+}
+
+handleStartDateToFilter(event) {
+    this.filterStartDateTo = event.target.value;
+}
+
+handleClearFilters() {
+    this.filterEmployeeId = '';
+    this.filterEmployeeName = '';
+    this.filterDepartment = '';
+    this.filterLeaveType = '';
+    this.filterStatus = '';
+    this.filterStartDateFrom = '';
+    this.filterStartDateTo = '';
+    this.filteredLeaveRequests = [];
+    this.showEmployeeIdSuggestions = false;
+    this.showEmployeeNameSuggestions = false;
+    this.employeeIdSuggestions = [];
+    this.employeeNameSuggestions = [];
+    this.selectedEmployeeFromId = null;
+    this.selectedEmployeeFromName = null;
+}
 
     handleSearchLeaveRequests() {
         this.isLoading = true;
@@ -770,7 +851,7 @@ export default class LeaveAdminConfig extends LightningElement {
             .then(result => {
                 this.filteredLeaveRequests = result.map(req => ({
                     ...req,
-                    employeeId: req.Employee__r.Employee_Id__c,
+                    employeeId: req.Employee__r.Employee_IDs__c,
                     employeeName: req.Employee__r.Name,
                     department: req.Employee__r.Department || 'N/A',
                     leaveTypeName: req.Leave_Type__r ? req.Leave_Type__r.Leave_Type_Name__c : 'N/A',
@@ -948,7 +1029,7 @@ export default class LeaveAdminConfig extends LightningElement {
         data.forEach(balance => {
             const empId = balance.Employee__c;
             const empName = balance.Employee__r.Name;
-            const empEmployeeId = balance.Employee__r.Employee_Id__c;
+            const empEmployeeId = balance.Employee__r.Employee_IDs__c;
             const empDepartment = balance.Employee__r.Department;
             const empGender = balance.Employee__r.Gender__c;
             const empMaritalStatus = balance.Employee__r.Marital_Status__c;

@@ -4,7 +4,7 @@
  * @date 2025-11-06
  * @version 1.0
  */
-public with sharing class BranchController {
+public without sharing class BranchController {
     
     /**
      * @description Get all active branches for dropdown selection

@@ -1,4 +1,5 @@
 <template>
+    
     <div class="attendance-wrapper">
         <!-- Loading Spinner -->
         <template if:true={isLoading}>
@@ -66,7 +67,28 @@
         </div>
     </div>
 </template>
-
+            <!-- ✅ NEW: Previous Day Missing Attendance Card -->
+<template if:true={hasMissingYesterdayRecord}>
+    <div class="od-missing-card">
+        <div class="od-card-left">
+            <div class="od-icon-wrap">
+                <lightning-icon icon-name="utility:warning" size="small" class="od-warning-icon"></lightning-icon>
+            </div>
+            <div class="od-card-text">
+                <p class="od-card-title">Attendance missing for yesterday</p>
+                <p class="od-card-subtitle">{previousDayLabel} · {yesterdayDisplayDate}</p>
+            </div>
+        </div>
+        <lightning-button
+            label="Apply OD / Log Attendance"
+            variant="brand"
+            icon-name="utility:add"
+            icon-position="left"
+            onclick={handleOpenODModal}
+            class="od-apply-btn">
+        </lightning-button>
+    </div>
+</template>
 
             <div class="attendance-content">
                 <!-- Left Section - Clock -->
@@ -146,6 +168,16 @@
                 <div class="summary-card absent-card">
                     <div class="summary-number">{absentDays}</div>
                     <div class="summary-label">Absent Days</div>
+                    <div class="absent-breakdown">
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">🏖️ Approved Leave:</span>
+                            <span class="breakdown-value">{approvedLeaveDays}</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">💸 LOP Days:</span>
+                            <span class="breakdown-value">{lopDays}</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="summary-card hours-card">
                     <div class="summary-number">{totalHours}h</div>
@@ -185,6 +217,7 @@
                                 <th class="status-column">Status</th>
                                 <th class="location-column">Location</th>
                                 <th class="approval-column">WFH Approval</th>
+                                <th class="approval-column">OD Approval</th>
                                 <th class="notes-column">Notes</th>
                             </tr>
                         </thead>
@@ -251,6 +284,18 @@
                                             </div>
                                         </template>
                                         <template if:false={record.submittedForApproval}>
+                                            --
+                                        </template>
+                                    </td>
+
+                                    <!-- OD Approval Status Column -->
+                                    <td class="approval-data">
+                                        <template if:true={record.isODRequest}>
+                                            <div class="approval-status-container">
+                                                <span class={record.odApprovalBadgeClass}>{record.odApprovalStatusText}</span>
+                                            </div>
+                                        </template>
+                                        <template if:false={record.isODRequest}>
                                             --
                                         </template>
                                     </td>
@@ -407,16 +452,30 @@
                             <div class="work-location-section">
                                 <div class="section-header">
                                     <lightning-icon icon-name="utility:office" size="small"></lightning-icon>
-                                    <span class="section-title">Work Location *</span>
                                 </div>
+                                <span class="section-title">Work Location 
+                                     <abbr class="slds-required" title="required">*</abbr>   
+                                    </span>
                                 <lightning-combobox
                                     name="workLocation"
                                     placeholder="Select work location"
                                     options={workLocationOptions}
                                     value={selectedWorkLocation}
                                     onchange={handleWorkLocationChange}
-                                    required>
+                                    >
                                 </lightning-combobox>
+                                <!-- ✅ NEW: Spinner while verifying WFH request -->
+<template if:true={isCheckingWFHRequest}>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:8px;
+                padding:8px 12px;background:#f0f7ff;border-radius:6px;
+                border-left:3px solid #0176d3;">
+        <lightning-spinner alternative-text="Checking WFH request..." size="small">
+        </lightning-spinner>
+        <span style="font-size:12px;color:#0176d3;font-style:italic;">
+            Verifying your WFH request...
+        </span>
+    </div>
+</template>
                             </div>
 
                              <!-- ✅ BRANCH DROPDOWN (shown only if Work from Office) -->
@@ -566,16 +625,19 @@
     </div>
 </template>
 
+
+
                                         <!-- WFH Reason Section - WITH HYBRID SCHEDULE BUTTON -->
-                <template if:true={showWFHReasonSection}>
+                                         
+         <!--      <template if:true={showWFHReasonSection}>
                     <div class="wfh-reason-section">
                         <div class="section-header">
                             <lightning-icon icon-name="utility:home" size="small"></lightning-icon>
                             <span class="section-title">Work From Home</span>
-                        </div>
+                        </div>--> 
 
                         <!-- ✅ HYBRID SCHEDULE BUTTON - ALWAYS VISIBLE -->
-                        <div class="hybrid-schedule-quick-access">
+                     <!--   <div class="hybrid-schedule-quick-access">
                             <div class="quick-access-content">
                                 <div class="quick-access-icon">
                                     <lightning-icon icon-name="utility:calendar" size="small"></lightning-icon>
@@ -598,10 +660,10 @@
                                 onclick={openHybridScheduleModal}
                                 class="hybrid-schedule-btn">
                             </lightning-button>
-                        </div>
+                        </div> -->
 
                         <!-- Schedule Status Display -->
-                        <template if:true={hasActiveHybridSchedule}>
+                      <!--  <template if:true={hasActiveHybridSchedule}>
                             <template if:true={isScheduledWFH}>
                                 <div class="wfh-approval-notice approved-schedule">
                                     <lightning-icon icon-name="utility:success" size="x-small" class="success-icon"></lightning-icon>
@@ -618,9 +680,16 @@
                                     </span>
                                 </div>
                             </template>
-                        </template>
+                        </template> -->
 
                         <!-- WFH Reason Textarea -->
+                                                  <!--<template if:true={errorMessage}>
+                        <div class="slds-text-color_error slds-m-top_small">
+                         {errorMessage}
+                             </div>
+                        </template>
+
+
                         <lightning-textarea
                             name="wfhReason"
                             placeholder="Please provide detailed reason for working from home (required for manager approval)..."
@@ -631,23 +700,23 @@
                         </lightning-textarea>
                         <div class="character-count">
                             <span class="char-count-text">{wfhReasonCharCount} / 1000 characters</span>
-                        </div>
+                        </div> -->
 
                         <!-- Approval Notice -->
-                        <template if:false={autoApproveWFH}>
+                       <!-- <template if:false={autoApproveWFH}>
                             <div class="wfh-approval-notice">
                                 <lightning-icon icon-name="utility:info" size="x-small" class="info-icon"></lightning-icon>
                                 <span class="notice-text">This request will be automatically sent to your manager for approval</span>
                             </div>
-                        </template>
+                        </template> -->
 
                         <!-- Manager Info -->
-                        <div class="manager-info-notice">
+                       <!-- <div class="manager-info-notice">
                             <lightning-icon icon-name="utility:user" size="x-small" class="manager-icon"></lightning-icon>
                             <span class="manager-text">Manager: {currentUserManagerName}</span>
                         </div>
                     </div>
-                </template>
+                </template> -->
 
                             
 
@@ -658,7 +727,9 @@
                             <div class="photo-section">
                                 <div class="section-header">
                                     <lightning-icon icon-name="utility:photo" size="small"></lightning-icon>
-                                    <span class="section-title">Capture Photo *</span>
+                                    <span class="section-title">Capture Photo
+                                        <abbr class="slds-required" title="required">*</abbr>
+                                    </span>
                                     <template if:true={isCapturingPhoto}>
                                         <lightning-spinner alternative-text="Processing..." size="small"></lightning-spinner>
                                     </template>
@@ -695,7 +766,8 @@
                             <div class="location-section">
                                 <div class="section-header">
                                     <lightning-icon icon-name="utility:location" size="small"></lightning-icon>
-                                    <span class="section-title">GPS Location *</span>
+                                    <span class="section-title">GPS Location
+                                         <abbr class="slds-required" title="required">*</abbr></span>
                                     <template if:true={isGettingLocation}>
                                         <lightning-spinner alternative-text="Getting location..." size="small"></lightning-spinner>
                                     </template>
@@ -724,7 +796,7 @@
                                                     </template>
                                                     
                                                     <!-- Coordinates Display -->
-                                                    <div class="coordinates-display-card">
+                                               <!--    <div class="coordinates-display-card">
                                                         <div class="coordinates-header-row">
                                                             <lightning-icon icon-name="utility:pin" size="x-small"></lightning-icon>
                                                             <span class="coordinates-title">{latitude}, {longitude}</span>
@@ -750,7 +822,7 @@
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </div>
+                                                    </div>--> 
                                                 </div>
                                             </div>
                                             <lightning-button 
@@ -833,7 +905,9 @@
             <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-02" class="slds-modal slds-fade-in-open">
                 <div class="slds-modal__container">
                     <div class="slds-modal__header checkout-header">
-                        <h1 id="modal-heading-02" class="slds-modal__title slds-hyphenate">Check Out</h1>
+                        <h1 id="modal-heading-02" class="slds-modal__title slds-hyphenate">Check Out
+                            <abbr class="slds-required" title="required">*</abbr>
+                        </h1>
                         <lightning-button-icon 
                             icon-name="utility:close" 
                             alternative-text="Close" 
@@ -879,7 +953,7 @@
                             <div class="photo-section">
                                 <div class="section-header">
                                     <lightning-icon icon-name="utility:photo" size="small"></lightning-icon>
-                                    <span class="section-title">Capture Check-out Photo *</span>
+                                    <span class="section-title">Capture Check-out Photo</span>
                                     <template if:true={isCapturingPhoto}>
                                         <lightning-spinner alternative-text="Processing..." size="small"></lightning-spinner>
                                     </template>
@@ -1007,6 +1081,8 @@
                                             </lightning-button>
                                         </div>
                                     </template>
+
+                                    
                                 </div>
                             </div>
 
@@ -1040,6 +1116,9 @@
                             disabled={isCheckOutDisabled}
                             class="confirm-checkout-button">
                         </lightning-button>
+
+
+                        
                     </div>
                 </div>
             </section>
@@ -1058,6 +1137,199 @@
         />
     </div>
 
+    <!-- ✅ NEW: OD / Previous Day Attendance Modal -->
+<template if:true={showODModal}>
+    <section role="dialog" tabindex="-1" aria-modal="true"
+             aria-labelledby="od-modal-heading"
+             class="slds-modal slds-fade-in-open">
+        <div class="slds-modal__container">
+
+            <div class="slds-modal__header od-modal-header">
+                <h1 id="od-modal-heading" class="slds-modal__title">
+                    <lightning-icon icon-name="utility:event" size="small" class="od-modal-title-icon"></lightning-icon>
+                    Log Previous Day Attendance — OD Approval
+                </h1>
+                <lightning-button-icon
+                    icon-name="utility:close"
+                    alternative-text="Close"
+                    variant="bare-inverse"
+                    class="slds-modal__close"
+                    onclick={closeODModal}>
+                </lightning-button-icon>
+            </div>
+
+            <div class="slds-modal__content slds-p-around_medium">
+
+                <!-- Info Banner -->
+                <div class="od-info-banner">
+                    <lightning-icon icon-name="utility:info" size="x-small"></lightning-icon>
+                    <span>You are logging attendance for <strong>{previousDayLabel}</strong> 
+    ({yesterdayDisplayDate}). This request will be sent to 
+    <strong>{currentUserManagerName}</strong> for approval.</span>
+                </div>
+
+                <!-- Work Location -->
+                <div class="od-form-section">
+                    <label class="od-field-label">
+                        Work Location <abbr class="slds-required" title="required">*</abbr>
+                    </label>
+                    <lightning-combobox
+                        name="odWorkLocation"
+                        placeholder="Select work location"
+                        options={workLocationOptions}
+                        value={odSelectedWorkLocation}
+                        onchange={handleODWorkLocationChange}>
+                    </lightning-combobox>
+                </div>
+
+                <!-- Branch (if Office) -->
+                <template if:true={odShowBranchDropdown}>
+                    <div class="od-form-section">
+                        <label class="od-field-label">
+                            Branch Office <abbr class="slds-required" title="required">*</abbr>
+                        </label>
+                        <lightning-combobox
+                            name="odBranch"
+                            placeholder="Select branch"
+                            options={branchOptions}
+                            value={odSelectedBranchId}
+                            onchange={handleODBranchChange}>
+                        </lightning-combobox>
+                        <template if:true={odSelectedBranchName}>
+                            <div class="od-branch-confirm">
+                                <lightning-icon icon-name="utility:success" size="x-small"></lightning-icon>
+                                <span>Branch: <strong>{odSelectedBranchName}</strong></span>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- Time inputs side by side -->
+                <div class="od-time-row">
+                    <div class="od-form-section od-time-field">
+                        <lightning-input
+                            type="time"
+                            label="Check-in Time *"
+                            value={odCheckInTime}
+                            onchange={handleODCheckInTimeChange}
+                            required>
+                        </lightning-input>
+                    </div>
+                    <div class="od-form-section od-time-field">
+                        <lightning-input
+                            type="time"
+                            label="Check-out Time *"
+                            value={odCheckOutTime}
+                            onchange={handleODCheckOutTimeChange}
+                            required>
+                        </lightning-input>
+                    </div>
+                </div>
+
+                <!-- OD Reason -->
+                <div class="od-form-section">
+                    <label class="od-field-label">
+                        Reason for OD / Missed Attendance
+                        <abbr class="slds-required" title="required">*</abbr>
+                    </label>
+                    <lightning-textarea
+    name="odReason"
+    placeholder="Provide a detailed reason (minimum 20 characters)..."
+    value={odReason}
+    onchange={handleODReasonChange}
+    max-length="1000">
+</lightning-textarea>
+                    <div class="od-char-count">{odReasonCharCount} / 1000</div>
+                </div>
+
+                <!-- Check-in Photo -->
+              <!--  <div class="od-photo-row">
+                    <div class="od-photo-col">
+                        <p class="od-field-label">Check-in Photo <abbr class="slds-required" title="required">*</abbr></p>
+                        <template if:false={odCheckInPhotoPreview}>
+                            <div class="od-photo-capture" onclick={captureODCheckInPhoto}>
+                                <lightning-icon icon-name="utility:camera" size="medium" class="od-camera-icon"></lightning-icon>
+                                <p class="od-photo-hint">Tap to capture</p>
+                            </div>
+                        </template>
+                        <template if:true={odCheckInPhotoPreview}>
+                            <div class="od-photo-preview-wrap">
+                                <img src={odCheckInPhotoPreview} alt="Check-in" class="od-preview-img" />
+                                <lightning-button
+                                    label="Retake"
+                                    variant="neutral"
+                                    size="small"
+                                    onclick={captureODCheckInPhoto}
+                                    class="od-retake-btn">
+                                </lightning-button>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div class="od-photo-col">
+                        <p class="od-field-label">Check-out Photo <abbr class="slds-required" title="required">*</abbr></p>
+                        <template if:false={odCheckOutPhotoPreview}>
+                            <div class="od-photo-capture" onclick={captureODCheckOutPhoto}>
+                                <lightning-icon icon-name="utility:camera" size="medium" class="od-camera-icon"></lightning-icon>
+                                <p class="od-photo-hint">Tap to capture</p>
+                            </div>
+                        </template>
+                        <template if:true={odCheckOutPhotoPreview}>
+                            <div class="od-photo-preview-wrap">
+                                <img src={odCheckOutPhotoPreview} alt="Check-out" class="od-preview-img" />
+                                <lightning-button
+                                    label="Retake"
+                                    variant="neutral"
+                                    size="small"
+                                    onclick={captureODCheckOutPhoto}
+                                    class="od-retake-btn">
+                                </lightning-button>
+                            </div> 
+                        </template>
+                    </div>
+                </div>-->
+
+                <!-- Optional Notes -->
+                <div class="od-form-section">
+                    <label class="od-field-label">Additional Notes (Optional)</label>
+                    <lightning-textarea
+                        name="odNotes"
+                        placeholder="Any additional context for your manager..."
+                        value={odNotes}
+                        onchange={handleODNotesChange}
+                        max-length="500">
+                    </lightning-textarea>
+                </div>
+
+                <!-- Manager notice -->
+                <div class="od-manager-notice">
+                    <lightning-icon icon-name="utility:user" size="x-small"></lightning-icon>
+                    <span>Approval request will be sent to: <strong>{currentUserManagerName}</strong></span>
+                </div>
+
+            </div>
+
+            <div class="slds-modal__footer">
+                <lightning-button
+                    label="Cancel"
+                    variant="neutral"
+                    onclick={closeODModal}>
+                </lightning-button>
+                <lightning-button
+                    label="Submit for Manager Approval"
+                    variant="brand"
+                    icon-name="utility:forward"
+                    icon-position="left"
+                    onclick={confirmODSubmit}
+                    disabled={isODSubmitDisabled}
+                    class="od-submit-btn">
+                </lightning-button>
+            </div>
+
+        </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+</template>
                
         <!-- ✅ HYBRID SCHEDULE MODAL - ADD THIS BEFORE CLOSING TAGS -->
         <template if:true={showHybridScheduleModal}>

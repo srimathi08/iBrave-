@@ -7,7 +7,7 @@ public with sharing class ContactDocEmailService {
             SELECT Id, Name, Email, FirstName,
                    Appointment_Letter_File_Id__c,
                    NDA_File_Id__c,
-                   Designation__c
+                   User_Designation__c
             FROM Contact
             WHERE Id IN :contactIds
         ];
@@ -82,7 +82,7 @@ public with sharing class ContactDocEmailService {
     
     private static String buildHtmlEmailBody(Contact c) {
         String firstName = String.isNotBlank(c.FirstName) ? c.FirstName : c.Name;
-        String designation = String.isNotBlank(c.Designation__c) ? c.Designation__c : 'Team Member';
+        String designation = String.isNotBlank(c.User_Designation__c) ? c.User_Designation__c : 'Team Member';
         
         return 
             '<html>' +
@@ -187,7 +187,7 @@ public with sharing class ContactDocEmailService {
             '<div class="footer">' +
             '<strong>Quadrobay Technologies Private Limited</strong>' +
             '<p>This is an automated email. Please do not reply directly to this message.</p>' +
-            '<p>For any queries, please contact: hr@quadrobay.com</p>' +
+            '<p>For any queries, please contact: it-admin@quadrobay.com</p>' +
             '</div>' +
             
             '</div>' +

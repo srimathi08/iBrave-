@@ -1,0 +1,55 @@
+<template>
+    <lightning-card title="Employee Requests" icon-name="standard:employee">
+
+        <!-- If user has at least one request -->
+        <template if:true={hasAccess}>
+            <lightning-tabset active-tab-value={activeTab}>
+
+                <!-- Leave Request -->
+                <template if:true={showLeave}>
+                    <lightning-tab label="Leave Request" value="leave">
+                        <c-leave-management></c-leave-management>
+                    </lightning-tab>
+                </template>
+
+
+
+
+                   <!-- Work From Home -->
+                <template if:true={showWFH}>
+                    <lightning-tab label="Work From Home" value="wfh">
+                     <c-work-from-home-request-component></c-work-from-home-request-component>
+                        
+                    </lightning-tab>
+                </template>
+
+                <!-- Hybrid Work Schedule -->
+                <template if:true={showHybrid}>
+                    <lightning-tab label="Hybrid Work Schedule" value="hybrid">
+                        <!-- 🔹 YOUR COMPONENT PLUGGED HERE -->
+                        <c-hybrid-schedule-request></c-hybrid-schedule-request>
+                    </lightning-tab>
+                </template>
+
+
+
+            </lightning-tabset>
+        </template>
+
+        <!-- No Access Case -->
+        <template if:false={hasAccess}>
+            <div class="slds-p-around_medium slds-text-align_center">
+                <lightning-icon icon-name="utility:info" size="medium"></lightning-icon>
+                <p class="slds-m-top_small">
+                    No request types are available for your role.
+                </p>
+            </div>
+        </template>
+
+    </lightning-card>
+</template>
+
+
+
+
+

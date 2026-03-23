@@ -64,6 +64,39 @@ public with sharing class EditController {
         
         return result;
     }
+
+    /**
+     * Updates timesheet entry record
+     */
+    @AuraEnabled
+    public static Map<String, Object> updateTimesheetEntry(Id recordId, Map<String,Object> changes) {
+        Map<String, Object> result = new Map<String, Object>();
+        try {
+            TimesheetEntry__c updateRec = new TimesheetEntry__c(Id = recordId);
+            for (String fieldName : changes.keySet()) {
+                Object fieldValue = changes.get(fieldName);
+                if (fieldValue == null) continue;
+                
+                if (fieldName == 'Total_Hours__c') {
+                    updateRec.Total_Hours__c = Double.valueOf(fieldValue);
+                } else if (fieldName == 'Start_Time__c' || fieldName == 'End_Time__c') {
+                    String t = (String) fieldValue;
+                    List<String> parts = t.split(':');
+                    updateRec.put(fieldName, Time.newInstance(Integer.valueOf(parts[0]), Integer.valueOf(parts[1]), 0, 0));
+                } else {
+                    updateRec.put(fieldName, fieldValue);
+                }
+            }
+            update updateRec;
+            result.put('success', true);
+            result.put('message', 'Timesheet entry updated successfully');
+        } catch (Exception e) {
+            result.put('success', false);
+            result.put('error', e.getMessage());
+            System.debug('Error updating timesheet: ' + e.getMessage());
+        }
+        return result;
+    }
     
     /**
      * Creates a ContentDocument from base64 image data

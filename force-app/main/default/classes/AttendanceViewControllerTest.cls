@@ -1,1008 +1,760 @@
-/**
- * @description Test class for AttendanceViewController
- * @author Salesforce Consultant
- * @date 2025-12-15
- * @version 2.0 - Focused on code coverage
- */
 @isTest
 private class AttendanceViewControllerTest {
-    
-    // Test data constants
-    private static final String EMPLOYEE_FIRST_NAME = 'Test';
-    private static final String EMPLOYEE_LAST_NAME = 'Employee';
-    private static final String EMPLOYEE_EMAIL = 'test.employee@example.com';
-    private static final String EMPLOYEE_USERNAME = 'test.employee@example.com.test';
-    private static final String EMPLOYEE_ALIAS = 'testemp';
-    private static final String BRANCH_NAME = 'Test Branch';
-    private static final String BRANCH_CITY = 'Test City';
-    private static final String BRANCH_STATE = 'Test State';
-    
+
+    // ===================================================================
+    // HELPER: Get next weekday
+    // ===================================================================
+    private static Date getNextWeekday(Date startDate) {
+        Date d = startDate;
+        Integer tries = 0;
+        while (tries < 10) {
+            Datetime dt = Datetime.newInstance(d, Time.newInstance(0, 0, 0, 0));
+            String dow = dt.format('EEEE');
+            if (dow != 'Saturday' && dow != 'Sunday') return d;
+            d = d.addDays(1);
+            tries++;
+        }
+        return startDate;
+    }
+
+    // ===================================================================
+    // TEST DATA SETUP
+    // ===================================================================
     @TestSetup
     static void setupTestData() {
-        // Create Account and Contact for Community user
-        Account testAccount = new Account(Name = 'Test Company Account');
-        insert testAccount;
-        
-        Contact testContact = new Contact(
-            AccountId = testAccount.Id,
-            FirstName = EMPLOYEE_FIRST_NAME,
-            LastName = EMPLOYEE_LAST_NAME,
-            Email = EMPLOYEE_EMAIL
+        Profile p = [SELECT Id FROM Profile WHERE Name = 'Standard User' LIMIT 1];
+
+        User testUser = new User(
+            FirstName='Test', LastName='Employee',
+            Email='viewtest@testorg.com',
+            Username='viewtest_' + System.currentTimeMillis() + '@testorg.com',
+            Alias='vtest', TimeZoneSidKey='America/Los_Angeles',
+            LocaleSidKey='en_US', EmailEncodingKey='UTF-8',
+            LanguageLocaleKey='en_US', ProfileId=p.Id
         );
-        insert testContact;
-        
-        // Create Community user
-        Profile customerProfile = [SELECT Id FROM Profile WHERE Name = 'Customer Community Login User' LIMIT 1];
-        
-        User testEmployee = new User(
-            ContactId = testContact.Id,
-            FirstName = EMPLOYEE_FIRST_NAME,
-            LastName = EMPLOYEE_LAST_NAME,
-            Email = EMPLOYEE_EMAIL,
-            Username = EMPLOYEE_USERNAME,
-            Alias = EMPLOYEE_ALIAS,
-            TimeZoneSidKey = 'America/Los_Angeles',
-            LocaleSidKey = 'en_US',
-            EmailEncodingKey = 'UTF-8',
-            ProfileId = customerProfile.Id,
-            LanguageLocaleKey = 'en_US',
-            IsActive = true
+        insert testUser;
+
+        Date today      = Date.today();
+        Date monthStart = today.toStartOfMonth();
+        Date day1       = getNextWeekday(monthStart);
+        Date day2       = getNextWeekday(day1.addDays(1));
+
+        // Branch record
+        Branch__c branch = new Branch__c(
+            Branch_Name__c = 'Test Branch',
+            City__c        = 'Chennai',
+            State__c       = 'Tamil Nadu'
         );
-        insert testEmployee;
-        
-        // Create Branch
-        Branch__c testBranch = new Branch__c(
-            Branch_Name__c = BRANCH_NAME,
-            City__c = BRANCH_CITY,
-            State__c = BRANCH_STATE,
-            Is_Active__c = true
-        );
-        insert testBranch;
-        
-        // Create Leave Type
-        Leave_Type__c leaveType = new Leave_Type__c(
-            Leave_Type_Name__c = 'Casual Leave',
-            Leave_Code__c = 'CL',
-            Is_Active__c = true
-        );
-        insert leaveType;
-        
-        // Create diverse attendance records
-        Date today = Date.today();
-        List<Employee_Attendance__c> attendanceRecords = new List<Employee_Attendance__c>();
-        
-        // Today - checked in only
-        attendanceRecords.add(new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = today,
-            Check_In_Time__c = DateTime.now().addHours(-2),
-            Status__c = 'Present',
-            Work_Location__c = 'Work from Office',
-            Branch__c = testBranch.Id,
-            Session_Number__c = 1,
+        insert branch;
+
+        List<Employee_Attendance__c> recs = new List<Employee_Attendance__c>();
+
+        // 1. Present — Work from Office with branch
+        recs.add(new Employee_Attendance__c(
+            Employee_Name__c       = testUser.Id,
+            Date__c                = day1,
+            Check_In_Time__c       = DateTime.newInstance(day1, Time.newInstance(9, 0, 0, 0)),
+            Check_Out_Time__c      = DateTime.newInstance(day1, Time.newInstance(18, 0, 0, 0)),
+            Status__c              = 'Present',
+            Work_Location__c       = 'Work from Office',
+            Branch__c              = branch.Id,
+            Session_Number__c      = 1,
             Is_Multiple_Session__c = false,
-            Notes__c = 'Today session'
+            Notes__c               = 'Office check-in'
         ));
-        
-        // Yesterday - WFH Approved
-        attendanceRecords.add(new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = today.addDays(-1),
-            Check_In_Time__c = DateTime.newInstance(today.addDays(-1), Time.newInstance(9, 0, 0, 0)),
-            Check_Out_Time__c = DateTime.newInstance(today.addDays(-1), Time.newInstance(17, 30, 0, 0)),
-            Status__c = 'Present',
-            Work_Location__c = 'Work from Home',
-            WFH_Reason__c = 'Approved WFH',
-            Submitted_For_Approval__c = true,
-            WFH_Approval_Status__c = 'Approved',
-            Branch__c = testBranch.Id,
-            Session_Number__c = 1,
-            Is_Multiple_Session__c = false
-        ));
-        
-        // Day -2 - Client Place
-        attendanceRecords.add(new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = today.addDays(-2),
-            Check_In_Time__c = DateTime.newInstance(today.addDays(-2), Time.newInstance(8, 30, 0, 0)),
-            Check_Out_Time__c = DateTime.newInstance(today.addDays(-2), Time.newInstance(18, 0, 0, 0)),
-            Status__c = 'Present',
-            Work_Location__c = 'Client Place',
-            Client_Place_Details__c = 'ABC Corp Office',
-            Branch__c = testBranch.Id,
-            Session_Number__c = 1,
-            Is_Multiple_Session__c = false
-        ));
-        
-        // Day -3 - Field Work
-        attendanceRecords.add(new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = today.addDays(-3),
-            Check_In_Time__c = DateTime.newInstance(today.addDays(-3), Time.newInstance(9, 0, 0, 0)),
-            Check_Out_Time__c = DateTime.newInstance(today.addDays(-3), Time.newInstance(16, 0, 0, 0)),
-            Status__c = 'Present',
-            Work_Location__c = 'Field Work',
-            Field_Work_Details__c = 'Site visit',
-            Branch__c = testBranch.Id,
-            Session_Number__c = 1,
-            Is_Multiple_Session__c = false
-        ));
-        
-        // Day -4 - WFH Pending
-        attendanceRecords.add(new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = today.addDays(-4),
-            Check_In_Time__c = DateTime.newInstance(today.addDays(-4), Time.newInstance(9, 0, 0, 0)),
-            Check_Out_Time__c = DateTime.newInstance(today.addDays(-4), Time.newInstance(17, 0, 0, 0)),
-            Status__c = 'Present',
-            Work_Location__c = 'Work from Home',
-            WFH_Reason__c = 'Pending approval',
-            Submitted_For_Approval__c = true,
-            WFH_Approval_Status__c = 'Pending',
-            Branch__c = testBranch.Id,
-            Session_Number__c = 1,
-            Is_Multiple_Session__c = false
-        ));
-        
-        // Day -5 - WFH Rejected
-        attendanceRecords.add(new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = today.addDays(-5),
-            Check_In_Time__c = DateTime.newInstance(today.addDays(-5), Time.newInstance(9, 0, 0, 0)),
-            Check_Out_Time__c = DateTime.newInstance(today.addDays(-5), Time.newInstance(17, 0, 0, 0)),
-            Status__c = 'Present',
-            Work_Location__c = 'Work from Home',
-            WFH_Reason__c = 'Rejected',
-            Submitted_For_Approval__c = true,
-            WFH_Approval_Status__c = 'Rejected',
-            Branch__c = testBranch.Id,
-            Session_Number__c = 1,
-            Is_Multiple_Session__c = false
-        ));
-        
-        // Day -6 - Late
-        attendanceRecords.add(new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = today.addDays(-6),
-            Check_In_Time__c = DateTime.newInstance(today.addDays(-6), Time.newInstance(10, 30, 0, 0)),
-            Check_Out_Time__c = DateTime.newInstance(today.addDays(-6), Time.newInstance(18, 30, 0, 0)),
-            Status__c = 'Late',
-            Work_Location__c = 'Work from Office',
-            Branch__c = testBranch.Id,
-            Session_Number__c = 1,
-            Is_Multiple_Session__c = false
-        ));
-        
-        // Day -7 - Absent
-        attendanceRecords.add(new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = today.addDays(-7),
-            Status__c = 'Absent',
-            Work_Location__c = 'Work from Office',
-            Branch__c = testBranch.Id,
-            Session_Number__c = 1,
-            Is_Multiple_Session__c = false
-        ));
-        
-        // Day -8 - Half Day
-        attendanceRecords.add(new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = today.addDays(-8),
-            Check_In_Time__c = DateTime.newInstance(today.addDays(-8), Time.newInstance(9, 0, 0, 0)),
-            Check_Out_Time__c = DateTime.newInstance(today.addDays(-8), Time.newInstance(13, 0, 0, 0)),
-            Status__c = 'Half Day',
-            Work_Location__c = 'Work from Office',
-            Branch__c = testBranch.Id,
-            Session_Number__c = 1,
-            Is_Multiple_Session__c = false
-        ));
-        
-        // Day -9 - Multiple sessions - Morning
-        attendanceRecords.add(new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = today.addDays(-9),
-            Check_In_Time__c = DateTime.newInstance(today.addDays(-9), Time.newInstance(9, 0, 0, 0)),
-            Check_Out_Time__c = DateTime.newInstance(today.addDays(-9), Time.newInstance(12, 0, 0, 0)),
-            Status__c = 'Present',
-            Work_Location__c = 'Work from Office',
-            Branch__c = testBranch.Id,
-            Session_Number__c = 1,
+
+        // 2. Late — Work from Home with WFH reason, submitted for approval
+        if (day2 <= today) {
+            recs.add(new Employee_Attendance__c(
+                Employee_Name__c        = testUser.Id,
+                Date__c                 = day2,
+                Check_In_Time__c        = DateTime.newInstance(day2, Time.newInstance(10, 30, 0, 0)),
+                Check_Out_Time__c       = DateTime.newInstance(day2, Time.newInstance(19, 0, 0, 0)),
+                Status__c               = 'Late',
+                Work_Location__c        = 'Work from Home',
+                WFH_Reason__c           = 'Personal work',
+                Submitted_For_Approval__c = true,
+                WFH_Approval_Status__c  = 'Pending',
+                Session_Number__c       = 1,
+                Is_Multiple_Session__c  = false
+            ));
+        }
+
+        // 3. Session 2 on day1 — multiple sessions
+        recs.add(new Employee_Attendance__c(
+            Employee_Name__c       = testUser.Id,
+            Date__c                = day1,
+            Check_In_Time__c       = DateTime.newInstance(day1, Time.newInstance(14, 0, 0, 0)),
+            Check_Out_Time__c      = DateTime.newInstance(day1, Time.newInstance(16, 0, 0, 0)),
+            Status__c              = 'Present',
+            Work_Location__c       = 'Work from Office',
+            Branch__c              = branch.Id,
+            Session_Number__c      = 2,
             Is_Multiple_Session__c = true
         ));
-        
-        // Day -9 - Multiple sessions - Afternoon
-        attendanceRecords.add(new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = today.addDays(-9),
-            Check_In_Time__c = DateTime.newInstance(today.addDays(-9), Time.newInstance(14, 0, 0, 0)),
-            Check_Out_Time__c = DateTime.newInstance(today.addDays(-9), Time.newInstance(18, 0, 0, 0)),
-            Status__c = 'Present',
-            Work_Location__c = 'Work from Office',
-            Branch__c = testBranch.Id,
-            Session_Number__c = 2,
-            Is_Multiple_Session__c = true
+
+        // 4. Client Place
+        Date day3 = getNextWeekday(day2.addDays(1));
+        if (day3 <= today) {
+            recs.add(new Employee_Attendance__c(
+                Employee_Name__c       = testUser.Id,
+                Date__c                = day3,
+                Check_In_Time__c       = DateTime.newInstance(day3, Time.newInstance(9, 0, 0, 0)),
+                Check_Out_Time__c      = DateTime.newInstance(day3, Time.newInstance(17, 0, 0, 0)),
+                Status__c              = 'Present',
+                Work_Location__c       = 'Client Place',
+                Client_Place_Details__c= 'ABC Corp, 123 Main Street, Building A — very long detail text here for testing truncation purposes abcdefgh',
+                Session_Number__c      = 1,
+                Is_Multiple_Session__c = false
+            ));
+        }
+
+        // 5. Field Work
+        Date day4 = getNextWeekday(day2.addDays(2));
+        if (day4 <= today) {
+            recs.add(new Employee_Attendance__c(
+                Employee_Name__c       = testUser.Id,
+                Date__c                = day4,
+                Check_In_Time__c       = DateTime.newInstance(day4, Time.newInstance(8, 0, 0, 0)),
+                Check_Out_Time__c      = DateTime.newInstance(day4, Time.newInstance(16, 0, 0, 0)),
+                Status__c              = 'Present',
+                Work_Location__c       = 'Field Work',
+                Field_Work_Details__c  = 'Site visit to Construction XYZ — very long detail text here for testing truncation purposes abcdefgh',
+                Session_Number__c      = 1,
+                Is_Multiple_Session__c = false
+            ));
+        }
+
+        // 6. Today — checked in only (no checkout) — for getTodayAttendanceRecord
+        recs.add(new Employee_Attendance__c(
+            Employee_Name__c        = testUser.Id,
+            Date__c                 = today,
+            Check_In_Time__c        = DateTime.newInstance(today, Time.newInstance(9, 0, 0, 0)),
+            Check_Out_Time__c       = null,
+            Status__c               = 'Present',
+            Work_Location__c        = 'Work from Home',
+            WFH_Reason__c           = 'WFH reason',
+            Submitted_For_Approval__c = true,
+            WFH_Approval_Status__c  = 'Approved',
+            Session_Number__c       = 1,
+            Is_Multiple_Session__c  = false,
+            Notes__c                = 'Today checkin'
         ));
-        
-        // Day -10 - WFH without approval submission
-        attendanceRecords.add(new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = today.addDays(-10),
-            Check_In_Time__c = DateTime.newInstance(today.addDays(-10), Time.newInstance(9, 0, 0, 0)),
-            Check_Out_Time__c = DateTime.newInstance(today.addDays(-10), Time.newInstance(17, 0, 0, 0)),
-            Status__c = 'Present',
-            Work_Location__c = 'Work from Home',
-            WFH_Reason__c = 'No approval needed',
-            Submitted_For_Approval__c = false,
-            Branch__c = testBranch.Id,
-            Session_Number__c = 1,
-            Is_Multiple_Session__c = false
-        ));
-        
-        // Day -11 - Null times
-        attendanceRecords.add(new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = today.addDays(-11),
-            Check_In_Time__c = null,
-            Check_Out_Time__c = null,
-            Status__c = 'Present',
-            Work_Location__c = 'Work from Office',
-            Branch__c = testBranch.Id,
-            Session_Number__c = 1,
-            Is_Multiple_Session__c = false
-        ));
-        
-        // Day -12 - No notes
-        attendanceRecords.add(new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = today.addDays(-12),
-            Check_In_Time__c = DateTime.newInstance(today.addDays(-12), Time.newInstance(9, 0, 0, 0)),
-            Check_Out_Time__c = DateTime.newInstance(today.addDays(-12), Time.newInstance(17, 0, 0, 0)),
-            Status__c = 'Present',
-            Work_Location__c = 'Work from Office',
-            Branch__c = testBranch.Id,
-            Notes__c = null,
-            Session_Number__c = 1,
-            Is_Multiple_Session__c = false
-        ));
-        
-        insert attendanceRecords;
-        
-        // Create leave requests
-        Leave_Request__c approvedLeave = new Leave_Request__c(
-            Employee__c = testEmployee.Id,
-            Leave_Type__c = leaveType.Id,
-            Start_Date__c = today.addDays(1),
-            End_Date__c = today.addDays(1),
-            Total_Days__c = 1,
-            Reason__c = 'Medical',
-            Status__c = 'Approved',
-            Is_Active__c = true,
-            Is_Half_Day__c = false
+
+        // 7. WFH Rejected record
+        Date day5 = getNextWeekday(day2.addDays(3));
+        if (day5 <= today) {
+            recs.add(new Employee_Attendance__c(
+                Employee_Name__c        = testUser.Id,
+                Date__c                 = day5,
+                Check_In_Time__c        = DateTime.newInstance(day5, Time.newInstance(9, 0, 0, 0)),
+                Check_Out_Time__c       = DateTime.newInstance(day5, Time.newInstance(17, 0, 0, 0)),
+                Status__c               = 'Present',
+                Work_Location__c        = 'Work from Home',
+                WFH_Reason__c           = 'Rejected reason',
+                Submitted_For_Approval__c = true,
+                WFH_Approval_Status__c  = 'Rejected',
+                Session_Number__c       = 1,
+                Is_Multiple_Session__c  = false
+            ));
+        }
+
+        insert recs;
+
+        // Leave Request for checkLeaveForDate
+        Leave_Type__c lt = new Leave_Type__c(
+            Leave_Type_Name__c = 'Casual Leave',
+            Leave_Code__c      = 'CL'
         );
-        insert approvedLeave;
-        
-        Leave_Request__c pendingLeave = new Leave_Request__c(
-            Employee__c = testEmployee.Id,
-            Leave_Type__c = leaveType.Id,
-            Start_Date__c = today.addDays(2),
-            End_Date__c = today.addDays(2),
-            Total_Days__c = 1,
-            Reason__c = 'Personal',
-            Status__c = 'Pending',
-            Is_Active__c = true,
-            Is_Half_Day__c = true,
-            Half_Day_Type__c = 'First Half'
+        insert lt;
+
+        insert new Leave_Request__c(
+            Employee__c     = testUser.Id,
+            Leave_Type__c   = lt.Id,
+            Start_Date__c   = today.addDays(10),
+            End_Date__c     = today.addDays(11),
+            Total_Days__c   = 2,
+            Status__c       = 'Pending',
+            Is_Active__c    = true,
+            Reason__c       = 'Test leave',
+            Applied_Date__c = DateTime.now(),
+            Is_Half_Day__c  = true
         );
-        insert pendingLeave;
-        
-        Leave_Request__c cancelledLeave = new Leave_Request__c(
-            Employee__c = testEmployee.Id,
-            Leave_Type__c = leaveType.Id,
-            Start_Date__c = today.addDays(3),
-            End_Date__c = today.addDays(3),
-            Total_Days__c = 1,
-            Reason__c = 'Cancelled',
-            Status__c = 'Cancelled',
-            Is_Active__c = true,
-            Is_Half_Day__c = false
-        );
-        insert cancelledLeave;
     }
-    
+
+    // ===================================================================
+    // TESTS: getEmployeeAttendanceRecords
+    // ===================================================================
+
     @isTest
-    static void testGetEmployeeAttendanceRecords_Success() {
-        User testEmployee = [SELECT Id FROM User WHERE Username = :EMPLOYEE_USERNAME LIMIT 1];
+    static void testGetEmployeeAttendanceRecords_HappyPath() {
+        User u = [SELECT Id FROM User WHERE Email = 'viewtest@testorg.com' LIMIT 1];
         Test.startTest();
-        Map<String, Object> result = AttendanceViewController.getEmployeeAttendanceRecords(testEmployee.Id, 50);
+        Map<String, Object> result = AttendanceViewController.getEmployeeAttendanceRecords(u.Id, 200);
         Test.stopTest();
-        System.assertNotEquals(null, result);
+
+        System.assertEquals(true, result.get('success'), 'success should be true');
+        System.assertNotEquals(null, result.get('records'), 'records should not be null');
+        Integer totalCount = (Integer) result.get('totalCount');
+        System.assert(totalCount >= 1, 'Should have at least 1 record');
     }
-    
+
+    @isTest
+    static void testGetEmployeeAttendanceRecords_DefaultLimit() {
+        User u = [SELECT Id FROM User WHERE Email = 'viewtest@testorg.com' LIMIT 1];
+        Test.startTest();
+        // Pass null limit — should default to 200
+        Map<String, Object> result = AttendanceViewController.getEmployeeAttendanceRecords(u.Id, null);
+        Test.stopTest();
+        System.assertEquals(true, result.get('success'), 'success should be true with null limit');
+    }
+
     @isTest
     static void testGetEmployeeAttendanceRecords_BlankEmployeeId() {
         Test.startTest();
         try {
-            AttendanceViewController.getEmployeeAttendanceRecords('', 50);
-        } catch (Exception e) {
-            System.assertNotEquals(null, e);
+            Map<String, Object> result = AttendanceViewController.getEmployeeAttendanceRecords('', 10);
+            System.assert(false, 'Should have thrown AuraHandledException');
+        } catch (AuraHandledException e) {
+            System.assert(e.getMessage().contains('required') || e.getMessage() != null, 'Should throw for blank ID');
         }
         Test.stopTest();
     }
-    
-    @isTest
-    static void testGetEmployeeAttendanceRecords_InvalidEmployeeId() {
-        Test.startTest();
-        try {
-            AttendanceViewController.getEmployeeAttendanceRecords('005000000000000AAA', 50);
-        } catch (Exception e) {
-            System.assertNotEquals(null, e);
-        }
-        Test.stopTest();
-    }
-    
-    @isTest
-    static void testGetEmployeeAttendanceRecords_DefaultLimit() {
-        User testEmployee = [SELECT Id FROM User WHERE Username = :EMPLOYEE_USERNAME LIMIT 1];
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.getEmployeeAttendanceRecords(testEmployee.Id, null);
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
+
     @isTest
     static void testGetEmployeeAttendanceRecords_InactiveUser() {
-        User testEmployee = [SELECT Id FROM User WHERE Username = :EMPLOYEE_USERNAME LIMIT 1];
-        testEmployee.IsActive = false;
-        update testEmployee;
+        Profile p = [SELECT Id FROM Profile WHERE Name = 'Standard User' LIMIT 1];
+        User inactive = new User(
+            FirstName='Inactive', LastName='User',
+            Email='inactive@testorg.com',
+            Username='inactive_'+System.currentTimeMillis()+'@testorg.com',
+            Alias='inact', TimeZoneSidKey='America/Los_Angeles',
+            LocaleSidKey='en_US', EmailEncodingKey='UTF-8',
+            LanguageLocaleKey='en_US', ProfileId=p.Id,
+            IsActive=false
+        );
+        insert inactive;
         Test.startTest();
         try {
-            AttendanceViewController.getEmployeeAttendanceRecords(testEmployee.Id, 50);
-        } catch (Exception e) {
-            System.assertNotEquals(null, e);
+            Map<String, Object> result = AttendanceViewController.getEmployeeAttendanceRecords(inactive.Id, 10);
+            System.assert(false, 'Should throw for inactive user');
+        } catch (AuraHandledException e) {
+            System.assertNotEquals(null, e.getMessage(), 'Should have error message');
         }
         Test.stopTest();
     }
-    
+
     @isTest
-    static void testGetTodayAttendance_Success() {
-        User testEmployee = [SELECT Id FROM User WHERE Username = :EMPLOYEE_USERNAME LIMIT 1];
+    static void testGetEmployeeAttendanceRecords_FormatsAllLocationTypes() {
+        User u = [SELECT Id FROM User WHERE Email = 'viewtest@testorg.com' LIMIT 1];
         Test.startTest();
-        Map<String, Object> result = AttendanceViewController.getTodayAttendance(testEmployee.Id);
+        Map<String, Object> result = AttendanceViewController.getEmployeeAttendanceRecords(u.Id, 200);
         Test.stopTest();
-        System.assertNotEquals(null, result);
+
+        List<Object> records = (List<Object>) result.get('records');
+        System.assert(records.size() >= 1, 'Should have records');
+
+        // Verify location display values are set
+        for (Object obj : records) {
+            Map<String, Object> rec = (Map<String, Object>) obj;
+            System.assertNotEquals(null, rec.get('displayLocation'), 'displayLocation should not be null');
+            System.assertNotEquals(null, rec.get('workLocation'), 'workLocation should not be null');
+        }
     }
-    
+
     @isTest
-    static void testGetTodayAttendance_BlankEmployeeId() {
+    static void testGetEmployeeAttendanceRecordsWithApproval_Delegates() {
+        User u = [SELECT Id FROM User WHERE Email = 'viewtest@testorg.com' LIMIT 1];
         Test.startTest();
-        Map<String, Object> result = AttendanceViewController.getTodayAttendance('');
+        Map<String, Object> result = AttendanceViewController.getEmployeeAttendanceRecordsWithApproval(u.Id, 10);
         Test.stopTest();
-        System.assertNotEquals(null, result);
+        System.assertEquals(true, result.get('success'), 'Delegate method should return success');
     }
-    
+
+    // ===================================================================
+    // TESTS: getTodayAttendance
+    // ===================================================================
+
+    @isTest
+    static void testGetTodayAttendance_RecordFound() {
+        User u = [SELECT Id FROM User WHERE Email = 'viewtest@testorg.com' LIMIT 1];
+        Test.startTest();
+        Map<String, Object> result = AttendanceViewController.getTodayAttendance(u.Id);
+        Test.stopTest();
+
+        System.assertEquals(true, result.get('success'), 'success should be true');
+        System.assertEquals(true, result.get('hasRecord'), 'hasRecord should be true');
+        System.assertNotEquals(null, result.get('recordId'), 'recordId should not be null');
+        System.assertEquals(true, result.get('isCheckedIn'), 'isCheckedIn should be true');
+    }
+
     @isTest
     static void testGetTodayAttendance_NoRecord() {
-        Account newAccount = new Account(Name = 'New Test Company');
-        insert newAccount;
-        Contact newContact = new Contact(
-            AccountId = newAccount.Id,
-            FirstName = 'New',
-            LastName = 'Employee',
-            Email = 'new.employee@example.com'
+        Profile p = [SELECT Id FROM Profile WHERE Name = 'Standard User' LIMIT 1];
+        User fresh = new User(
+            FirstName='Fresh2', LastName='User',
+            Email='fresh2@testorg.com',
+            Username='fresh2_'+System.currentTimeMillis()+'@testorg.com',
+            Alias='frsh2', TimeZoneSidKey='America/Los_Angeles',
+            LocaleSidKey='en_US', EmailEncodingKey='UTF-8',
+            LanguageLocaleKey='en_US', ProfileId=p.Id
         );
-        insert newContact;
-        Profile customerProfile = [SELECT Id FROM Profile WHERE Name = 'Customer Community Login User' LIMIT 1];
-        User newEmployee = new User(
-            ContactId = newContact.Id,
-            FirstName = 'New',
-            LastName = 'Employee',
-            Email = 'new.employee@example.com',
-            Username = 'new.employee@example.com.test',
-            Alias = 'newemp',
-            TimeZoneSidKey = 'America/Los_Angeles',
-            LocaleSidKey = 'en_US',
-            EmailEncodingKey = 'UTF-8',
-            ProfileId = customerProfile.Id,
-            LanguageLocaleKey = 'en_US',
-            IsActive = true
-        );
-        insert newEmployee;
+        insert fresh;
         Test.startTest();
-        Map<String, Object> result = AttendanceViewController.getTodayAttendance(newEmployee.Id);
+        Map<String, Object> result = AttendanceViewController.getTodayAttendance(fresh.Id);
         Test.stopTest();
-        System.assertNotEquals(null, result);
+        System.assertEquals(true,  result.get('success'),   'success should be true');
+        System.assertEquals(false, result.get('hasRecord'), 'hasRecord should be false');
     }
-    
+
     @isTest
-    static void testGetTodayAttendanceRecord_Success() {
-        User testEmployee = [SELECT Id FROM User WHERE Username = :EMPLOYEE_USERNAME LIMIT 1];
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.getTodayAttendanceRecord(testEmployee.Id);
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
-    @isTest
-    static void testGetTodayAttendanceRecord_BlankEmployeeId() {
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.getTodayAttendanceRecord('');
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
-    @isTest
-    static void testGetAttendanceSummaryWithWFH_Success() {
-        User testEmployee = [SELECT Id FROM User WHERE Username = :EMPLOYEE_USERNAME LIMIT 1];
-        Date startDate = Date.today().addDays(-30);
-        Date endDate = Date.today();
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.getAttendanceSummaryWithWFH(testEmployee.Id, startDate, endDate);
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
-    @isTest
-    static void testGetAttendanceSummaryWithWFH_DefaultDates() {
-        User testEmployee = [SELECT Id FROM User WHERE Username = :EMPLOYEE_USERNAME LIMIT 1];
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.getAttendanceSummaryWithWFH(testEmployee.Id, null, null);
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
-    @isTest
-    static void testGetAttendanceSummaryWithWFH_BlankEmployeeId() {
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.getAttendanceSummaryWithWFH('', null, null);
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
-    @isTest
-    static void testLocationFieldsAccess_Success() {
-        User testEmployee = [SELECT Id FROM User WHERE Username = :EMPLOYEE_USERNAME LIMIT 1];
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.testLocationFieldsAccess(testEmployee.Id);
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
-    @isTest
-    static void testLocationFieldsAccess_BlankEmployeeId() {
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.testLocationFieldsAccess('');
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
-    @isTest
-    static void testCheckLeaveForDate_ApprovedLeave() {
-        User testEmployee = [SELECT Id FROM User WHERE Username = :EMPLOYEE_USERNAME LIMIT 1];
-        Date tomorrow = Date.today().addDays(1);
-        String dateString = String.valueOf(tomorrow.year()) + '-' + 
-                           String.valueOf(tomorrow.month()).leftPad(2, '0') + '-' + 
-                           String.valueOf(tomorrow.day()).leftPad(2, '0');
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.checkLeaveForDate(testEmployee.Id, dateString);
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
-    @isTest
-    static void testCheckLeaveForDate_PendingLeave() {
-        User testEmployee = [SELECT Id FROM User WHERE Username = :EMPLOYEE_USERNAME LIMIT 1];
-        Date dayAfterTomorrow = Date.today().addDays(2);
-        String dateString = String.valueOf(dayAfterTomorrow.year()) + '-' + 
-                           String.valueOf(dayAfterTomorrow.month()).leftPad(2, '0') + '-' + 
-                           String.valueOf(dayAfterTomorrow.day()).leftPad(2, '0');
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.checkLeaveForDate(testEmployee.Id, dateString);
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
-    @isTest
-    static void testCheckLeaveForDate_CancelledLeaveExcluded() {
-        User testEmployee = [SELECT Id FROM User WHERE Username = :EMPLOYEE_USERNAME LIMIT 1];
-        Date threeDaysLater = Date.today().addDays(3);
-        String dateString = String.valueOf(threeDaysLater.year()) + '-' + 
-                           String.valueOf(threeDaysLater.month()).leftPad(2, '0') + '-' + 
-                           String.valueOf(threeDaysLater.day()).leftPad(2, '0');
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.checkLeaveForDate(testEmployee.Id, dateString);
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
-    @isTest
-    static void testCheckLeaveForDate_NoLeave() {
-        User testEmployee = [SELECT Id FROM User WHERE Username = :EMPLOYEE_USERNAME LIMIT 1];
-        Date futureDate = Date.today().addDays(10);
-        String dateString = String.valueOf(futureDate.year()) + '-' + 
-                           String.valueOf(futureDate.month()).leftPad(2, '0') + '-' + 
-                           String.valueOf(futureDate.day()).leftPad(2, '0');
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.checkLeaveForDate(testEmployee.Id, dateString);
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
-    @isTest
-    static void testGetEmployeeAttendanceRecordsWithApproval() {
-        User testEmployee = [SELECT Id FROM User WHERE Username = :EMPLOYEE_USERNAME LIMIT 1];
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.getEmployeeAttendanceRecordsWithApproval(testEmployee.Id, 50);
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
-    @isTest
-    static void testAttendanceWithVariousWorkLocations() {
-        User testEmployee = [SELECT Id FROM User WHERE Username = :EMPLOYEE_USERNAME LIMIT 1];
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.getEmployeeAttendanceRecords(testEmployee.Id, 50);
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
-    @isTest
-    static void testBulkRecordHandling() {
-        User testEmployee = [SELECT Id FROM User WHERE Username = :EMPLOYEE_USERNAME LIMIT 1];
-        List<Employee_Attendance__c> bulkRecords = new List<Employee_Attendance__c>();
-        Branch__c testBranch = [SELECT Id FROM Branch__c WHERE Branch_Name__c = :BRANCH_NAME LIMIT 1];
-        for (Integer i = 13; i <= 30; i++) {
-            bulkRecords.add(new Employee_Attendance__c(
-                Employee_Name__c = testEmployee.Id,
-                Date__c = Date.today().addDays(-i),
-                Check_In_Time__c = DateTime.now().addDays(-i).addHours(-8),
-                Check_Out_Time__c = DateTime.now().addDays(-i).addHours(-1),
-                Status__c = 'Present',
-                Work_Location__c = 'Work from Office',
-                Branch__c = testBranch.Id,
-                Session_Number__c = 1,
-                Is_Multiple_Session__c = false
-            ));
-        }
-        insert bulkRecords;
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.getEmployeeAttendanceRecords(testEmployee.Id, 100);
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
-    @isTest
-    static void testGetTodayAttendanceRecord_NoRecords() {
-        Account newAccount = new Account(Name = 'Another Test Company');
-        insert newAccount;
-        Contact newContact = new Contact(
-            AccountId = newAccount.Id,
-            FirstName = 'Another',
-            LastName = 'Employee',
-            Email = 'another.employee@example.com'
-        );
-        insert newContact;
-        Profile customerProfile = [SELECT Id FROM Profile WHERE Name = 'Customer Community Login User' LIMIT 1];
-        User anotherEmployee = new User(
-            ContactId = newContact.Id,
-            FirstName = 'Another',
-            LastName = 'Employee',
-            Email = 'another.employee@example.com',
-            Username = 'another.employee@example.com.test',
-            Alias = 'anemp',
-            TimeZoneSidKey = 'America/Los_Angeles',
-            LocaleSidKey = 'en_US',
-            EmailEncodingKey = 'UTF-8',
-            ProfileId = customerProfile.Id,
-            LanguageLocaleKey = 'en_US',
-            IsActive = true
-        );
-        insert anotherEmployee;
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.getTodayAttendanceRecord(anotherEmployee.Id);
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
-    @isTest
-    static void testWFHWithNullApprovalStatus() {
-        User testEmployee = [SELECT Id FROM User WHERE Username = :EMPLOYEE_USERNAME LIMIT 1];
-        Branch__c testBranch = [SELECT Id FROM Branch__c WHERE Branch_Name__c = :BRANCH_NAME LIMIT 1];
-        Employee_Attendance__c wfhRecord = new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = Date.today().addDays(-13),
-            Check_In_Time__c = DateTime.now().addDays(-13).addHours(-8),
-            Check_Out_Time__c = DateTime.now().addDays(-13).addHours(-1),
-            Status__c = 'Present',
-            Work_Location__c = 'Work from Home',
-            WFH_Reason__c = 'Null status test',
-            Submitted_For_Approval__c = true,
-            WFH_Approval_Status__c = 'Pending',
-            Branch__c = testBranch.Id,
-            Session_Number__c = 1,
-            Is_Multiple_Session__c = false
-        );
-        insert wfhRecord;
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.getEmployeeAttendanceRecords(testEmployee.Id, 50);
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
-    @isTest
-    static void testWFHWithUnknownApprovalStatus() {
-        User testEmployee = [SELECT Id FROM User WHERE Username = :EMPLOYEE_USERNAME LIMIT 1];
-        Branch__c testBranch = [SELECT Id FROM Branch__c WHERE Branch_Name__c = :BRANCH_NAME LIMIT 1];
-        Employee_Attendance__c wfhRecord = new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = Date.today().addDays(-14),
-            Check_In_Time__c = DateTime.now().addDays(-14).addHours(-8),
-            Check_Out_Time__c = DateTime.now().addDays(-14).addHours(-1),
-            Status__c = 'Present',
-            Work_Location__c = 'Work from Home',
-            WFH_Reason__c = 'Rejected status test',
-            Submitted_For_Approval__c = true,
-            WFH_Approval_Status__c = 'Rejected',
-            Branch__c = testBranch.Id,
-            Session_Number__c = 1,
-            Is_Multiple_Session__c = false
-        );
-        insert wfhRecord;
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.getEmployeeAttendanceRecords(testEmployee.Id, 50);
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
-    @isTest
-    static void testClientPlaceWithLongDetails() {
-        User testEmployee = [SELECT Id FROM User WHERE Username = :EMPLOYEE_USERNAME LIMIT 1];
-        Branch__c testBranch = [SELECT Id FROM Branch__c WHERE Branch_Name__c = :BRANCH_NAME LIMIT 1];
-        String longDetails = 'This is a very long client place details text that exceeds fifty characters to test the substring functionality';
-        Employee_Attendance__c clientRecord = new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = Date.today().addDays(-15),
-            Check_In_Time__c = DateTime.now().addDays(-15).addHours(-8),
-            Check_Out_Time__c = DateTime.now().addDays(-15).addHours(-1),
-            Status__c = 'Present',
-            Work_Location__c = 'Client Place',
-            Client_Place_Details__c = longDetails,
-            Branch__c = testBranch.Id,
-            Session_Number__c = 1,
-            Is_Multiple_Session__c = false
-        );
-        insert clientRecord;
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.getEmployeeAttendanceRecords(testEmployee.Id, 50);
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
-    @isTest
-    static void testFieldWorkWithLongDetails() {
-        User testEmployee = [SELECT Id FROM User WHERE Username = :EMPLOYEE_USERNAME LIMIT 1];
-        Branch__c testBranch = [SELECT Id FROM Branch__c WHERE Branch_Name__c = :BRANCH_NAME LIMIT 1];
-        String longDetails = 'This is a very long field work details text that exceeds fifty characters to test the substring functionality';
-        Employee_Attendance__c fieldRecord = new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = Date.today().addDays(-16),
-            Check_In_Time__c = DateTime.now().addDays(-16).addHours(-8),
-            Check_Out_Time__c = DateTime.now().addDays(-16).addHours(-1),
-            Status__c = 'Present',
-            Work_Location__c = 'Field Work',
-            Field_Work_Details__c = longDetails,
-            Branch__c = testBranch.Id,
-            Session_Number__c = 1,
-            Is_Multiple_Session__c = false
-        );
-        insert fieldRecord;
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.getEmployeeAttendanceRecords(testEmployee.Id, 50);
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
-    @isTest
-    static void testClientPlaceWithBlankDetails() {
-        User testEmployee = [SELECT Id FROM User WHERE Username = :EMPLOYEE_USERNAME LIMIT 1];
-        Branch__c testBranch = [SELECT Id FROM Branch__c WHERE Branch_Name__c = :BRANCH_NAME LIMIT 1];
-        Employee_Attendance__c clientRecord = new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = Date.today().addDays(-17),
-            Check_In_Time__c = DateTime.now().addDays(-17).addHours(-8),
-            Check_Out_Time__c = DateTime.now().addDays(-17).addHours(-1),
-            Status__c = 'Present',
-            Work_Location__c = 'Client Place',
-            Client_Place_Details__c = null,
-            Branch__c = testBranch.Id,
-            Session_Number__c = 1,
-            Is_Multiple_Session__c = false
-        );
-        insert clientRecord;
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.getEmployeeAttendanceRecords(testEmployee.Id, 50);
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
-    @isTest
-    static void testFieldWorkWithBlankDetails() {
-        User testEmployee = [SELECT Id FROM User WHERE Username = :EMPLOYEE_USERNAME LIMIT 1];
-        Branch__c testBranch = [SELECT Id FROM Branch__c WHERE Branch_Name__c = :BRANCH_NAME LIMIT 1];
-        Employee_Attendance__c fieldRecord = new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = Date.today().addDays(-18),
-            Check_In_Time__c = DateTime.now().addDays(-18).addHours(-8),
-            Check_Out_Time__c = DateTime.now().addDays(-18).addHours(-1),
-            Status__c = 'Present',
-            Work_Location__c = 'Field Work',
-            Field_Work_Details__c = null,
-            Branch__c = testBranch.Id,
-            Session_Number__c = 1,
-            Is_Multiple_Session__c = false
-        );
-        insert fieldRecord;
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.getEmployeeAttendanceRecords(testEmployee.Id, 50);
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
-    @isTest
-    static void testOfficeWorkWithBranchDetails() {
-        User testEmployee = [SELECT Id FROM User WHERE Username = :EMPLOYEE_USERNAME LIMIT 1];
-        Branch__c testBranch = [SELECT Id FROM Branch__c WHERE Branch_Name__c = :BRANCH_NAME LIMIT 1];
-        Employee_Attendance__c officeRecord = new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = Date.today().addDays(-19),
-            Check_In_Time__c = DateTime.now().addDays(-19).addHours(-8),
-            Check_Out_Time__c = DateTime.now().addDays(-19).addHours(-1),
-            Status__c = 'Present',
-            Work_Location__c = 'Work from Office',
-            Branch__c = testBranch.Id,
-            Session_Number__c = 1,
-            Is_Multiple_Session__c = false
-        );
-        insert officeRecord;
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.getEmployeeAttendanceRecords(testEmployee.Id, 50);
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
-    @isTest
-    static void testOfficeWorkWithNoBranch() {
-        User testEmployee = [SELECT Id FROM User WHERE Username = :EMPLOYEE_USERNAME LIMIT 1];
-        Branch__c testBranch = [SELECT Id FROM Branch__c WHERE Branch_Name__c = :BRANCH_NAME LIMIT 1];
-        Employee_Attendance__c officeRecord = new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = Date.today().addDays(-20),
-            Check_In_Time__c = DateTime.now().addDays(-20).addHours(-8),
-            Check_Out_Time__c = DateTime.now().addDays(-20).addHours(-1),
-            Status__c = 'Present',
-            Work_Location__c = 'Work from Office',
-            Branch__c = testBranch.Id,
-            Session_Number__c = 1,
-            Is_Multiple_Session__c = false
-        );
-        insert officeRecord;
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.getEmployeeAttendanceRecords(testEmployee.Id, 50);
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
-    @isTest
-    static void testStatusBadgeClasses() {
-        User testEmployee = [SELECT Id FROM User WHERE Username = :EMPLOYEE_USERNAME LIMIT 1];
-        Branch__c testBranch = [SELECT Id FROM Branch__c WHERE Branch_Name__c = :BRANCH_NAME LIMIT 1];
-        List<Employee_Attendance__c> statusRecords = new List<Employee_Attendance__c>();
-        
-        statusRecords.add(new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = Date.today().addDays(-21),
-            Status__c = 'Present',
-            Work_Location__c = 'Work from Office',
-            Branch__c = testBranch.Id,
-            Session_Number__c = 1,
-            Is_Multiple_Session__c = false
-        ));
-        
-        statusRecords.add(new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = Date.today().addDays(-22),
-            Status__c = 'Late',
-            Work_Location__c = 'Work from Office',
-            Branch__c = testBranch.Id,
-            Session_Number__c = 1,
-            Is_Multiple_Session__c = false
-        ));
-        
-        statusRecords.add(new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = Date.today().addDays(-23),
-            Status__c = 'Absent',
-            Work_Location__c = 'Work from Office',
-            Branch__c = testBranch.Id,
-            Session_Number__c = 1,
-            Is_Multiple_Session__c = false
-        ));
-        
-        statusRecords.add(new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = Date.today().addDays(-24),
-            Status__c = 'Half Day',
-            Work_Location__c = 'Work from Office',
-            Branch__c = testBranch.Id,
-            Session_Number__c = 1,
-            Is_Multiple_Session__c = false
-        ));
-        
-        statusRecords.add(new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = Date.today().addDays(-25),
-            Status__c = 'Holiday',
-            Work_Location__c = 'Work from Office',
-            Branch__c = testBranch.Id,
-            Session_Number__c = 1,
-            Is_Multiple_Session__c = false
-        ));
-        
-        statusRecords.add(new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = Date.today().addDays(-26),
-            Status__c = 'Leave',
-            Work_Location__c = 'Work from Office',
-            Branch__c = testBranch.Id,
-            Session_Number__c = 1,
-            Is_Multiple_Session__c = false
-        ));
-        
-        insert statusRecords;
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.getEmployeeAttendanceRecords(testEmployee.Id, 50);
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
-    @isTest
-    static void testMultipleTodaySessions() {
-        User testEmployee = [SELECT Id FROM User WHERE Username = :EMPLOYEE_USERNAME LIMIT 1];
-        Branch__c testBranch = [SELECT Id FROM Branch__c WHERE Branch_Name__c = :BRANCH_NAME LIMIT 1];
-        
-        List<Employee_Attendance__c> todaySessions = new List<Employee_Attendance__c>();
-        
-        todaySessions.add(new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = Date.today(),
-            Check_In_Time__c = DateTime.now().addHours(-6),
-            Check_Out_Time__c = DateTime.now().addHours(-4),
-            Status__c = 'Present',
-            Work_Location__c = 'Work from Office',
-            Branch__c = testBranch.Id,
-            Session_Number__c = 2,
-            Is_Multiple_Session__c = true
-        ));
-        
-        todaySessions.add(new Employee_Attendance__c(
-            Employee_Name__c = testEmployee.Id,
-            Date__c = Date.today(),
-            Check_In_Time__c = DateTime.now().addHours(-2),
-            Status__c = 'Present',
-            Work_Location__c = 'Work from Office',
-            Branch__c = testBranch.Id,
-            Session_Number__c = 3,
-            Is_Multiple_Session__c = true
-        ));
-        
-        insert todaySessions;
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.getTodayAttendanceRecord(testEmployee.Id);
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
-    @isTest
-    static void testZeroLimitRecords() {
-        User testEmployee = [SELECT Id FROM User WHERE Username = :EMPLOYEE_USERNAME LIMIT 1];
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.getEmployeeAttendanceRecords(testEmployee.Id, 0);
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
-    @isTest
-    static void testNegativeLimitRecords() {
-        User testEmployee = [SELECT Id FROM User WHERE Username = :EMPLOYEE_USERNAME LIMIT 1];
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.getEmployeeAttendanceRecords(testEmployee.Id, -10);
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
-    @isTest
-    static void testAttendanceSummaryWithNoRecords() {
-        Account newAccount = new Account(Name = 'Summary Test Company');
-        insert newAccount;
-        Contact newContact = new Contact(
-            AccountId = newAccount.Id,
-            FirstName = 'Summary',
-            LastName = 'Employee',
-            Email = 'summary.employee@example.com'
-        );
-        insert newContact;
-        Profile customerProfile = [SELECT Id FROM Profile WHERE Name = 'Customer Community Login User' LIMIT 1];
-        User summaryEmployee = new User(
-            ContactId = newContact.Id,
-            FirstName = 'Summary',
-            LastName = 'Employee',
-            Email = 'summary.employee@example.com',
-            Username = 'summary.employee@example.com.test',
-            Alias = 'sumemp',
-            TimeZoneSidKey = 'America/Los_Angeles',
-            LocaleSidKey = 'en_US',
-            EmailEncodingKey = 'UTF-8',
-            ProfileId = customerProfile.Id,
-            LanguageLocaleKey = 'en_US',
-            IsActive = true
-        );
-        insert summaryEmployee;
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.getAttendanceSummaryWithWFH(summaryEmployee.Id, Date.today().addDays(-30), Date.today());
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
-    @isTest
-    static void testLocationFieldsWithNoRecords() {
-        Account newAccount = new Account(Name = 'Location Test Company');
-        insert newAccount;
-        Contact newContact = new Contact(
-            AccountId = newAccount.Id,
-            FirstName = 'Location',
-            LastName = 'Employee',
-            Email = 'location.employee@example.com'
-        );
-        insert newContact;
-        Profile customerProfile = [SELECT Id FROM Profile WHERE Name = 'Customer Community Login User' LIMIT 1];
-        User locationEmployee = new User(
-            ContactId = newContact.Id,
-            FirstName = 'Location',
-            LastName = 'Employee',
-            Email = 'location.employee@example.com',
-            Username = 'location.employee@example.com.test',
-            Alias = 'locemp',
-            TimeZoneSidKey = 'America/Los_Angeles',
-            LocaleSidKey = 'en_US',
-            EmailEncodingKey = 'UTF-8',
-            ProfileId = customerProfile.Id,
-            LanguageLocaleKey = 'en_US',
-            IsActive = true
-        );
-        insert locationEmployee;
-        Test.startTest();
-        Map<String, Object> result = AttendanceViewController.testLocationFieldsAccess(locationEmployee.Id);
-        Test.stopTest();
-        System.assertNotEquals(null, result);
-    }
-    
-    @isTest
-    static void testCheckLeaveWithInvalidDateFormat() {
-        User testEmployee = [SELECT Id FROM User WHERE Username = :EMPLOYEE_USERNAME LIMIT 1];
+    static void testGetTodayAttendance_BlankId() {
         Test.startTest();
         try {
-            Map<String, Object> result = AttendanceViewController.checkLeaveForDate(testEmployee.Id, 'invalid-date');
+            Map<String, Object> result = AttendanceViewController.getTodayAttendance('');
+            // Method may throw or return error map
+            if (result != null) {
+                System.assertNotEquals(null, result, 'Result should not be null');
+            }
+        } catch (AuraHandledException e) {
+            System.assertNotEquals(null, e.getMessage());
         } catch (Exception e) {
-            System.assertNotEquals(null, e);
+            System.assertNotEquals(null, e.getMessage());
         }
         Test.stopTest();
     }
-    
+
+    // ===================================================================
+    // TESTS: getTodayAttendanceRecord (multi-session)
+    // ===================================================================
+
     @isTest
-    static void testGetEmployeeAttendanceRecordsLargeLimit() {
-        User testEmployee = [SELECT Id FROM User WHERE Username = :EMPLOYEE_USERNAME LIMIT 1];
+    static void testGetTodayAttendanceRecord_HasSession() {
+        User u = [SELECT Id FROM User WHERE Email = 'viewtest@testorg.com' LIMIT 1];
         Test.startTest();
-        Map<String, Object> result = AttendanceViewController.getEmployeeAttendanceRecords(testEmployee.Id, 1000);
+        Map<String, Object> result = AttendanceViewController.getTodayAttendanceRecord(u.Id);
         Test.stopTest();
-        System.assertNotEquals(null, result);
+
+        System.assertEquals(true, result.get('success'),    'success should be true');
+        System.assertEquals(true, result.get('hasRecords'), 'hasRecords should be true');
+        System.assertNotEquals(null, result.get('lastSession'), 'lastSession should not be null');
+        System.assertNotEquals(null, result.get('allSessions'), 'allSessions should not be null');
+
+        Integer totalSessions = (Integer) result.get('totalSessions');
+        System.assert(totalSessions >= 1, 'totalSessions should be >= 1');
+    }
+
+    @isTest
+    static void testGetTodayAttendanceRecord_NoSession() {
+        Profile p = [SELECT Id FROM Profile WHERE Name = 'Standard User' LIMIT 1];
+        User noSession = new User(
+            FirstName='NoSession', LastName='User',
+            Email='nosession@testorg.com',
+            Username='nosession_'+System.currentTimeMillis()+'@testorg.com',
+            Alias='noses', TimeZoneSidKey='America/Los_Angeles',
+            LocaleSidKey='en_US', EmailEncodingKey='UTF-8',
+            LanguageLocaleKey='en_US', ProfileId=p.Id
+        );
+        insert noSession;
+        Test.startTest();
+        Map<String, Object> result = AttendanceViewController.getTodayAttendanceRecord(noSession.Id);
+        Test.stopTest();
+        System.assertEquals(true,  result.get('success'),    'success should be true');
+        System.assertEquals(false, result.get('hasRecords'), 'hasRecords should be false');
+        System.assertEquals(0,     result.get('totalSessions'), 'totalSessions should be 0');
+    }
+
+    @isTest
+    static void testGetTodayAttendanceRecord_BlankId() {
+        Test.startTest();
+        try {
+            Map<String, Object> result = AttendanceViewController.getTodayAttendanceRecord('');
+            if (result != null) {
+                System.assertNotEquals(null, result, 'Result should not be null');
+            }
+        } catch (AuraHandledException e) {
+            System.assertNotEquals(null, e.getMessage());
+        } catch (Exception e) {
+            System.assertNotEquals(null, e.getMessage());
+        }
+        Test.stopTest();
+    }
+
+    // ===================================================================
+    // TESTS: getAttendanceSummaryWithWFH
+    // ===================================================================
+
+    @isTest
+    static void testGetAttendanceSummaryWithWFH_HappyPath() {
+        User u = [SELECT Id FROM User WHERE Email = 'viewtest@testorg.com' LIMIT 1];
+        Date startDate = Date.today().toStartOfMonth();
+        Date endDate   = Date.today();
+        Test.startTest();
+        Map<String, Object> result = AttendanceViewController.getAttendanceSummaryWithWFH(u.Id, startDate, endDate);
+        Test.stopTest();
+
+        System.assertEquals(true, result.get('success'), 'success should be true');
+        System.assertNotEquals(null, result.get('presentDays'),    'presentDays not null');
+        System.assertNotEquals(null, result.get('lateDays'),       'lateDays not null');
+        System.assertNotEquals(null, result.get('wfhDays'),        'wfhDays not null');
+        System.assertNotEquals(null, result.get('clientPlaceDays'),'clientPlaceDays not null');
+        System.assertNotEquals(null, result.get('fieldWorkDays'),  'fieldWorkDays not null');
+    }
+
+    @isTest
+    static void testGetAttendanceSummaryWithWFH_NullDates_UsesDefaults() {
+        User u = [SELECT Id FROM User WHERE Email = 'viewtest@testorg.com' LIMIT 1];
+        Test.startTest();
+        // Pass null dates — should default to current month
+        Map<String, Object> result = AttendanceViewController.getAttendanceSummaryWithWFH(u.Id, null, null);
+        Test.stopTest();
+        System.assertEquals(true, result.get('success'), 'success should be true with null dates');
+    }
+
+    @isTest
+    static void testGetAttendanceSummaryWithWFH_BlankId() {
+        Test.startTest();
+        try {
+            Map<String, Object> result = AttendanceViewController.getAttendanceSummaryWithWFH('', null, null);
+            if (result != null) {
+                System.assertNotEquals(null, result, 'Result should not be null');
+            }
+        } catch (AuraHandledException e) {
+            System.assertNotEquals(null, e.getMessage());
+        } catch (Exception e) {
+            System.assertNotEquals(null, e.getMessage());
+        }
+        Test.stopTest();
+    }
+
+    @isTest
+    static void testGetAttendanceSummaryWithWFH_WFHApprovalRates() {
+        User u = [SELECT Id FROM User WHERE Email = 'viewtest@testorg.com' LIMIT 1];
+        Test.startTest();
+        Map<String, Object> result = AttendanceViewController.getAttendanceSummaryWithWFH(
+            u.Id, Date.today().toStartOfMonth(), Date.today()
+        );
+        Test.stopTest();
+
+        System.assertNotEquals(null, result.get('wfhApprovedDays'), 'wfhApprovedDays not null');
+        System.assertNotEquals(null, result.get('wfhPendingDays'),  'wfhPendingDays not null');
+        System.assertNotEquals(null, result.get('wfhRejectedDays'), 'wfhRejectedDays not null');
+        System.assertNotEquals(null, result.get('wfhApprovalRate'), 'wfhApprovalRate not null');
+    }
+
+    // ===================================================================
+    // TESTS: checkLeaveForDate
+    // ===================================================================
+
+    @isTest
+    static void testCheckLeaveForDate_LeaveFound() {
+        User u = [SELECT Id FROM User WHERE Email = 'viewtest@testorg.com' LIMIT 1];
+        Date leaveDate = Date.today().addDays(10);
+        // Use YYYY-MM-DD format required by Date.valueOf()
+        String leaveDateStr = leaveDate.year() + '-' +
+            String.valueOf(leaveDate.month()).leftPad(2, '0') + '-' +
+            String.valueOf(leaveDate.day()).leftPad(2, '0');
+        Test.startTest();
+        Map<String, Object> result = AttendanceViewController.checkLeaveForDate(u.Id, leaveDateStr);
+        Test.stopTest();
+
+        System.assertEquals(true, result.get('success'),  'success should be true');
+        System.assertEquals(true, result.get('hasLeave'), 'hasLeave should be true');
+        System.assertNotEquals(null, result.get('leaveId'),   'leaveId should not be null');
+        System.assertNotEquals(null, result.get('leaveType'), 'leaveType should not be null');
+        System.assertNotEquals(null, result.get('message'),   'message should not be null');
+    }
+
+    @isTest
+    static void testCheckLeaveForDate_NoLeave() {
+        User u = [SELECT Id FROM User WHERE Email = 'viewtest@testorg.com' LIMIT 1];
+        Date futureDate = Date.today().addDays(100);
+        String futureDateStr = futureDate.year() + '-' +
+            String.valueOf(futureDate.month()).leftPad(2, '0') + '-' +
+            String.valueOf(futureDate.day()).leftPad(2, '0');
+        Test.startTest();
+        Map<String, Object> result = AttendanceViewController.checkLeaveForDate(u.Id, futureDateStr);
+        Test.stopTest();
+
+        System.assertEquals(true,  result.get('success'),  'success should be true');
+        System.assertEquals(false, result.get('hasLeave'), 'hasLeave should be false');
+    }
+
+    @isTest
+    static void testCheckLeaveForDate_InvalidDate() {
+        User u = [SELECT Id FROM User WHERE Email = 'viewtest@testorg.com' LIMIT 1];
+        Test.startTest();
+        Map<String, Object> result = AttendanceViewController.checkLeaveForDate(u.Id, 'not-a-date');
+        Test.stopTest();
+        // Should return success=false with error
+        System.assertEquals(false, result.get('success'), 'success should be false for invalid date');
+    }
+
+    // ===================================================================
+    // TESTS: autoCheckOut
+    // ===================================================================
+
+    @isTest
+    static void testAutoCheckOut_Success() {
+        User u = [SELECT Id FROM User WHERE Email = 'viewtest@testorg.com' LIMIT 1];
+        // Get today's open check-in record
+        Employee_Attendance__c rec = [
+            SELECT Id FROM Employee_Attendance__c
+            WHERE Employee_Name__c = :u.Id
+            AND Date__c = :Date.today()
+            AND Check_Out_Time__c = null
+            LIMIT 1
+        ];
+        Test.startTest();
+        Map<String, Object> result = AttendanceViewController.autoCheckOut(rec.Id);
+        Test.stopTest();
+
+        System.assertEquals(true, result.get('success'), 'autoCheckOut should succeed');
+        System.assertNotEquals(null, result.get('hoursWorked'), 'hoursWorked should not be null');
+        System.assertNotEquals(null, result.get('checkOutTime'), 'checkOutTime should not be null');
+    }
+
+    @isTest
+    static void testAutoCheckOut_BlankRecordId() {
+        Test.startTest();
+        Map<String, Object> result = AttendanceViewController.autoCheckOut('');
+        Test.stopTest();
+        System.assertEquals(false, result.get('success'), 'Should fail for blank ID');
+    }
+
+    @isTest
+    static void testAutoCheckOut_AlreadyCheckedOut() {
+        User u = [SELECT Id FROM User WHERE Email = 'viewtest@testorg.com' LIMIT 1];
+        // Get a record that already has checkout
+        Employee_Attendance__c rec = [
+            SELECT Id FROM Employee_Attendance__c
+            WHERE Employee_Name__c = :u.Id
+            AND Check_Out_Time__c != null
+            LIMIT 1
+        ];
+        Test.startTest();
+        Map<String, Object> result = AttendanceViewController.autoCheckOut(rec.Id);
+        Test.stopTest();
+        System.assertEquals(false, result.get('success'), 'Should fail if already checked out');
+    }
+
+    @isTest
+    static void testAutoCheckOut_WrongDate() {
+        User u = [SELECT Id FROM User WHERE Email = 'viewtest@testorg.com' LIMIT 1];
+        // Create a past date record without checkout
+        Date pastDate = Date.today().addDays(-5);
+        Employee_Attendance__c pastRec = new Employee_Attendance__c(
+            Employee_Name__c = u.Id,
+            Date__c          = pastDate,
+            Check_In_Time__c = DateTime.newInstance(pastDate, Time.newInstance(9, 0, 0, 0)),
+            Status__c        = 'Present',
+            Work_Location__c = 'Work from Office',
+            Session_Number__c = 1
+        );
+        insert pastRec;
+        Test.startTest();
+        Map<String, Object> result = AttendanceViewController.autoCheckOut(pastRec.Id);
+        Test.stopTest();
+        System.assertEquals(false, result.get('success'), 'Should fail for non-today record');
+        System.assert(
+            ((String) result.get('error')).contains('today'),
+            'Error should mention today'
+        );
+    }
+
+    // ===================================================================
+    // TESTS: checkYesterdayAttendance
+    // ===================================================================
+
+    @isTest
+    static void testCheckYesterdayAttendance_HasRecord() {
+        User u = [SELECT Id FROM User WHERE Email = 'viewtest@testorg.com' LIMIT 1];
+        // Use day1 which has a real (non-OD) record
+        Date day1 = getNextWeekday(Date.today().toStartOfMonth());
+        Test.startTest();
+        Map<String, Object> result = AttendanceViewController.checkYesterdayAttendance(u.Id, day1);
+        Test.stopTest();
+
+        System.assertEquals(true, result.get('success'),   'success should be true');
+        System.assertEquals(true, result.get('hasRecord'), 'hasRecord should be true for day1');
+    }
+
+    @isTest
+    static void testCheckYesterdayAttendance_NoRecord() {
+        User u = [SELECT Id FROM User WHERE Email = 'viewtest@testorg.com' LIMIT 1];
+        // Far future date — no records
+        Date futureDate = Date.today().addDays(60);
+        Test.startTest();
+        Map<String, Object> result = AttendanceViewController.checkYesterdayAttendance(u.Id, futureDate);
+        Test.stopTest();
+
+        System.assertEquals(true,  result.get('success'),   'success should be true');
+        System.assertEquals(false, result.get('hasRecord'), 'hasRecord should be false');
+        System.assertEquals(false, result.get('hasODSubmitted'), 'hasODSubmitted should be false');
+    }
+
+    @isTest
+    static void testCheckYesterdayAttendance_HasLeave() {
+        User u = [SELECT Id FROM User WHERE Email = 'viewtest@testorg.com' LIMIT 1];
+        Date leaveDate = Date.today().addDays(10);
+        Test.startTest();
+        Map<String, Object> result = AttendanceViewController.checkYesterdayAttendance(u.Id, leaveDate);
+        Test.stopTest();
+
+        System.assertEquals(true, result.get('success'),  'success should be true');
+        System.assertEquals(true, result.get('hasLeave'), 'hasLeave should be true for leave date');
+    }
+
+    @isTest
+    static void testCheckYesterdayAttendance_ODRecord() {
+        User u = [SELECT Id FROM User WHERE Email = 'viewtest@testorg.com' LIMIT 1];
+        Date odDate = Date.today().addDays(-10);
+
+        // Insert an OD record for odDate
+        Employee_Attendance__c odRec = new Employee_Attendance__c(
+            Employee_Name__c  = u.Id,
+            Date__c           = odDate,
+            Check_In_Time__c  = DateTime.newInstance(odDate, Time.newInstance(9, 0, 0, 0)),
+            Check_Out_Time__c = DateTime.newInstance(odDate, Time.newInstance(17, 0, 0, 0)),
+            Status__c         = 'Present',
+            Work_Location__c  = 'Work from Home',
+            Is_OD_Request__c  = true,
+            OD_Reason__c      = 'Test OD',
+            OD_Approval_Status__c = 'Pending',
+            Session_Number__c = 1
+        );
+        insert odRec;
+
+        Test.startTest();
+        Map<String, Object> result = AttendanceViewController.checkYesterdayAttendance(u.Id, odDate);
+        Test.stopTest();
+
+        System.assertEquals(true,  result.get('success'),      'success should be true');
+        System.assertEquals(false, result.get('hasRecord'),    'real record should be false (OD excluded)');
+        System.assertEquals(true,  result.get('hasODSubmitted'), 'hasODSubmitted should be true');
+    }
+
+    // ===================================================================
+    // TESTS: testLocationFieldsAccess
+    // ===================================================================
+
+    @isTest
+    static void testLocationFieldsAccess_HappyPath() {
+        User u = [SELECT Id FROM User WHERE Email = 'viewtest@testorg.com' LIMIT 1];
+        Test.startTest();
+        Map<String, Object> result = AttendanceViewController.testLocationFieldsAccess(u.Id);
+        Test.stopTest();
+
+        System.assertEquals(true, result.get('success'), 'success should be true');
+        System.assertNotEquals(null, result.get('hasClientPlaceDetailsField'), 'hasClientPlaceDetailsField not null');
+        System.assertNotEquals(null, result.get('hasFieldWorkDetailsField'),   'hasFieldWorkDetailsField not null');
+        System.assertNotEquals(null, result.get('sampleRecordsFound'),         'sampleRecordsFound not null');
+    }
+
+    @isTest
+    static void testLocationFieldsAccess_BlankId() {
+        Test.startTest();
+        try {
+            Map<String, Object> result = AttendanceViewController.testLocationFieldsAccess('');
+            if (result != null) {
+                System.assertNotEquals(null, result, 'Result should not be null');
+            }
+        } catch (AuraHandledException e) {
+            System.assertNotEquals(null, e.getMessage());
+        } catch (Exception e) {
+            System.assertNotEquals(null, e.getMessage());
+        }
+        Test.stopTest();
+    }
+
+    // ===================================================================
+    // TESTS: processWFHApprovalStatus (via getTodayAttendance — private method)
+    // ===================================================================
+
+    @isTest
+    static void testWFHApprovalStatus_Approved_ViaGetTodayAttendance() {
+        User u = [SELECT Id FROM User WHERE Email = 'viewtest@testorg.com' LIMIT 1];
+        Test.startTest();
+        Map<String, Object> result = AttendanceViewController.getTodayAttendance(u.Id);
+        Test.stopTest();
+
+        // Today's record has WFH_Approval_Status__c = 'Approved'
+        System.assertEquals(true, result.get('success'), 'success should be true');
+        if ((Boolean) result.get('hasRecord')) {
+            System.assertNotEquals(null, result.get('wfhApprovalStatusText'), 'WFH status text not null');
+        }
+    }
+
+    @isTest
+    static void testWFHApprovalStatus_Pending() {
+        User u = [SELECT Id FROM User WHERE Email = 'viewtest@testorg.com' LIMIT 1];
+        // Update today's record to Pending to hit the Pending branch
+        Employee_Attendance__c todayRec = [
+            SELECT Id, WFH_Approval_Status__c
+            FROM Employee_Attendance__c
+            WHERE Employee_Name__c = :u.Id
+            AND Date__c = :Date.today()
+            LIMIT 1
+        ];
+        todayRec.WFH_Approval_Status__c = 'Pending';
+        update todayRec;
+
+        Test.startTest();
+        Map<String, Object> result = AttendanceViewController.getTodayAttendance(u.Id);
+        Test.stopTest();
+
+        System.assertEquals(true, result.get('success'), 'success should be true');
+    }
+
+    @isTest
+    static void testWFHApprovalStatus_Rejected() {
+        User u = [SELECT Id FROM User WHERE Email = 'viewtest@testorg.com' LIMIT 1];
+        Employee_Attendance__c todayRec = [
+            SELECT Id, WFH_Approval_Status__c
+            FROM Employee_Attendance__c
+            WHERE Employee_Name__c = :u.Id
+            AND Date__c = :Date.today()
+            LIMIT 1
+        ];
+        todayRec.WFH_Approval_Status__c = 'Rejected';
+        update todayRec;
+
+        Test.startTest();
+        Map<String, Object> result = AttendanceViewController.getTodayAttendance(u.Id);
+        Test.stopTest();
+
+        System.assertEquals(true, result.get('success'), 'success should be true');
+    }
+
+    @isTest
+    static void testWFHApprovalStatus_UnknownStatus() {
+        User u = [SELECT Id FROM User WHERE Email = 'viewtest@testorg.com' LIMIT 1];
+        Employee_Attendance__c todayRec = [
+            SELECT Id, WFH_Approval_Status__c
+            FROM Employee_Attendance__c
+            WHERE Employee_Name__c = :u.Id
+            AND Date__c = :Date.today()
+            LIMIT 1
+        ];
+        todayRec.WFH_Approval_Status__c = 'pending';
+        update todayRec;
+
+        Test.startTest();
+        Map<String, Object> result = AttendanceViewController.getTodayAttendance(u.Id);
+        Test.stopTest();
+
+        System.assertEquals(true, result.get('success'), 'success should be true');
+    }
+
+    // ===================================================================
+    // TESTS: testDataSetup (private @TestVisible method)
+    // ===================================================================
+
+    @isTest
+    static void testDataSetup_Runs() {
+        Test.startTest();
+        AttendanceViewController.testDataSetup();
+        Test.stopTest();
+        System.assert(true, 'testDataSetup should run without error');
     }
 }

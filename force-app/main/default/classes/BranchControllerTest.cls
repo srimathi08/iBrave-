@@ -13,7 +13,7 @@ public class BranchControllerTest {
             FirstName = 'Manager',
             LastName = 'User',
             Email = 'manager@example.com',
-            Username = 'manageruser@example.com',
+            Username = 'manageruser@example.com' + System.currentTimeMillis(),
             Alias = 'mgr',
             TimeZoneSidKey = 'America/Los_Angeles',
             LocaleSidKey = 'en_US',

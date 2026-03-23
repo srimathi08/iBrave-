@@ -254,10 +254,12 @@ try {
             update candidate;
 
             // ---- Education Records ----
+            // Track all records in original input order for ID mapping back to LWC
+            List<Education_Detail__c> allEduRecords = new List<Education_Detail__c>();
+            List<Education_Detail__c> eduToInsert = new List<Education_Detail__c>();
+            List<Education_Detail__c> eduToUpdate = new List<Education_Detail__c>();
             if (String.isNotBlank(educationData)) {
                 List<Object> educationList = (List<Object>) JSON.deserializeUntyped(educationData);
-                List<Education_Detail__c> eduToInsert = new List<Education_Detail__c>();
-                List<Education_Detail__c> eduToUpdate = new List<Education_Detail__c>();
                 
                 for (Object eduObj : educationList) {
                     Map<String, Object> eduMap = (Map<String, Object>) eduObj;
@@ -267,10 +269,13 @@ try {
                     // Check if Id exists AND is a valid 18-char Salesforce ID (not a temp/unique ID)
                     if (String.isNotBlank(eduId) && eduId.length() == 18 && eduId.startsWith('a0')) {
                         edu.Id = eduId;
-                        eduToUpdate.add(mapEducationFields(edu, eduMap, candidate.Id));
+                        Education_Detail__c mapped = mapEducationFields(edu, eduMap, candidate.Id);
+                        eduToUpdate.add(mapped);
+                        allEduRecords.add(mapped);
                     } else {
-                        // New record - don't set Id
-                        eduToInsert.add(mapEducationFields(edu, eduMap, candidate.Id));
+                        Education_Detail__c mapped = mapEducationFields(edu, eduMap, candidate.Id);
+                        eduToInsert.add(mapped);
+                        allEduRecords.add(mapped);
                     }
                 }
                 
@@ -316,10 +321,11 @@ try {
             }
 
             // ---- Work Experience Records ----
+            List<Work_Experience__c> allWorkRecords = new List<Work_Experience__c>();
+            List<Work_Experience__c> workToInsert = new List<Work_Experience__c>();
+            List<Work_Experience__c> workToUpdate = new List<Work_Experience__c>();
             if (String.isNotBlank(workData)) {
                 List<Object> workList = (List<Object>) JSON.deserializeUntyped(workData);
-                List<Work_Experience__c> workToInsert = new List<Work_Experience__c>();
-                List<Work_Experience__c> workToUpdate = new List<Work_Experience__c>();
                 
                 for (Object workObj : workList) {
                     Map<String, Object> workMap = (Map<String, Object>) workObj;
@@ -329,10 +335,13 @@ try {
                     // Check if Id exists AND is a valid 18-char Salesforce ID
                     if (String.isNotBlank(workId) && workId.length() == 18 && workId.startsWith('a0')) {
                         work.Id = workId;
-                        workToUpdate.add(mapWorkFields(work, workMap, candidate.Id));
+                        Work_Experience__c mapped = mapWorkFields(work, workMap, candidate.Id);
+                        workToUpdate.add(mapped);
+                        allWorkRecords.add(mapped);
                     } else {
-                        // New record - don't set Id
-                        workToInsert.add(mapWorkFields(work, workMap, candidate.Id));
+                        Work_Experience__c mapped = mapWorkFields(work, workMap, candidate.Id);
+                        workToInsert.add(mapped);
+                        allWorkRecords.add(mapped);
                     }
                 }
                 
@@ -347,10 +356,11 @@ try {
             }
 
             // ---- Bank Records ----
+            List<Bank_Details__c> allBankRecords = new List<Bank_Details__c>();
+            List<Bank_Details__c> bankToInsert = new List<Bank_Details__c>();
+            List<Bank_Details__c> bankToUpdate = new List<Bank_Details__c>();
             if (String.isNotBlank(bankData)) {
                 List<Object> bankList = (List<Object>) JSON.deserializeUntyped(bankData);
-                List<Bank_Details__c> bankToInsert = new List<Bank_Details__c>();
-                List<Bank_Details__c> bankToUpdate = new List<Bank_Details__c>();
                 
                 for (Object bankObj : bankList) {
                     Map<String, Object> bankMap = (Map<String, Object>) bankObj;
@@ -360,10 +370,13 @@ try {
                     // Check if Id exists AND is a valid 18-char Salesforce ID
                     if (String.isNotBlank(bankId) && bankId.length() == 18 && bankId.startsWith('a0')) {
                         bank.Id = bankId;
-                        bankToUpdate.add(mapBankFields(bank, bankMap, candidate.Id));
+                        Bank_Details__c mapped = mapBankFields(bank, bankMap, candidate.Id);
+                        bankToUpdate.add(mapped);
+                        allBankRecords.add(mapped);
                     } else {
-                        // New record - don't set Id
-                        bankToInsert.add(mapBankFields(bank, bankMap, candidate.Id));
+                        Bank_Details__c mapped = mapBankFields(bank, bankMap, candidate.Id);
+                        bankToInsert.add(mapped);
+                        allBankRecords.add(mapped);
                     }
                 }
                 
@@ -377,7 +390,13 @@ try {
                 }
             }
 
-            return 'SUCCESS';
+            // Return record IDs in original input order so LWC can attach files to correct records
+            Map<String, Object> resultMap = new Map<String, Object>();
+            resultMap.put('status', 'SUCCESS');
+            resultMap.put('educationIds', collectOrderedIds(allEduRecords));
+            resultMap.put('workIds', collectOrderedIds(allWorkRecords));
+            resultMap.put('bankIds', collectOrderedIds(allBankRecords));
+            return JSON.serialize(resultMap);
 
         } catch (Exception e) {
             Database.rollback(sp);
@@ -421,6 +440,7 @@ try {
         
         fam.Contact_No__c = (String) famMap.get('Contact_No__c');
         fam.Occupation__c = (String) famMap.get('Occupation__c');
+        
         return fam;
     }
 
@@ -459,6 +479,15 @@ try {
         bank.Status__c = (String) bankMap.get('Status__c');
         bank.Remarks__c = (String) bankMap.get('Remarks__c');
         return bank;
+    }
+
+    // Collect record IDs in original input order (after DML, inserted records will have their IDs populated)
+    private static List<String> collectOrderedIds(List<SObject> records) {
+        List<String> ids = new List<String>();
+        for (SObject rec : records) {
+            ids.add(rec.Id);
+        }
+        return ids;
     }
 
      // File upload helpers
@@ -585,7 +614,7 @@ try {
             }
 
             Candidate__c cand = [
-                SELECT Id, First_Name__c, Last_Name__c, Onboarding_Status__c
+                SELECT Id, Onboarding_Status__c
                 FROM Candidate__c
                 WHERE Id = :candidateId
                 LIMIT 1
@@ -594,32 +623,8 @@ try {
             // Update onboarding completion fields
             cand.Onboarding_Status__c = 'Submitted';
             cand.Onboarding_Submitted_Date__c = Date.today();
-
             update cand;
-
-            // (Optional) HR notification email
-            try {
-                Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-                //mail.setToAddresses(new String[] {'hr@quadrobay.com'});
-				mail.setToAddresses(new String[] {'Priyadharsini.gunasekaran@quadrobay.com'});	
-                mail.setSubject('Candidate Completed Onboarding - ' + cand.First_Name__c + ' ' + cand.Last_Name__c);
-                
-                String baseUrl = System.Url.getOrgDomainUrl().toExternalForm();
-                String link = baseUrl + '/lightning/r/Candidate__c/' + cand.Id + '/view';
-
-                String body =
-                    'Hello HR Team,\n\n' +
-                    'The following candidate has completed the onboarding form:\n\n' +
-                    'Name: ' + cand.First_Name__c + ' ' + cand.Last_Name__c + '\n' +
-                    'Date: ' + String.valueOf(Date.today()) + '\n\n' +
-                    'View record: ' + link + '\n\n' +
-                    'Regards,\nHR Automation System';
-
-                mail.setPlainTextBody(body);
-                Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
-            } catch (Exception ex) {
-                System.debug('⚠️ Failed to send HR onboarding notification: ' + ex.getMessage());
-            }
+            // HR notification email is handled by CandidateOnboardingTrigger (runs in system context)
 
             return 'SUCCESS';
         } catch (Exception e) {

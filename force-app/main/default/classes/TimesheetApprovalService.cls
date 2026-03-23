@@ -1,94 +1,3 @@
-/*public class TimesheetApprovalService {
-
-    // Entry point for submission — call from controller after all entries marked "Submitted"
-    public static void submitWeeklyForApproval(Integer weekNumber, Integer year) {
-        Id employeeId = UserInfo.getUserId();
-
-        // 1. Get logged-in user and their manager
-        User employee = [SELECT Id, Name, Email, ManagerId FROM User WHERE Id = :employeeId LIMIT 1];
-        if (employee.ManagerId == null) {
-            throw new AuraHandledException('No manager assigned. Cannot submit for approval.');
-        }
-        User manager = [SELECT Id, Name, Email FROM User WHERE Id = :employee.ManagerId LIMIT 1];
-if (manager.Email == null) {
-            throw new AuraHandledException('Manager does not have an email address.');
-        }
-        // 2. Fetch Timesheet and weekly Timesheet entries
-        Timesheet__c weeklySheet;
-        try {
-            weeklySheet = [SELECT Id, Week_Number__c, Week_Year__c, Approval_Status__c
-                           FROM Timesheet__c
-                           WHERE Employee__c = :employeeId
-                             AND Week_Number__c = :weekNumber
-                             AND Week_Year__c = :year
-                           LIMIT 1];
-        } catch (Exception e) {
-            throw new AuraHandledException('Timesheet not found for user/week.');
-        }
-        // 3. Entries
-        List<TimesheetEntry__c> weeklyEntries = [
-            SELECT Date__c, Task__c, Project__r.Name, Total_Hours__c, Status__c
-            FROM TimesheetEntry__c
-            WHERE Timesheet__c = :weeklySheet.Id
-        ];
-        if (weeklyEntries.isEmpty()) {
-            throw new AuraHandledException('No entries to submit for approval.');
-        }
-
-                if (weeklySheet.Approval_Status__c == 'Submitted' || weeklySheet.Approval_Status__c == 'Approved') {
-            throw new AuraHandledException('Timesheet already submitted or approved for this week.');
-        }
-
-        // 3. Update Timesheet status to Submitted (entries should already have this set)
-        weeklySheet.Approval_Status__c = 'Submitted';
-        update weeklySheet;
-
-        // 4. Compose email body with all entry details
-        String entryDetails = '';
-        for (TimesheetEntry__c e : weeklyEntries) {
-            entryDetails += '- Date: ' + String.valueOf(e.Date__c)
-                        + ', Project: ' + (e.Project__r != null ? e.Project__r.Name : 'N/A')
-                        + ', Task: ' + (e.Task__c != null ? e.Task__c : '')
-                        + ', Hours: ' + String.valueOf(e.Total_Hours__c)
-                        + ', Status: ' + (e.Status__c != null ? e.Status__c : '') + '\n';
-        }
-        String subject = 'Weekly Timesheet Approval: ' + employee.Name + ' (Week ' + String.valueOf(weekNumber) + ', ' + String.valueOf(year) + ')';
-        String body =
-            'Hello ' + manager.Name + ',\n\n' +
-            employee.Name + ' has submitted a weekly timesheet for your approval.\n\n' +
-            entryDetails +
-            '\nPlease log in to the portal to Approve or Reject and add comments as needed.';
-
-        // 5. Send the email to the manager
- try {
-        Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-        mail.setToAddresses(new String[] { manager.Email });
-        mail.setSubject(subject);
-        mail.setPlainTextBody(body);
-        Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
-} catch (Exception e) {
-            System.debug('Failed sending manager email: ' + e.getMessage());
-            throw new AuraHandledException('Submission failed: Could not email manager (' + e.getMessage() + ')');
-        }
-    }
-
-       
-    // Example method for manager approval/rejection (to be called via portal/LWC/controller)
-    public static void processManagerApproval(Id timesheetId, Boolean isApproved, String comment) {
-        Timesheet__c sheet = [SELECT Id, Approval_Status__c FROM Timesheet__c WHERE Id = :timesheetId LIMIT 1];
-        sheet.Approval_Status__c = isApproved ? 'Approved' : 'Rejected';
-        update sheet;
-
-        // Optionally, update all related timesheet entries
-        List<TimesheetEntry__c> entries = [SELECT Id FROM TimesheetEntry__c WHERE Timesheet__c = :timesheetId];
-        for (TimesheetEntry__c entry : entries) {
-            entry.Approval_Status__c = sheet.Approval_Status__c;
-        }
-        update entries;
-
-        // Optionally, log comment, notify employee, etc.
-    }
-}*/
 public without sharing class TimesheetApprovalService {
     
     /* =====================================================================================
@@ -127,7 +36,7 @@ public without sharing class TimesheetApprovalService {
             
             // Get all entries for this week
             List<TimesheetEntry__c> entries = [
-                SELECT Id, Date__c, Project__r.Name, Task__c, Description__c,
+                SELECT Id, Date__c, Project__r.Name, Task__c, 
                        Total_Hours__c, Regular_Hours__c, Overtime_Hours__c
                 FROM TimesheetEntry__c
                 WHERE Timesheet__c = :sheet.Id
@@ -209,7 +118,7 @@ public without sharing class TimesheetApprovalService {
             
             // Get entries
             List<TimesheetEntry__c> entries = [
-                SELECT Id, Date__c, Project__r.Name, Task__c, Description__c,
+                SELECT Id, Date__c, Project__r.Name, Task__c, 
                        Total_Hours__c, Regular_Hours__c, Overtime_Hours__c
                 FROM TimesheetEntry__c
                 WHERE Timesheet__c = :timesheetId
@@ -264,7 +173,16 @@ public without sharing class TimesheetApprovalService {
             mail.setSubject('Timesheet Approval Required: ' + sheet.Employee__r.Name + ' - Week ' + sheet.Week_Number__c + ', ' + sheet.Week_Year__c);
             mail.setHtmlBody(emailBody);
             mail.setSaveAsActivity(false);
-            mail.setOrgWideEmailAddressId('0D2e1000000046rCAA');
+            //  GENERIC ORG-WIDE EMAIL 
+if (!Test.isRunningTest()) {
+    OrgWideEmailAddress owea = [
+        SELECT Id
+        FROM OrgWideEmailAddress
+        WHERE IsAllowAllProfiles = true
+        LIMIT 1
+    ];
+    mail.setOrgWideEmailAddressId(owea.Id);
+}
             Messaging.SendEmailResult[] results = Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
             
             // Check if email was sent successfully

@@ -1,0 +1,979 @@
+/* ================================
+   Work From Home Request Component
+================================ */
+
+/* Container */
+.slds-card {
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+}
+
+/* Card Header */
+.slds-card__header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 24px;
+    border-bottom: 2px solid #0176d3;
+}
+
+.slds-card__header-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #181818;
+}
+
+/* Content Area */
+.slds-p-around_medium {
+    padding: 28px;
+    background: #fafbfc;
+}
+
+/* ================================
+   Form Container
+================================ */
+.slds-box {
+    background: white;
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Form Fields */
+lightning-input,
+lightning-textarea {
+    margin-bottom: 20px;
+}
+
+lightning-input::part(label),
+lightning-textarea::part(label) {
+    font-weight: 600;
+    color: #181818;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+lightning-input::part(input),
+lightning-textarea::part(textarea) {
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+lightning-input::part(input):focus,
+lightning-textarea::part(textarea):focus {
+    border-color: #0176d3;
+    box-shadow: 0 0 0 3px rgba(1, 118, 211, 0.1);
+}
+
+lightning-input::part(input):disabled {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+    color: #6c757d;
+}
+
+/* ================================
+   Form Buttons
+================================ */
+.slds-m-top_medium {
+    margin-top: 32px;
+}
+
+.slds-align_absolute-center {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+lightning-button {
+    --sds-c-button-radius: 10px;
+}
+
+lightning-button[variant="brand"]::part(button) {
+    background: linear-gradient(135deg, #0176d3 0%, #0d4f8b 100%);
+    border: none;
+    padding: 12px 32px;
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 12px rgba(1, 118, 211, 0.3);
+    transition: all 0.3s ease;
+}
+
+lightning-button[variant="brand"]::part(button):hover {
+    background: linear-gradient(135deg, #014a8c 0%, #083a6b 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(1, 118, 211, 0.4);
+}
+
+lightning-button[variant="neutral"]::part(button) {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    border: none;
+    color: white;
+    padding: 12px 32px;
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+    transition: all 0.3s ease;
+}
+
+lightning-button[variant="neutral"]::part(button):hover {
+    background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(108, 117, 125, 0.4);
+}
+
+/* Header Action Button */
+.slds-card__header lightning-button[variant="brand"]::part(button) {
+    background: linear-gradient(135deg, #2e844a 0%, #1e5f35 100%);
+    box-shadow: 0 4px 12px rgba(46, 132, 74, 0.3);
+}
+
+.slds-card__header lightning-button[variant="brand"]::part(button):hover {
+    background: linear-gradient(135deg, #1e5f35 0%, #155028 100%);
+    box-shadow: 0 6px 16px rgba(46, 132, 74, 0.4);
+}
+
+/* ================================
+   Data Table
+================================ */
+lightning-datatable {
+    --lwc-borderRadiusMedium: 12px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e5e7eb;
+}
+
+lightning-datatable::part(table) {
+    border-radius: 12px;
+}
+
+lightning-datatable::part(header-cell) {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    font-weight: 700;
+    font-size: 13px;
+    color: #181818;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 16px;
+    border-bottom: 2px solid #dee2e6;
+}
+
+lightning-datatable::part(data-cell) {
+    padding: 16px;
+    font-size: 14px;
+    color: #1f2937;
+}
+
+lightning-datatable::part(row):hover {
+    background: #f8f9fa;
+}
+
+/* ================================
+   Empty State
+================================ */
+.slds-text-align_center {
+    padding: 60px 20px;
+    background: white;
+    border-radius: 12px;
+    border: 2px dashed #dee2e6;
+    margin-top: 20px;
+}
+
+.slds-text-color_weak {
+    color: #6c757d;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.slds-text-align_center::before {
+    content: '📄';
+    display: block;
+    font-size: 64px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+/* ================================
+   Status Badges (Custom)
+================================ */
+.status-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-approved {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #66bb6a;
+}
+
+.status-rejected {
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #ef5350;
+}
+
+.status-pending {
+    background: #fff8e1;
+    color: #f57c00;
+    border: 1px solid #ffb74d;
+}
+
+.status-cancelled {
+    background: #f3f3f3;
+    color: #616161;
+    border: 1px solid #9e9e9e;
+}
+
+/* ================================
+   Form Group Styling
+================================ */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.form-section {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    border-left: 4px solid #0176d3;
+    margin-bottom: 20px;
+}
+
+.form-section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0176d3;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-section-title::before {
+    content: '📋';
+    font-size: 20px;
+}
+
+/* ================================
+   Info Messages
+================================ */
+.info-message {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border: 1px solid #90caf9;
+    border-left: 4px solid #1976d2;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.info-message::before {
+    content: 'ℹ️';
+    font-size: 24px;
+}
+
+.info-message-text {
+    color: #1565c0;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* ================================
+   Loading State
+================================ */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    gap: 16px;
+}
+
+.loading-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* ================================
+   Disabled Field Labels
+================================ */
+lightning-input[disabled]::part(label) {
+    color: #6c757d;
+    font-weight: 500;
+}
+
+/* ================================
+   Required Field Indicator
+================================ */
+lightning-input[required]::part(label)::after,
+lightning-textarea[required]::part(label)::after {
+    content: ' *';
+    color: #c62828;
+    font-weight: 700;
+}
+
+/* ================================
+   Hover Effects
+================================ */
+.slds-box:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+}
+
+/* ================================
+   Responsive Design
+================================ */
+@media (max-width: 768px) {
+    .slds-p-around_medium {
+        padding: 16px;
+    }
+
+    .slds-box {
+        padding: 20px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .slds-align_absolute-center {
+        flex-direction: column;
+    }
+
+    lightning-button {
+        width: 100%;
+    }
+
+    .slds-card__header {
+        padding: 16px;
+    }
+
+    .slds-card__header-title {
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .slds-box {
+        padding: 16px;
+    }
+
+    lightning-button::part(button) {
+        padding: 10px 20px;
+        font-size: 13px;
+    }
+}
+
+/* ================================
+   Focus States
+================================ */
+lightning-button:focus-visible::part(button) {
+    outline: 2px solid #0176d3;
+    outline-offset: 2px;
+}
+
+/* ================================
+   Smooth Transitions
+================================ */
+* {
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* ================================
+   Custom Scrollbar
+================================ */
+.slds-scrollable::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.slds-scrollable::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.slds-scrollable::-webkit-scrollbar-thumb {
+    background: #0176d3;
+    border-radius: 4px;
+}
+
+.slds-scrollable::-webkit-scrollbar-thumb:hover {
+    background: #014a8c;
+}
+
+/* Updated Card Header to match Leave Request */
+.slds-card__header {
+    background: linear-gradient(135deg, #0176d3 0%, #0d4f8b 100%) !important;
+    padding: 16px 24px !important;
+    border-bottom: none !important;
+}
+
+/* Make Title White to be readable on blue */
+.slds-card__header-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #ffffff !important;
+}
+
+/* New Request Button (Inside Header) */
+.slds-card__header lightning-button[variant="brand"]::part(button) {
+    background: #ffffff !important;
+    color: #0176d3 !important;
+    border: 1px solid #ffffff !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.slds-card__header lightning-button[variant="brand"]::part(button):hover {
+    background: #f4f6f9 !important;
+    transform: translateY(-1px);
+}
+
+/* Submit/Brand Buttons (Inside Form) */
+lightning-button[variant="brand"]::part(button) {
+    background: #0176d3 !important;
+    border: 1px solid #0176d3 !important;
+    padding: 12px 32px;
+    font-weight: 600;
+}
+
+/* Refresh Button Styling (If you add one) */
+.refresh-btn::part(button) {
+    background: transparent !important;
+    color: #ffffff !important;
+    border: 1px solid #ffffff !important;
+}
+
+
+/* Leave Management Container */
+
+
+/* Header Section */
+.header-section {
+    background: linear-gradient(135deg, #0176d3 0%, #0d4f8b 100%);
+    padding: 24px 32px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.header-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.page-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.page-subtitle {
+    font-size: 14px;
+    margin: 4px 0 0 0;
+    opacity: 0.9;
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+/* workFromHomeRequest.css */
+
+/* ==================== CALCULATION BOX ==================== */
+.calculation-box {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px solid #0176d3;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 2px 8px rgba(1, 118, 211, 0.1);
+}
+
+.calculation-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #0176d3;
+}
+
+.calculation-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0176d3;
+}
+
+/* ==================== CALCULATION GRID ==================== */
+.calculation-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.calc-item {
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+    border: 1px solid #e0e0e0;
+    transition: all 0.3s ease;
+}
+
+.calc-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.calc-item.highlight {
+    background: linear-gradient(135deg, #0176d3 0%, #0d5baf 100%);
+    border: none;
+}
+
+.calc-item.highlight .calc-label,
+.calc-item.highlight .calc-value {
+    color: white;
+}
+
+.calc-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.calc-value {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.calc-value.total {
+    color: #5c6368;
+}
+
+.calc-value.working {
+    color: white;
+}
+
+.calc-value.weekend {
+    color: #ff9800;
+}
+
+.calc-value.holiday {
+    color: #e91e63;
+}
+
+/* ==================== EXCLUDED DATES SECTION ==================== */
+.excluded-section {
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 16px;
+    border: 1px solid #e0e0e0;
+}
+
+.excluded-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #5c6368;
+    margin-bottom: 12px;
+}
+
+.excluded-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.weekend-tag,
+.holiday-tag {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.weekend-tag {
+    background: #fff3e0;
+    color: #f57c00;
+    border: 1px solid #ffb74d;
+}
+
+.holiday-tag {
+    background: #fce4ec;
+    color: #c2185b;
+    border: 1px solid #f48fb1;
+}
+
+/* ==================== EXISTING STYLES ==================== */
+.header-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 24px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.header-text {
+    color: white;
+}
+
+.page-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+    color: white;
+}
+
+.page-subtitle {
+    font-size: 14px;
+    margin: 4px 0 0 0;
+    opacity: 0.9;
+    color: white;
+}
+
+.header-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.form-section {
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.form-section:last-child {
+    border-bottom: none;
+}
+
+.form-section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #181818;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #0176d3;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.info-message {
+    background: #e8f4fd;
+    border-left: 4px solid #0176d3;
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin-top: 20px;
+}
+
+.info-message-text {
+    font-size: 13px;
+    color: #014486;
+    line-height: 1.5;
+}
+
+/* Status Classes */
+.status-approved {
+    color: #2e844a;
+    font-weight: 600;
+    background: #d4edda;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.status-rejected {
+    color: #c23934;
+    font-weight: 600;
+    background: #f8d7da;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.status-pending {
+    color: #f57c00;
+    font-weight: 600;
+    background: #fff3e0;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.status-cancelled {
+    color: #5c6368;
+    font-weight: 600;
+    background: #e0e0e0;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .calculation-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .header-section {
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .header-actions {
+        width: 100%;
+        justify-content: center;
+    }
+}
+/* Overlap Warning Styling */
+.overlap-warning {
+    background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+    border: 2px solid #ff9800;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 16px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    box-shadow: 0 2px 8px rgba(255, 152, 0, 0.15);
+    animation: slideIn 0.3s ease-out;
+}
+
+.warning-icon {
+    color: #ff9800;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.overlap-message {
+    flex: 1;
+}
+
+.overlap-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: #e65100;
+    margin-bottom: 8px;
+}
+
+.overlap-text {
+    font-size: 13px;
+    color: #5d4037;
+    line-height: 1.5;
+    white-space: pre-line;
+}
+
+/* Animation */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Calculation Box (existing styles) */
+.calculation-box {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border: 2px solid #2196f3;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 16px 0;
+}
+
+.calculation-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #90caf9;
+}
+
+.calculation-title {
+    font-weight: 600;
+    color: #1565c0;
+    font-size: 14px;
+}
+
+.calculation-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.calc-item {
+    background: white;
+    padding: 12px;
+    border-radius: 6px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.calc-item.highlight {
+    background: #1976d2;
+    color: white;
+}
+
+.calc-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    opacity: 0.8;
+}
+
+.calc-item.highlight .calc-label {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.calc-value {
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.calc-value.working {
+    color: white;
+}
+
+.calc-value.total {
+    color: #424242;
+}
+
+.calc-value.weekend {
+    color: #ff9800;
+}
+
+.calc-value.holiday {
+    color: #e91e63;
+}
+
+/* Excluded Dates */
+.excluded-section {
+    background: rgba(255, 255, 255, 0.6);
+    padding: 12px;
+    border-radius: 6px;
+    margin-top: 8px;
+}
+
+.excluded-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #1565c0;
+    margin-bottom: 8px;
+}
+
+.excluded-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.weekend-tag,
+.holiday-tag {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.weekend-tag {
+    background: #ffe0b2;
+    color: #e65100;
+    border: 1px solid #ff9800;
+}
+
+.holiday-tag {
+    background: #f8bbd0;
+    color: #880e4f;
+    border: 1px solid #e91e63;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .calculation-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .overlap-warning {
+        flex-direction: column;
+    }
+}

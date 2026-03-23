@@ -1,66 +1,3 @@
-/*public without sharing class OfferLetterAcceptanceController {
-    public Boolean isSuccess {get; set;}
-    public String errorMessage {get; set;}
-    public String candidateName {get; set;}
-    public String designation {get; set;}
-    public String acceptanceDate {get; set;}
-    public String onboardingFormUrl {get; set;}
-
-    // Constructor ONLY checks token and sets up state
-    public OfferLetterAcceptanceController() {
-        isSuccess = false;
-    }
-
-    // This method does everything except page setup
-    public PageReference processAcceptance() {
-        String token = ApexPages.currentPage().getParameters().get('token');
-        if (String.isBlank(token)) {
-            errorMessage = 'Invalid or missing acceptance token. Please use the link provided in your email.';
-            return null;
-        }
-        try {
-            List<Candidate__c> candidates = [
-                SELECT Id, First_Name__c, Last_Name__c, Designation__c, 
-                       Offer_Accepted__c, Offer_Accepted_Date__c, Personal_Email__c, 
-                       onboarding_Form_URL__c, Onboarding_Status__c,
-                       Offer_Letter_Status__c
-                FROM Candidate__c 
-                WHERE Offer_Acceptance_Token__c = :token 
-                LIMIT 1
-            ];
-            if (candidates.isEmpty()) {
-                errorMessage = 'Invalid or expired acceptance link. Please contact HR for assistance.';
-                return null;
-            }
-            Candidate__c candidate = candidates[0];
-            candidateName = candidate.First_Name__c + ' ' + candidate.Last_Name__c;
-            designation = candidate.Designation__c;
-            onboardingFormUrl = candidate.onboarding_Form_URL__c;
-
-            if (candidate.Offer_Accepted__c) {
-                isSuccess = true;
-                acceptanceDate = candidate.Offer_Accepted_Date__c != null ? 
-                    candidate.Offer_Accepted_Date__c.format() : Date.today().format();
-                return null;
-            }
-
-            // Safe to run DML here
-            candidate.Offer_Accepted__c = true;
-            candidate.Offer_Accepted_Date__c = Date.today();
-            candidate.Offer_Letter_Status__c = 'Accepted';
-            candidate.Onboarding_Status__c = 'In Progress';
-            update candidate;
-
-            isSuccess = true;
-            acceptanceDate = Date.today().format();
-        } catch (Exception e) {
-            errorMessage = 'An unexpected error occurred. Please try again or contact HR at hr@quadrobay.com';
-            System.debug('Error in OfferLetterAcceptanceController: ' + e.getMessage());
-            System.debug('Stack trace: ' + e.getStackTraceString());
-        }
-        return null;
-    }
-}*/
 public without sharing class OfferLetterAcceptanceController {
     public Boolean isSuccess { get; set; }
     public String errorMessage { get; set; }
@@ -83,7 +20,7 @@ public without sharing class OfferLetterAcceptanceController {
 
         try {
             Candidate__c candidate = [
-                SELECT Id, First_Name__c, Last_Name__c, Designation__c,
+                SELECT Id, First_Name__c, Last_Name__c, Designations__c,
                        Offer_Accepted__c, Offer_Accepted_Date__c,
                        Offer_Letter_Status__c, Offer_Letter_Signed_Document_Id__c,Onboarding_Status__c,
                        Personal_Email__c, onboarding_Form_URL__c,Date_of_Birth__c,Phone_No__c
@@ -98,7 +35,7 @@ public without sharing class OfferLetterAcceptanceController {
             }
 
             candidateName = candidate.First_Name__c + ' ' + candidate.Last_Name__c;
-            designation = candidate.Designation__c;
+            designation = candidate.Designations__c;
             onboardingFormUrl = candidate.onboarding_Form_URL__c;
 			onboardingStatus = candidate.Onboarding_Status__c;
 
@@ -134,12 +71,13 @@ public without sharing class OfferLetterAcceptanceController {
             //pdfPage.getParameters().put('id', String.valueOf(candidate.Id));
 			pdfPage.getParameters().put('id', candRecord.Id);
             //Blob signedPdf = pdfPage.getContentAsPDF();
-		Blob signedPdf;
+Blob signedPdf;
 		if (Test.isRunningTest()) {
     	signedPdf = Blob.valueOf('UNIT.TEST.PDF.CONTENT');
 		} else {
     	signedPdf = pdfPage.getContentAsPDF();
 		}
+
             // 3️⃣ Save signed PDF as new file
             String fileName = 'Offer_Letter_Signed_' + candidate.Last_Name__c + '_' + Date.today().format();
             ContentVersion cv = new ContentVersion();
@@ -166,7 +104,7 @@ try {
     Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
 
     // HR email address
-    mail.setToAddresses(new String[] { 'hr@quadrobay.com' });
+    mail.setToAddresses(new String[] { 'it-admin@quadrobay.com' });
 
     mail.setSubject('Candidate Accepted Offer - ' + candidate.First_Name__c + ' ' + candidate.Last_Name__c);
 
@@ -174,7 +112,7 @@ try {
         'Hello HR Team,\n\n' +
         'The following candidate has accepted the offer:\n\n' +
         'Name: ' + candidate.First_Name__c + ' ' + candidate.Last_Name__c + '\n' +
-        'Designation: ' + candidate.Designation__c + '\n' +
+        'Designation: ' + candidate.Designations__c + '\n' +
         'Acceptance Date: ' + String.valueOf(candidate.Offer_Accepted_Date__c) + '\n' +
         'IP Address: ' + candidate.Offer_Acceptance_IP__c + '\n\n' +
         'You can view the candidate record here:\n' + candidateLink + '\n\n' +
@@ -190,7 +128,7 @@ try {
 
             
         } catch (Exception e) {
-            errorMessage = 'An unexpected error occurred. Please try again or contact HR at hr@quadrobay.com';
+            errorMessage = 'An unexpected error occurred. Please try again or contact HR at it-admin@quadrobay.com';
             System.debug('Error in OfferLetterAcceptanceController: ' + e.getMessage());
             System.debug('Stack trace: ' + e.getStackTraceString());
         }

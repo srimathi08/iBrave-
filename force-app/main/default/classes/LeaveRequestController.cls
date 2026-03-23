@@ -91,6 +91,81 @@ public without sharing class LeaveRequestController {
         }
     }
     
+    
+    /**
+ * Check if employee already has leave request for the selected dates
+ * @param employeeId Employee ID
+ * @param startDate Requested start date
+ * @param endDate Requested end date
+ * @return Map with validation result and overlapping leave details
+ */
+
+@AuraEnabled
+public static Map<String, Object> checkOverlappingLeave(Id employeeId, Date startDate, Date endDate) {
+    Map<String, Object> result = new Map<String, Object>();
+    
+    try {
+        System.debug('=== CHECKING OVERLAPPING LEAVE ===');
+        System.debug('Employee: ' + employeeId);
+        System.debug('Start Date: ' + startDate);
+        System.debug('End Date: ' + endDate);
+        
+        // Query for any existing leave requests that overlap with the requested dates
+        List<Leave_Request__c> overlappingLeaves = [
+            SELECT Id, Name, 
+                   Leave_Type__r.Leave_Type_Name__c,
+            Leave_Type__r.Leave_Code__c,
+                   Start_Date__c, 
+                   End_Date__c, 
+                   Total_Days__c,
+                   Status__c
+            FROM Leave_Request__c
+            WHERE Employee__c = :employeeId
+            AND Is_Active__c = true
+            AND Status__c IN ('Pending', 'Approved')
+            AND (
+                (Start_Date__c <= :endDate AND End_Date__c >= :startDate)
+            )
+            ORDER BY Start_Date__c ASC
+            LIMIT 10
+        ];
+        
+        if (overlappingLeaves.isEmpty()) {
+        result.put('hasOverlap', false);
+        result.put('conflictCount', 0);
+        result.put('conflictingLeaves', new List<Object>());
+    } else {
+        List<Map<String, String>> conflicts = new List<Map<String, String>>();
+        
+        for (Leave_Request__c leave : overlappingLeaves) {
+            Map<String, String> conflict = new Map<String, String>();
+            conflict.put('leaveRequestName', leave.Name);
+            conflict.put('leaveType', leave.Leave_Type__r.Leave_Type_Name__c);
+            conflict.put('leaveCode', leave.Leave_Type__r.Leave_Code__c);
+            conflict.put('startDate', String.valueOf(leave.Start_Date__c));
+            conflict.put('endDate', String.valueOf(leave.End_Date__c));
+            conflict.put('totalDays', String.valueOf(leave.Total_Days__c));
+            conflict.put('status', leave.Status__c);
+            conflicts.add(conflict);
+        }
+        
+        result.put('hasOverlap', true);
+        result.put('conflictCount', overlappingLeaves.size());
+        result.put('conflictingLeaves', conflicts);
+    }
+    
+    return result;
+        
+    } catch (Exception e) {
+        System.debug('❌ Error checking overlapping leave: ' + e.getMessage());
+        result.put('hasOverlap', false);
+        result.put('error', e.getMessage());
+        return result;
+    }
+}
+    
+    
+    
     /**
      * Submit Leave Request with Email Notification
      */
@@ -162,12 +237,23 @@ public without sharing class LeaveRequestController {
             ];
             
             // Get base URL and build approval page URL
-            String baseUrl = System.URL.getOrgDomainUrl().toExternalForm();
-            String approvalUrl = baseUrl + '/lightning/r/Leave_Request__c/' + request.Id + '/view';
+            //String baseUrl = System.URL.getOrgDomainUrl().toExternalForm();
+         //String baseUrl = 'https://innovation-dream-9744--uatsandbox.sandbox.my.salesforce-sites.com/LeaveApproval';
+            String baseUrl = ' https://innovation-dream-9744.my.salesforce-sites.com/LeaveApproval';
+           
+           // String approvalUrl = baseUrl + '/lightning/r/Leave_Request__c/' + request.Id + '/view';
+           //         // ✅ Build Visualforce Approval Page URL
+        //String baseUrl = URL.getSalesforceBaseUrl().toExternalForm();
+        String approvalUrl = baseUrl + '/apex/LeaveApprovalPage' +'?id=' + request.Id +'&mgr=' + employee.ManagerId;
+            
+             
             
             Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
             mail.setToAddresses(new String[] { employee.Manager.Email });
             mail.setSubject('Leave Request from ' + employee.Name);
+             // mail.setOrgWideEmailAddressId('0D2fs00000001tl');
+	OrgWideEmailAddress owea = [SELECT Id FROM OrgWideEmailAddress WHERE IsAllowAllProfiles = true LIMIT 1];
+mail.setOrgWideEmailAddressId(owea.Id);
             
             String body = '<html><body style="font-family: Arial, sans-serif;">';
             body += '<h2 style="color: #0176d3;">New Leave Request Pending Approval</h2>';
@@ -192,13 +278,14 @@ public without sharing class LeaveRequestController {
             body += '<div style="text-align: center; margin: 30px 0;">';
             body += '<a href="' + approvalUrl + '" style="background-color: #0176d3; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">Click here to review</a>';
             body += '</div>';
-            body += '<p style="color: #666; font-size: 12px;">Click the button above to view the leave request in Salesforce.</p>';
+            body += '<p style="color: #666; font-size: 12px;">Click the button above to view the leave request.</p>';
             body += '<p>Thank you,<br/><strong>HR Management System</strong></p>';
             body += '</body></html>';
             
             mail.setHtmlBody(body);
             
-            Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
+           // Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
+             Messaging.SendEmailResult[] results = Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
             
         } catch (Exception e) {
             System.debug('Error sending email: ' + e.getMessage());
@@ -231,9 +318,11 @@ public without sharing class LeaveRequestController {
             ];
             
             Decimal days = request.Total_Days__c;
-            
+            Decimal currentPending = balance.Pending_Approval__c ?? 0;
+        Decimal currentBooked  = balance.Booked__c ?? 0;
+        Decimal currentUsed    = balance.Used__c ?? 0;
             // Handle status transitions
-            if (newStatus == 'Pending') {
+           /* if (newStatus == 'Pending') {
                 // Add to pending
                 balance.Pending_Approval__c = (balance.Pending_Approval__c != null ? balance.Pending_Approval__c : 0) + days;
             }
@@ -263,7 +352,41 @@ public without sharing class LeaveRequestController {
                 // Move from Booked to Used
                 balance.Booked__c = (balance.Booked__c != null ? balance.Booked__c : 0) - days;
                 balance.Used__c = (balance.Used__c != null ? balance.Used__c : 0) + days;
+            } */
+			// Handle status transitions
+        if (newStatus == 'Pending') {
+            // Add to Pending
+            balance.Pending_Approval__c = currentPending + days;
+        }
+        else if (newStatus == 'Approved' && oldStatus == 'Pending') {
+            // Move from Pending → Booked
+            balance.Pending_Approval__c = Math.max(0, currentPending - days);
+            balance.Booked__c           = currentBooked + days;
+            
+            // Increment lifetime usage for Maternity/Paternity
+            if (request.Leave_Type__r.Max_Lifetime_Occurrences__c != null) {
+                balance.Lifetime_Usage_Count__c = (balance.Lifetime_Usage_Count__c ?? 0) + 1;
             }
+        }
+        else if (newStatus == 'Rejected' && oldStatus == 'Pending') {
+            // Remove from Pending only — Available increases automatically
+            balance.Pending_Approval__c = Math.max(0, currentPending - days);
+        }
+        else if (newStatus == 'Cancelled' && oldStatus == 'Pending') {
+            // ✅ Remove from Pending only — NEVER touch Used
+            // Available = Total - Used - Booked - Pending
+            // Reducing Pending automatically increases Available
+            balance.Pending_Approval__c = Math.max(0, currentPending - days);
+        }
+        else if (newStatus == 'Cancelled' && oldStatus == 'Approved') {
+            // ✅ Remove from Booked only — NEVER touch Used
+            balance.Booked__c = Math.max(0, currentBooked - days);
+        }
+        else if (newStatus == 'Completed' && oldStatus == 'Approved') {
+            // Move from Booked → Used (actual leave taken)
+            balance.Booked__c = Math.max(0, currentBooked - days);
+            balance.Used__c   = currentUsed + days;
+        }
             
             update balance;
             
@@ -397,7 +520,8 @@ private static void sendCancellationEmailToEmployee(Leave_Request__c request, Id
         ];
         
         // Get base URL
-        String baseUrl = System.URL.getOrgDomainUrl().toExternalForm();
+        String baseUrl =  ' https://innovation-dream-9744.my.salesforce-sites.com/LeaveApproval';
+ //String baseUrl = 'https://innovation-dream-9744--uatsandbox.sandbox.my.salesforce-sites.com/LeaveApproval';
         String leaveUrl = baseUrl + '/lightning/r/Leave_Request__c/' + request.Id + '/view';
         
         Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
@@ -473,5 +597,333 @@ public static List<Leave_Request__c> getCancellableLeaveRequests(Id employeeId) 
         throw new AuraHandledException('Error: ' + e.getMessage());
     }
 }
+    
+    /**
+ * Check if requested leave dates fall on any public holidays
+ * @param startDate - Leave start date
+ * @param endDate - Leave end date
+ * @return Map with validation result and holiday details
+ */
+@AuraEnabled
+public static Map<String, Object> checkHolidayConflict(Date startDate, Date endDate) {
+    Map<String, Object> result = new Map<String, Object>();
+    List<Map<String, String>> conflictingHolidays = new List<Map<String, String>>();
+    
+    try {
+        // Query holidays that fall within the requested leave period
+        List<Holiday__c> holidays = [
+            SELECT Id, Name, Holiday_Date__c
+            FROM Holiday__c
+            WHERE Holiday_Date__c >= :startDate
+            AND Holiday_Date__c <= :endDate
+            AND Is_Active__c = true
+            ORDER BY Holiday_Date__c ASC
+        ];
+        
+         // Calculate working days (excluding weekends and holidays)
+        Integer workingDays = calculateWorkingDays(startDate, endDate, holidays);
+        
+        if (!holidays.isEmpty()) {
+            // Build list of conflicting holidays
+            for (Holiday__c holiday : holidays) {
+                Map<String, String> holidayInfo = new Map<String, String>();
+                holidayInfo.put('name', holiday.Name);
+                holidayInfo.put('date', holiday.Holiday_Date__c.format());
+                holidayInfo.put('dayOfWeek', getDayOfWeek(holiday.Holiday_Date__c));
+                conflictingHolidays.add(holidayInfo);
+            }
+            
+            result.put('hasConflict', true);
+            result.put('conflictingHolidays', conflictingHolidays);
+            result.put('holidayCount', holidays.size());
+        } else {
+            result.put('hasConflict', false);
+            result.put('conflictingHolidays', new List<Map<String, String>>());
+            result.put('holidayCount', 0);
+        }
+        result.put('workingDays', workingDays);
+        return result;
+        
+    } catch (Exception e) {
+        System.debug('Error checking holiday conflict: ' + e.getMessage());
+        result.put('hasConflict', false);
+        result.put('error', e.getMessage());
+        return result;
+    }
+}
 
+    
+    
+    /**
+ * Calculate working days between two dates excluding weekends and public holidays
+ * @param startDate Start date
+ * @param endDate End date
+ * @param holidays List of holidays in the date range
+ * @return Number of working days
+ */
+private static Integer calculateWorkingDays(Date startDate, Date endDate, List<Holiday__c> holidays) {
+    Integer workingDays = 0;
+    
+    // Create a set of holiday dates for quick lookup
+    Set<Date> holidayDates = new Set<Date>();
+    for (Holiday__c holiday : holidays) {
+        holidayDates.add(holiday.Holiday_Date__c);
+    }
+    
+    // Loop through each day
+    Date currentDate = startDate;
+    while (currentDate <= endDate) {
+        // Get day of week (uses DateTime to get proper day)
+        DateTime dt = DateTime.newInstance(currentDate.year(), currentDate.month(), currentDate.day());
+        String dayName = dt.format('EEEE');
+        
+        // Check if it's NOT Saturday or Sunday AND NOT a public holiday
+        Boolean isWeekend = (dayName == 'Saturday' || dayName == 'Sunday');
+        Boolean isHoliday = holidayDates.contains(currentDate);
+        
+        if (!isWeekend && !isHoliday) {
+            workingDays++;
+        }
+        
+        // Move to next day
+        currentDate = currentDate.addDays(1);
+    }
+    
+    return workingDays;
+}
+    
+    
+    
+/**
+ * Helper method to get day of week from date
+ */
+private static String getDayOfWeek(Date dateValue) {
+    DateTime dt = DateTime.newInstance(dateValue.year(), dateValue.month(), dateValue.day());
+    String dayName = dt.format('EEEE'); // Returns full day name like 'Monday'
+    return dayName;
+}
+    
+    /**
+ * Employee self-revoke leave request
+ * Rules: Can only revoke Pending or Approved leaves
+ * Deadline: Before 9 AM on the leave start date
+ */
+@AuraEnabled
+public static Map<String, Object> revokeLeaveRequest(Id leaveRequestId, String revokeReason) {
+    Map<String, Object> result = new Map<String, Object>();
+    
+    try {
+        Id employeeId = UserInfo.getUserId();
+        
+        Leave_Request__c leaveRequest = [
+            SELECT Id, Name, Employee__c, Employee__r.Name, Employee__r.Email,
+                   Leave_Type__c, Leave_Type__r.Leave_Type_Name__c,
+                   Start_Date__c, End_Date__c, Total_Days__c,
+                   Status__c, Manager__c, Manager__r.Name, Manager__r.Email,
+                   Reason__c, Applied_Date__c
+            FROM Leave_Request__c
+            WHERE Id = :leaveRequestId
+            AND Employee__c = :employeeId
+            LIMIT 1
+        ];
+        
+        // Security: Employee can only revoke their own leave
+        if (leaveRequest.Employee__c != employeeId) {
+            result.put('success', false);
+            result.put('message', 'You can only revoke your own leave requests.');
+            return result;
+        }
+        
+        // Validate status
+        if (leaveRequest.Status__c == 'Cancelled') {
+            result.put('success', false);
+            result.put('message', 'This leave request is already cancelled.');
+            return result;
+        }
+        if (leaveRequest.Status__c == 'Completed') {
+            result.put('success', false);
+            result.put('message', 'Cannot revoke a completed leave request.');
+            return result;
+        }
+        if (leaveRequest.Status__c == 'Rejected') {
+            result.put('success', false);
+            result.put('message', 'Cannot revoke a rejected leave request.');
+            return result;
+        }
+        if (leaveRequest.Status__c == 'Approved') {
+    result.put('success', false);
+    result.put('message', 'Approved leave requests cannot be revoked. Please contact your manager.');
+    return result;
+}
+        
+        // ===== 9 AM DEADLINE CHECK =====
+        // Build the deadline: leave start date at 09:00 AM in org timezone
+        DateTime leaveStartDeadline = DateTime.newInstance(
+            leaveRequest.Start_Date__c.year(),
+            leaveRequest.Start_Date__c.month(),
+            leaveRequest.Start_Date__c.day(),
+            9, 0, 0  // 9:00:00 AM
+        );
+        
+        DateTime nowUtc = System.now();
+        
+        // Convert org timezone offset for accurate comparison
+        // Using direct DateTime comparison (Salesforce stores in UTC internally)
+        // The deadline is 9 AM in the org's local time
+        String orgTz = UserInfo.getTimeZone().getId();
+        
+        // Get current time in org timezone for comparison
+        Datetime nowInOrgTz = nowUtc;
+        
+        // Check if today is already PAST the start date
+        Date today = Date.today();
+        if (today > leaveRequest.Start_Date__c) {
+            result.put('success', false);
+            result.put('message', 'Cannot revoke: Your leave has already started on ' + 
+                leaveRequest.Start_Date__c.format() + '.');
+            return result;
+        }
+        
+        // Check if today IS the start date — enforce 9 AM deadline
+        if (today == leaveRequest.Start_Date__c) {
+            if (nowUtc >= leaveStartDeadline) {
+                result.put('success', false);
+                result.put('message', 'Cannot revoke: The 9:00 AM deadline for revoking leave on ' + 
+                    leaveRequest.Start_Date__c.format() + ' has passed.');
+                return result;
+            }
+        }
+        // If today < start date, revoke is always allowed
+        
+        String oldStatus = leaveRequest.Status__c;
+        
+        // Update leave request to Cancelled
+        leaveRequest.Status__c = 'Cancelled';
+        leaveRequest.Cancelled_Date__c = System.now();
+        leaveRequest.Cancelled_By__c = employeeId;
+        leaveRequest.Cancelled_Reason__c = String.isNotBlank(revokeReason) 
+            ? revokeReason 
+            : 'Revoked by employee';
+        
+        update leaveRequest;
+        
+        // Restore balance
+        updateLeaveBalance(leaveRequestId, 'Cancelled', oldStatus);
+        
+        // Notify manager
+        sendRevokeEmailToManager(leaveRequest, employeeId);
+        
+        result.put('success', true);
+        result.put('message', 'Leave request revoked successfully. Your balance has been restored.');
+        result.put('leaveRequestName', leaveRequest.Name);
+        
+    } catch (Exception e) {
+        System.debug('Error revoking leave: ' + e.getMessage());
+        result.put('success', false);
+        result.put('message', 'Error: ' + e.getMessage());
+    }
+    
+    return result;
+}
+
+/**
+ * Check if a leave request is revocable by the employee
+ * Returns eligibility + reason if not revocable
+ */
+@AuraEnabled
+public static Map<String, Object> canRevokeLeave(Id leaveRequestId) {
+    Map<String, Object> result = new Map<String, Object>();
+    
+    try {
+        Id employeeId = UserInfo.getUserId();
+        
+        Leave_Request__c req = [
+            SELECT Id, Employee__c, Start_Date__c, Status__c
+            FROM Leave_Request__c
+            WHERE Id = :leaveRequestId
+            LIMIT 1
+        ];
+        
+        if (req.Employee__c != employeeId) {
+            result.put('canRevoke', false);
+            result.put('reason', 'Not your leave request');
+            return result;
+        }
+        
+        if (req.Status__c != 'Pending') {
+            result.put('canRevoke', false);
+            result.put('reason', 'Status is ' + req.Status__c);
+            return result;
+        }
+        
+        Date today = Date.today();
+        
+        if (today > req.Start_Date__c) {
+            result.put('canRevoke', false);
+            result.put('reason', 'Leave has already started');
+            return result;
+        }
+        
+        if (today == req.Start_Date__c) {
+            DateTime deadline = DateTime.newInstance(
+                req.Start_Date__c.year(),
+                req.Start_Date__c.month(),
+                req.Start_Date__c.day(),
+                9, 0, 0
+            );
+            if (System.now() >= deadline) {
+                result.put('canRevoke', false);
+                result.put('reason', 'Past 9 AM deadline for today\'s leave');
+                return result;
+            }
+        }
+        
+        result.put('canRevoke', true);
+        result.put('reason', '');
+        return result;
+        
+    } catch (Exception e) {
+        result.put('canRevoke', false);
+        result.put('reason', e.getMessage());
+        return result;
+    }
+}
+
+/**
+ * Send revoke notification email to manager
+ */
+private static void sendRevokeEmailToManager(Leave_Request__c request, Id employeeId) {
+    try {
+        User employee = [SELECT Id, Name, Email FROM User WHERE Id = :employeeId LIMIT 1];
+        
+        Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+        mail.setToAddresses(new String[] { request.Manager__r.Email });
+        mail.setSubject('Leave Revoked by ' + employee.Name + ' - ' + request.Name);
+        //mail.setOrgWideEmailAddressId('0D2fs00000001tl');
+	// ✅ Dynamic org-wide email address
+            OrgWideEmailAddress owea = [SELECT Id FROM OrgWideEmailAddress WHERE IsAllowAllProfiles = true LIMIT 1];
+            mail.setOrgWideEmailAddressId(owea.Id);
+        
+        String body = '<html><body style="font-family: Arial, sans-serif;">';
+        body += '<h2 style="color: #f97316;">Leave Request Revoked by Employee</h2>';
+        body += '<p>Dear ' + request.Manager__r.Name + ',</p>';
+        body += '<p><strong>' + employee.Name + '</strong> has revoked their leave request.</p>';
+        body += '<table border="1" cellpadding="10" cellspacing="0" style="border-collapse:collapse;width:100%;max-width:600px;">';
+        body += '<tr style="background:#f3f3f3;"><td><strong>Request #</strong></td><td>' + request.Name + '</td></tr>';
+        body += '<tr><td><strong>Leave Type</strong></td><td>' + request.Leave_Type__r.Leave_Type_Name__c + '</td></tr>';
+        body += '<tr style="background:#f3f3f3;"><td><strong>Period</strong></td><td>' + request.Start_Date__c.format() + ' to ' + request.End_Date__c.format() + '</td></tr>';
+        body += '<tr><td><strong>Total Days</strong></td><td>' + request.Total_Days__c + '</td></tr>';
+        body += '<tr style="background:#fff3cd;"><td><strong>Reason for Revoke</strong></td><td>' + (request.Cancelled_Reason__c ?? 'Not specified') + '</td></tr>';
+        body += '</table>';
+        body += '<p style="color:#2e7d32;font-weight:bold;">✅ No action needed. This leave has been cancelled.</p>';
+        body += '<p>Thank you,<br/><strong>HR Management System</strong></p>';
+        body += '</body></html>';
+        
+        mail.setHtmlBody(body);
+        Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
+        
+    } catch (Exception e) {
+        System.debug('Error sending revoke email: ' + e.getMessage());
+    }
+}
 }

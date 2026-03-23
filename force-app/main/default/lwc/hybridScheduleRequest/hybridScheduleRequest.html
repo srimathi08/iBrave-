@@ -1,4 +1,32 @@
 <template>
+
+            <!-- HEADER ACTION BUTTON -->
+        <div class="header-section">
+            <div class="header-left">
+                <lightning-icon icon-name="utility:event" size="large"></lightning-icon>
+                <div class="header-text">
+                    <h1 class="page-title">Hybrid Work Schedule Management</h1>
+                    <p class="page-subtitle">Manage your Hybrid Work Schedule requests and view balances</p>
+                </div>
+            </div>
+             <div class="header-actions">
+            <lightning-button
+                label="Refresh"
+                icon-name="utility:refresh"
+                onclick={handleRefresh}
+                class="slds-m-right_small refresh-btn">
+            </lightning-button>
+            
+            <lightning-button
+                label="New Request"
+                variant="brand"
+                icon-name="utility:add"
+                onclick={handleNewRequest}>
+            </lightning-button>
+        </div>
+</div>
+        
+    
     <div class="hybrid-schedule-container">
         <!-- Loading Spinner -->
         <template if:true={isLoading}>
@@ -6,6 +34,7 @@
         </template>
 
         <!-- Schedule Request Form -->
+           <template if:true={showForm}>
         <div class="schedule-form-card">
             <div class="form-header">
                 <h2 class="form-title">📅 New Schedule Request</h2>
@@ -15,17 +44,22 @@
                 <!-- Month Selection -->
                 <div class="form-row">
                     <lightning-input
-                        type="month"
-                        label="Schedule Month"
-                        value={selectedMonth}
-                        onchange={handleMonthChange}
-                        required
-                        min={minMonth}
-                        class="input-field">
-                    </lightning-input>
-                    <div class="field-help">
-                        Select the month for which you need a hybrid work schedule
-                    </div>
+    type="week"
+    label="Schedule Week"
+    value={selectedWeek}
+    onchange={handleWeekChange}
+    required
+    min={minWeek}
+    class="input-field">
+</lightning-input>
+<div class="field-help">
+    Select the week for which you need a hybrid work schedule
+</div>
+<template if:true={selectedWeek}>
+    <div class="week-preview">
+        📅 &nbsp;<strong>{weekRangeDisplay}</strong>
+    </div>
+</template>
                 </div>
 
                 <!-- Schedule Type -->
@@ -126,19 +160,73 @@
                                 <span class="summary-label">Month:</span>
                                 <span class="summary-value">{selectedMonthDisplay}</span>
                             </div>
-                            <div class="summary-item">
+                           <!-- <div class="summary-item">
                                 <span class="summary-label">WFH Days:</span>
                                 <span class="summary-value wfh-count">{totalWFHDays} days</span>
                             </div>
                             <div class="summary-item">
                                 <span class="summary-label">Office Days:</span>
                                 <span class="summary-value office-count">{totalOfficeDays} days</span>
-                            </div>
+                            </div>-->
+                            <!-- WFH Days Selection -->
+<div class="form-row">
+    <div class="days-selection-section wfh-section">
+        <label class="section-label">🏠 Work From Home Days</label>
+        <div class="days-checkbox-group">
+            <template for:each={daysOfWeek} for:item="day">
+                <div key={day.value} class="day-checkbox-item">
+                    <lightning-input
+                        type="checkbox"
+                        label={day.label}
+                        value={day.value}
+                        checked={day.isWFH}
+                        disabled={day.isOffice}
+                        onchange={handleWFHDayChange}
+                        data-day={day.value}>
+                    </lightning-input>
+                </div>
+            </template>
+        </div>
+        <div class="days-summary">
+            Selected: <strong>{selectedWFHDaysText}</strong>
+        </div>
+    </div>
+</div>
+
+<!-- Office Days Selection -->
+<div class="form-row">
+    <div class="days-selection-section office-section">
+        <label class="section-label">🏢 Office Days</label>
+        <div class="days-checkbox-group">
+            <template for:each={daysOfWeek} for:item="day">
+                <div key={day.value} class="day-checkbox-item">
+                    <lightning-input
+                        type="checkbox"
+                        label={day.label}
+                        value={day.value}
+                        checked={day.isOffice}
+                        disabled={day.isWFH}
+                        onchange={handleOfficeDayChange}
+                        data-day={day.value}>
+                    </lightning-input>
+                </div>
+            </template>
+        </div>
+        <div class="days-summary">
+            Selected: <strong>{selectedOfficeDaysText}</strong>
+        </div>
+    </div>
+</div>
                         </div>
                     </div>
                 </template>
 
                 <!-- Action Buttons -->
+                 <template if:true={showMessage}>
+    <div class={messageClass} role="alert">
+        {messageText}
+    </div>
+</template>
                 <div class="form-actions">
                     <lightning-button
                         label="Reset"
@@ -157,6 +245,7 @@
                 </div>
             </div>
         </div>
+        </template>
 
         <!-- Existing Schedules Section -->
         <div class="existing-schedules-card">
@@ -175,7 +264,10 @@
                     <template for:each={existingSchedules} for:item="schedule">
                         <div key={schedule.Id} class="schedule-item">
                             <div class="schedule-item-header">
-                                <span class="schedule-month">{schedule.monthDisplay}</span>
+                               <div class="schedule-week-display">
+    <span class="week-label">{schedule.weekLabel}</span>
+    <span class="schedule-month">{schedule.monthDisplay}</span>
+</div>
                                 <lightning-badge 
                                     label={schedule.Approval_Status__c}
                                     class={schedule.statusClass}>
@@ -192,7 +284,7 @@
                                 </div>
                                 <div class="schedule-detail">
                                     <span class="detail-label">Manager:</span>
-                                    <span class="detail-value">{schedule.Manager__r.Name}</span>
+                                    <span class="detail-value">{schedule.managerName}</span>
                                 </div>
                                 <template if:true={schedule.showApprovalDate}>
                                     <div class="schedule-detail">

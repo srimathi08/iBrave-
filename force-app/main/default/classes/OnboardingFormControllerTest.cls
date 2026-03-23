@@ -11,7 +11,10 @@ private class OnboardingFormControllerTest {
             Gender__c     = 'Male',
             Blood_Group__c = 'O+',
             Source_Of_Applicant__c = 'Referred',
-            Marital_Status__c      = 'Single'
+            Marital_Status__c      = 'Single',
+            Date_Of_Birth__c = Date.newInstance(1995, 6, 15),
+            Personal_Email__c = 'test.user@example.com',
+            Phone_No__c = '9876543210'
         );
         insert cand;
 
@@ -177,7 +180,9 @@ static void testGetCandidateDataBlankId() {
         );
         Test.stopTest();
 
-        System.assertEquals('SUCCESS', res);
+        // Result is now JSON containing status and record IDs
+        Map<String, Object> resultMap = (Map<String, Object>) JSON.deserializeUntyped(res);
+        System.assertEquals('SUCCESS', (String) resultMap.get('status'));
     }
 
     // --------- saveCandidateData (insert + update child rows) ---------
@@ -191,7 +196,11 @@ static void testGetCandidateDataBlankId() {
         Map<String, Object> candidateMap = new Map<String, Object>{
             'Id' => cand.Id,
             'First_Name__c' => 'Child',
-            'Last_Name__c'  => 'Update'
+            'Last_Name__c'  => 'Update',
+            'Personal_Email__c' => 'child.update@example.com',
+            'Phone_No__c' => '8765432109',
+            'Date_Of_Birth__c' => '1995-06-15',
+            'Gender__c' => 'Male'
         };
 
         List<Object> eduList = new List<Object>{
@@ -248,7 +257,19 @@ static void testGetCandidateDataBlankId() {
         );
         Test.stopTest();
 
-        System.assertEquals('SUCCESS', res);
+        // Result is now JSON containing status and record IDs
+        Map<String, Object> resultMap = (Map<String, Object>) JSON.deserializeUntyped(res);
+        System.assertEquals('SUCCESS', (String) resultMap.get('status'));
+        
+        // Verify record IDs are returned
+        List<Object> eduIds = (List<Object>) resultMap.get('educationIds');
+        System.assertEquals(2, eduIds.size(), 'Should have 2 education record IDs');
+        
+        List<Object> workIds = (List<Object>) resultMap.get('workIds');
+        System.assertEquals(1, workIds.size(), 'Should have 1 work record ID');
+        
+        List<Object> bankIds = (List<Object>) resultMap.get('bankIds');
+        System.assertEquals(1, bankIds.size(), 'Should have 1 bank record ID');
     }
 
    @IsTest

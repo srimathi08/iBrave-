@@ -1,91 +1,18 @@
-/*public class OfferLetterPDFGenerator {
-    @InvocableMethod(label='Generate Offer Letter PDF')
-    public static void generateOfferLetter(List<Id> candidateIds) {
-        for (Id candId : candidateIds) {
-            // Generate PDF using VF page
-            PageReference pdfPage = Page.OfferLetterPDF;
-            pdfPage.getParameters().put('id', candId);
-            Blob pdfBlob = pdfPage.getContentAsPDF();
-
-            String fileName = 'Offer_Letter_' + candId + '_' + Date.today().format() + '.pdf';
-            ContentVersion cv = new ContentVersion();
-            cv.Title = fileName;
-            cv.PathOnClient = fileName;
-            cv.VersionData = pdfBlob;
-            cv.FirstPublishLocationId = candId; // link to candidate
-            cv.IsMajorVersion = true;
-            insert cv;
-
-            ContentVersion resultCV = [SELECT ContentDocumentId FROM ContentVersion WHERE Id = :cv.Id LIMIT 1];
-            Candidate__c cand = [SELECT Id FROM Candidate__c WHERE Id = :candId LIMIT 1];
-            cand.Offer_Letter_Document_Id__c = resultCV.ContentDocumentId;
-			cand.Offer_Letter_Status__c = 'Generated'; // Set status value as per picklist
-            cand.Offer_Letter_Generated_Date__c = Date.today(); 
-            update cand;
-           
-        }
-    }
-}*/
-/*public class OfferLetterPDFGenerator {
-    @InvocableMethod(label='Generate Offer Letter PDF')
-    public static void generateOfferLetter(List<Id> candidateIds) {
-        List<Candidate__c> candidatesToUpdate = new List<Candidate__c>();
-        
-        for (Id candId : candidateIds) {
-            // Generate PDF
-            PageReference pdfPage = Page.OfferLetterPDF;
-            pdfPage.getParameters().put('id', candId);
-            Blob pdfBlob = pdfPage.getContentAsPDF();
-            String fileName = 'Offer_Letter_' + candId + '_' + Date.today().format() + '.pdf';
-            
-            // Create ContentVersion
-            ContentVersion cv = new ContentVersion();
-            cv.Title = fileName;
-            cv.PathOnClient = fileName;
-            cv.VersionData = pdfBlob;
-            cv.FirstPublishLocationId = candId;
-            cv.IsMajorVersion = true;
-            insert cv;
-            
-            // Get ContentDocumentId
-            ContentVersion resultCV = [SELECT ContentDocumentId FROM ContentVersion WHERE Id = :cv.Id LIMIT 1];
-            
-            // Create Public Link via ContentDistribution
-            ContentDistribution cd = new ContentDistribution();
-            cd.ContentVersionId = cv.Id;
-            cd.Name = fileName;
-            cd.PreferencesAllowViewInBrowser = true; // IMPORTANT: Allows viewing before download
-            cd.PreferencesAllowOriginalDownload = true; // Allows download
-            cd.PreferencesExpires = false; // Link doesn't expire
-            insert cd;
-            
-            // Get the public URL
-            ContentDistribution resultCD = [SELECT DistributionPublicUrl, ContentDownloadUrl 
-                                           FROM ContentDistribution WHERE Id = :cd.Id LIMIT 1];
-            
-            // Update Candidate record
-            Candidate__c cand = new Candidate__c();
-            cand.Id = candId;
-            cand.Offer_Letter_Document_Id__c = resultCV.ContentDocumentId;
-            cand.Offer_Letter_Doc_Link__c = resultCD.DistributionPublicUrl; // View link
-            cand.Offer_Letter_Status__c = 'Generated';
-            cand.Offer_Letter_Generated_Date__c = Date.today();
-            candidatesToUpdate.add(cand);
-        }
-        
-        if (!candidatesToUpdate.isEmpty()) {
-            update candidatesToUpdate;
-        }
-    }
-}*/
 public class OfferLetterPDFGenerator {
     @InvocableMethod(label='Generate Offer Letter PDF')
     public static void generateOfferLetter(List<Id> candidateIds) {
         List<Candidate__c> candidatesToUpdate = new List<Candidate__c>();
- 
-	String siteUrl = 'https://innovation-dream-9744--hrmproject.sandbox.my.site.com/CandidatePortal';  
-        
+
+        Map<Id, Candidate__c> candMap = new Map<Id, Candidate__c>(
+            [SELECT Id, First_Name__c, Last_Name__c
+             FROM Candidate__c
+             WHERE Id IN :candidateIds]
+        );
+	//String siteUrl = 'https://innovation-dream-9744.my.site.com/CandidatePortal';  
+      String siteUrl = 'https://innovation-dream-9744--uatsandbox.sandbox.my.site.com/CandidatePortal';  
         for (Id candId : candidateIds) {
+			Candidate__c candRec = candMap.get(candId);
+            if (candRec == null) continue;
             // Generate unique acceptance token
             String acceptanceToken = generateUniqueToken();
             
@@ -100,9 +27,21 @@ if (Test.isRunningTest()) {
 } else {
     pdfBlob = pdfPage.getContentAsPDF();
 }
+// Build full name: "John Doe"
+String firstName = candRec.First_Name__c != null ? candRec.First_Name__c : '';
+String lastName  = candRec.Last_Name__c  != null ? candRec.Last_Name__c  : '';
+String fullName  = (firstName + ' ' + lastName).trim();
 
+// fallback if both are blank
+if (String.isBlank(fullName)) {
+    fullName = 'Candidate';
+}
 
-            String fileName = 'Offer_Letter_' + candId + '_' + Date.today().format() + '.pdf';
+// sanitize for filename
+fullName = fullName.replaceAll('[^a-zA-Z0-9_\\- ]','');
+
+// final file name
+String fileName = 'Offer_Letter_' + fullName + '_' + Date.today().format() + '.pdf';
             
             // Create ContentVersion
             ContentVersion cv = new ContentVersion();
@@ -158,12 +97,7 @@ if (Test.isRunningTest()) {
         }
     }
     
-    /*private static String generateUniqueToken() {
-        Blob b = Crypto.GenerateAESKey(128);
-        String h = EncodingUtil.ConvertTohex(b);
-        return h.substring(0,32);
-    }*/
-@TestVisible
+ @TestVisible
 private static String generateUniqueToken() {
     Blob b = Crypto.GenerateAESKey(128);
     String h = EncodingUtil.ConvertTohex(b);

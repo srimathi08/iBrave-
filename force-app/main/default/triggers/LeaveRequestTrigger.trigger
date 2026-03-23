@@ -1,16 +1,12 @@
-trigger LeaveRequestTrigger on Leave_Request__c (after update) {
+trigger LeaveRequestTrigger on Leave_Request__c (after update, before delete) {
+
+    // ==================== AFTER UPDATE ====================
     if (Trigger.isAfter && Trigger.isUpdate) {
-        for (Leave_Request__c newReq : Trigger.new) {
-            Leave_Request__c oldReq = Trigger.oldMap.get(newReq.Id);
-            
-            // Check if status changed
-            if (newReq.Status__c != oldReq.Status__c) {
-                LeaveRequestController.updateLeaveBalance(
-                    newReq.Id,
-                    newReq.Status__c,
-                    oldReq.Status__c
-                );
-            }
-        }
+        LeaveRequestTriggerHandler.handleAfterUpdate(Trigger.new, Trigger.oldMap);
+    }
+
+    // ==================== BEFORE DELETE ====================
+    if (Trigger.isBefore && Trigger.isDelete) {
+        LeaveRequestTriggerHandler.handleBeforeDelete(Trigger.old);
     }
 }

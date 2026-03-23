@@ -448,7 +448,39 @@
 }
 
 .absent-card {
-    border-color: #c23934;
+    border-top: 4px solid var(--absent-color);
+    position: relative;
+    padding-bottom: 45px !important; /* Make room for breakdown */
+}
+
+.absent-breakdown {
+    position: absolute;
+    bottom: 5px;
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0 10px;
+    font-size: 0.75rem;
+    border-top: 1px solid rgba(0,0,0,0.05);
+    padding-top: 5px;
+}
+
+.breakdown-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #666;
+}
+
+.breakdown-label {
+    font-weight: 500;
+}
+
+.breakdown-value {
+    font-weight: 700;
+    color: var(--text-main);
 }
 
 .absent-card .summary-number {
@@ -946,6 +978,13 @@
     background: #f8f9fa;
     border-radius: 8px;
     padding: 15px;
+    
+}
+
+.photo-section{
+    content: ' *';
+    color: red;
+    font-weight: bold;
 }
 
 .section-header {
@@ -2790,4 +2829,190 @@
     background: #e3f2fd;
     color: #1976d2;
     text-transform: uppercase;
+}
+/* ── OD Missing Card ─────────────────────────────────────── */
+.od-missing-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #FAEEDA;
+    border: 1px solid #FAC775;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin: 0 16px 12px;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.od-card-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.od-icon-wrap {
+    background: #EF9F27;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.od-warning-icon {
+    --lwc-colorTextIconDefault: #fff;
+}
+
+.od-card-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: #633806;
+    margin: 0 0 2px;
+}
+
+.od-card-subtitle {
+    font-size: 12px;
+    color: #854F0B;
+    margin: 0;
+}
+
+/* ── OD Modal styles ─────────────────────────────────────── */
+.od-modal-header {
+    background: #185FA5;
+}
+
+.od-modal-title-icon {
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.od-info-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    background: #E6F1FB;
+    border: 1px solid #B5D4F4;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #0C447C;
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+.od-form-section {
+    margin-bottom: 14px;
+}
+
+.od-field-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    margin-bottom: 6px;
+    display: block;
+}
+
+.od-time-row {
+    display: flex;
+    gap: 12px;
+}
+
+.od-time-field {
+    flex: 1;
+}
+
+.od-reason-textarea {
+    width: 100%;
+    min-height: 90px;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border-primary);
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: var(--font-sans);
+    color: var(--color-text-primary);
+    background: var(--color-background-primary);
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+.od-char-count {
+    text-align: right;
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    margin-top: 4px;
+}
+
+.od-photo-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.od-photo-col {
+    flex: 1;
+}
+
+.od-photo-capture {
+    border: 2px dashed var(--color-border-secondary);
+    border-radius: 8px;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    gap: 6px;
+    background: var(--color-background-secondary);
+    transition: border-color 0.15s;
+}
+
+.od-photo-capture:hover {
+    border-color: #185FA5;
+}
+
+.od-camera-icon {
+    --lwc-colorTextIconDefault: #888;
+}
+
+.od-photo-hint {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    margin: 0;
+}
+
+.od-photo-preview-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.od-preview-img {
+    width: 100%;
+    border-radius: 6px;
+    border: 1px solid var(--color-border-tertiary);
+    object-fit: cover;
+    max-height: 120px;
+}
+
+.od-branch-confirm {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: #0F6E56;
+    margin-top: 6px;
+}
+
+.od-manager-notice {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    background: var(--color-background-secondary);
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-top: 4px;
 }

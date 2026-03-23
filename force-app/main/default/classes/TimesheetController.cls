@@ -40,6 +40,23 @@ public without sharing class TimesheetController {
         return projectList;
     }
 
+    @AuraEnabled(cacheable=true)
+    public static List<Map<String, String>> getAllActiveProjects() {
+        List<Map<String, String>> projectList = new List<Map<String, String>>();
+        for (Project__c p : [
+            SELECT Id, Name
+            FROM Project__c
+            WHERE Status__c = 'Active'
+            ORDER BY Name ASC
+        ]) {
+            Map<String, String> opt = new Map<String, String>();
+            opt.put('label', p.Name);
+            opt.put('value', p.Id);
+            projectList.add(opt);
+        }
+        return projectList;
+    }
+
     /* =====================================================================================
        2.  GET ALL TIMESHEET ENTRIES FOR LOGGED-IN USER
     ===================================================================================== */
@@ -47,7 +64,8 @@ public without sharing class TimesheetController {
     public static List<TimesheetEntry__c> getEntries() {
         return [
             SELECT Id, Date__c, Project__c, Project__r.Name,
-                   Start_Time__c, End_Time__c, Task__c, Description__c,
+                   Related_Project__c, Related_Project__r.Name,
+                   Start_Time__c, End_Time__c, Task__c,
                    Regular_Hours__c, Overtime_Hours__c, Total_Hours__c,
                    Status__c, Billing_Status__c,
                    Approval_Status__c, Timesheet__c, Timesheet__r.Employee__c
@@ -56,6 +74,29 @@ public without sharing class TimesheetController {
             ORDER BY Date__c DESC
         ];
     }
+
+    /* =====================================================================================
+       3.  GET CURRENT WEEK TOTAL HOURS FOR LOGGED-IN USER
+           Called by navigation.js to populate the "Hours This Week" metric card.
+    ===================================================================================== */
+    @AuraEnabled(cacheable=true)
+    public static Decimal getCurrentWeekTotalHours() {
+        Date today     = Date.today();
+        Date weekStart = today.toStartOfWeek();      // Monday of current week
+        Date weekEnd   = weekStart.addDays(6);       // Sunday
+
+        AggregateResult[] agg = [
+            SELECT SUM(Total_Hours__c) totalHrs
+            FROM TimesheetEntry__c
+            WHERE Date__c                       >= :weekStart
+            AND   Date__c                       <= :weekEnd
+            AND   Timesheet__r.Employee__c       = :UserInfo.getUserId()
+        ];
+
+        Object raw = agg[0].get('totalHrs');
+        return raw != null ? (Decimal) raw : 0;
+    }
+
 @AuraEnabled(cacheable=true)
 public static List<String> getStatusPicklistValues() {
     Schema.DescribeFieldResult fieldResult = TimesheetEntry__c.Status__c.getDescribe();
@@ -81,8 +122,12 @@ private static Id getManagerForUser(Id userId) {
 
     // Fallback (optional but recommended)
     if (mgr == null) {
-        // Default HR Manager user ID
-        mgr = '005e1000000ypJAAQ'; 
+        if (Test.isRunningTest()) {
+            mgr = [SELECT Id FROM User WHERE IsActive = true LIMIT 1].Id;
+        } else {
+            // Default HR Manager user ID
+            mgr = '005e1000000ypJAAQ'; 
+        }
     }
 
     System.debug('FINAL MANAGER SELECTED = ' + mgr);
@@ -116,46 +161,7 @@ Public static Timesheet__c getOrCreateWeeklyTimesheet(Date entryDate, Id userId)
 
         return existing;
     }
-    // -----------------------------
-    // FIND MANAGER
-    // -----------------------------
-   /* User usr = [
-        SELECT ContactId, ManagerId
-        FROM User
-        WHERE Id = :userId
-        LIMIT 1
-    ];
-
-    Id ManagerId;
-
-    // 1️⃣ Try Contact.Manager__c (employee scenario)
-    if (usr.ContactId != null) {
-        try {
-            Contact c = [
-                SELECT Manager__c
-                FROM Contact
-                WHERE Id = :usr.ContactId
-                LIMIT 1
-            ];
-            ManagerId = c.Manager__c;
-        } catch (Exception e) {
-            // Ignore, try next source
-        }
-    }
-
-    // 2️⃣ If no manager in Contact → use User.ManagerId (internal admin scenario)
-    if (ManagerId == null) {
-        ManagerId = usr.ManagerId;
-    }
-
-    // 3️⃣ If still null → fallback to HR Admin user
-    // Replace with YOUR HR admin id
-    /*final Id HR_ADMIN_ID = '005xxxxxxxxxxxx';
-
-    if (ManagerId == null) {
-        ManagerId = HR_ADMIN_ID;
-    }*/
-
+   
     // -----------------------------
     // Create Timesheet
     // -----------------------------
@@ -233,14 +239,19 @@ public static Set<String> getValidBillingStatuses() {
     }
     return valid;
 }
-@AuraEnabled
-public static List<Id> createMultipleTimesheetEntries(List<Map<String, Object>> rows) {
-    try {
-        if (rows == null || rows.isEmpty()) {
-            throw new AuraHandledException('No entries provided.');
-        }
-		System.debug('rows'+rows);
-        Id userId = UserInfo.getUserId();
+    @AuraEnabled
+    public static List<Id> createMultipleTimesheetEntries(List<Map<String, Object>> rows) {
+        return createMultipleTimesheetEntriesWithUser(rows, UserInfo.getUserId());
+    }
+
+    public static List<Id> createMultipleTimesheetEntriesWithUser(List<Map<String, Object>> rows, Id userId) {
+        try {
+            if (rows == null || rows.isEmpty()) {
+                throw new AuraHandledException('No entries provided.');
+            }
+            System.debug('rows for user ' + userId + ': ' + rows);
+            System.debug('rows'+rows);
+            // Id userId = UserInfo.getUserId();
 
         // 1) Collect distinct week/year keys and project ids
         Set<Integer> years = new Set<Integer>();
@@ -411,11 +422,16 @@ Id ManagerId = getManagerForUser(userId);
 
             // default approval status
             if (te.Approval_Status__c == null) te.Approval_Status__c = 'Draft';
-			Set<String> validStatuses = getValidBillingStatuses();
 
-if (te.Billing_Status__c != null && !validStatuses.contains(te.Billing_Status__c)) {
-    te.Billing_Status__c = null; // or set a fallback/default
-}
+            // Billing Status Auto Lookup
+            if (te.Billing_Status__c == null && te.Project__c != null && paByProject.containsKey(te.Project__c)) {
+                te.Billing_Status__c = paByProject.get(te.Project__c).Employment_Status__c;
+            }
+
+            Set<String> validStatuses = getValidBillingStatuses();
+            if (te.Billing_Status__c != null && !validStatuses.contains(te.Billing_Status__c)) {
+                te.Billing_Status__c = null; // or set a fallback/default
+            }
           
             toInsertEntries.add(te);
         }
@@ -494,7 +510,8 @@ TimesheetEntry__c te = [
 
         return [
             SELECT Id, Date__c, Project__c, Project__r.Name,
-                   Start_Time__c, End_Time__c, Task__c, Description__c,
+                   Related_Project__c, Related_Project__r.Name,
+                   Start_Time__c, End_Time__c, Task__c,
                    Regular_Hours__c, Overtime_Hours__c, Total_Hours__c,
                    Billing_Status__c, Approval_Status__c,Status__c,
                    Timesheet__c
@@ -752,5 +769,128 @@ public static Map<String, Object> submitWeeklyEntriesForApproval(Integer weekNum
         status.put('entryCount', entries.size());
 
         return status;
+    }   
+@AuraEnabled(cacheable=false)
+public static Map<String, Object> getMonthlyBillingBreakdown() {
+    Id userId = UserInfo.getUserId();
+    Date today = Date.today();
+    
+    // 1. Current Month Period
+    Date curMonthStart = Date.newInstance(today.year(), today.month(), 1);
+    
+    // 2. Last Month Period
+    Date lastMonthStart = curMonthStart.addMonths(-1);
+    Date lastMonthEnd   = curMonthStart.addDays(-1);
+
+    // Get Month Names
+    String curMonthName = Datetime.newInstance(curMonthStart, Time.newInstance(0, 0, 0, 0)).format('MMMM');
+    String lastMonthName = Datetime.newInstance(lastMonthStart, Time.newInstance(0, 0, 0, 0)).format('MMMM');
+
+    // --- Helper for calculating productivity for a range ---
+    Map<String, Object> currentStats = calculateStatsForPeriod(userId, curMonthStart, today, true);
+    Map<String, Object> lastMonthStats = calculateStatsForPeriod(userId, lastMonthStart, lastMonthEnd, false);
+
+    Map<String, Object> result = new Map<String, Object>();
+    
+    // Map Current Month Data
+    result.put('currentMonthName', curMonthName);
+    result.put('productivityPct', currentStats.get('productivityPct'));
+    result.put('billablePct', currentStats.get('billablePct'));
+    result.put('nonBillablePct', currentStats.get('nonBillablePct'));
+    result.put('shadowPct', currentStats.get('shadowPct'));
+    result.put('totalHours', currentStats.get('totalHours'));
+    
+    // Map Last Month Data
+    result.put('lastMonthName', lastMonthName);
+    result.put('lastMonthProductivityPct', lastMonthStats.get('productivityPct'));
+    result.put('lastMonthBillablePct', lastMonthStats.get('billablePct'));
+    result.put('lastMonthNonBillablePct', lastMonthStats.get('nonBillablePct'));
+    result.put('lastMonthShadowPct', lastMonthStats.get('shadowPct'));
+    result.put('lastMonthPendingHours', lastMonthStats.get('pendingHours'));
+    result.put('lastMonthTotalHours', lastMonthStats.get('totalHours'));
+
+    return result;
+}
+
+private static Map<String, Object> calculateStatsForPeriod(Id userId, Date start, Date endD, Boolean isCurrentMonth) {
+    // Collect all entries for the period
+    List<TimesheetEntry__c> entries = [
+        SELECT Total_Hours__c, Billing_Status__c, Approval_Status__c
+        FROM TimesheetEntry__c
+        WHERE Timesheet__r.Employee__c = :userId
+        AND Date__c >= :start
+        AND Date__c <= :endD
+    ];
+
+    Decimal billableApproved = 0;
+    Decimal nonBillableApproved = 0;
+    Decimal shadowApproved = 0;
+    Decimal pendingSubmitted = 0;
+    Decimal totalLogged = 0;
+
+    for (TimesheetEntry__c te : entries) {
+        Decimal hrs = te.Total_Hours__c != null ? te.Total_Hours__c : 0;
+        totalLogged += hrs;
+
+        if (te.Approval_Status__c == 'Approved') {
+            if (te.Billing_Status__c == 'Billable') billableApproved += hrs;
+            else if (te.Billing_Status__c == 'Non-Billable') nonBillableApproved += hrs;
+            else if (te.Billing_Status__c == 'Shadow') shadowApproved += hrs;
+        } else if (te.Approval_Status__c == 'Submitted') {
+            pendingSubmitted += hrs;
+        }
     }
+
+    Decimal totalApproved = billableApproved + nonBillableApproved + shadowApproved;
+
+    // --- Target Hours Calculation (remains same) ---
+    Integer totalWeekdays = 0;
+    for (Date d = start; d <= endD; d = d.addDays(1)) {
+        Integer dayNum = Integer.valueOf(Datetime.newInstance(d, Time.newInstance(0, 0, 0, 0)).format('u'));
+        if (dayNum >= 1 && dayNum <= 5) totalWeekdays++;
+    }
+
+    List<Holiday__c> holidays = [SELECT Holiday_Date__c FROM Holiday__c 
+                                WHERE Holiday_Date__c >= :start AND Holiday_Date__c <= :endD];
+    for (Holiday__c h : holidays) {
+        Integer dayNum = Integer.valueOf(Datetime.newInstance(h.Holiday_Date__c, Time.newInstance(0, 0, 0, 0)).format('u'));
+        if (dayNum >= 1 && dayNum <= 5) totalWeekdays--;
+    }
+
+    List<Leave_Request__c> leaves = [SELECT Start_Date__c, End_Date__c, Is_Half_Day__c 
+                                    FROM Leave_Request__c 
+                                    WHERE Employee__c = :userId AND Status__c IN ('Approved', 'Pending')
+                                    AND ((Start_Date__c >= :start AND Start_Date__c <= :endD)
+                                         OR (End_Date__c >= :start AND End_Date__c <= :endD))];
+    Decimal leaveWeekdayDays = 0;
+    for (Leave_Request__c lr : leaves) {
+        Date s = lr.Start_Date__c < start ? start : lr.Start_Date__c;
+        Date e = lr.End_Date__c > endD ? endD : lr.End_Date__c;
+        for (Date d = s; d <= e; d = d.addDays(1)) {
+            Integer dayNum = Integer.valueOf(Datetime.newInstance(d, Time.newInstance(0, 0, 0, 0)).format('u'));
+            if (dayNum >= 1 && dayNum <= 5) leaveWeekdayDays += (lr.Is_Half_Day__c == true ? 0.5 : 1.0);
+        }
+    }
+
+    Decimal targetHours = (totalWeekdays - leaveWeekdayDays) * 8.0;
+    // Productivity % is now based ONLY on totalApproved
+    Decimal productivityPct = (targetHours > 0) ? (totalApproved / targetHours * 100).setScale(1) : 0;
+
+    Map<String, Object> stats = new Map<String, Object>();
+    stats.put('productivityPct', productivityPct);
+    stats.put('totalHours', totalLogged);
+    stats.put('pendingHours', pendingSubmitted);
+    
+    if (totalApproved > 0) {
+        stats.put('billablePct', (billableApproved / totalApproved * 100).setScale(1));
+        stats.put('nonBillablePct', (nonBillableApproved / totalApproved * 100).setScale(1));
+        stats.put('shadowPct', (shadowApproved / totalApproved * 100).setScale(1));
+    } else {
+        stats.put('billablePct', 0);
+        stats.put('nonBillablePct', 0);
+        stats.put('shadowPct', 0);
+    }
+    
+    return stats;
+}
 }

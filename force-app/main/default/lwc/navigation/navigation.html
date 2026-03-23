@@ -1,13 +1,10 @@
 <template>
     <div class="dashboard-wrapper">
-        
+
         <!-- Loading State -->
         <template if:true={isLoading}>
             <div class="loading-spinner">
-                <lightning-spinner 
-                    alternative-text="Loading dashboard..." 
-                    size="large" 
-                    class="main-spinner">
+                <lightning-spinner alternative-text="Loading dashboard..." size="large" class="main-spinner">
                 </lightning-spinner>
             </div>
         </template>
@@ -15,43 +12,62 @@
 
         <!-- Main Dashboard Content -->
         <template if:true={isUserDataReady}>
-            
+
             <!-- Header Section with Real User Data -->
             <div class="dashboard-header">
                 <div class="welcome-section">
                     <h1 class="welcome-title">Welcome back, {employeeName}!</h1>
-                    
+
                 </div>
                 <div class="profile-actions">
-                    <lightning-button-icon 
-                        icon-name="utility:notification" 
-                        variant="border-filled" 
-                        alternative-text="Notifications"
-                        class="notification-btn"
-                        title="Notifications">
+                    <lightning-button-icon icon-name="utility:notification" variant="border-filled"
+                        alternative-text="Notifications" class="notification-btn" title="Notifications">
                     </lightning-button-icon>
                     <div class="profile-avatar" title={displayUserEmail}>
-                        <lightning-icon 
-                            icon-name="standard:user" 
-                            size="medium"
-                            alternative-text="User Profile">
-                        </lightning-icon>
+                        <img src={currentUserPhotoUrl} alt="User Photo" />
                     </div>
                     <div>
-                            <lightning-button
-                                label="Logout"
-                                  variant="base"
-                                    onclick={logout}>
-                                        </lightning-button>
+                        <lightning-button label="Logout" variant="base" onclick={logout}>
+                        </lightning-button>
                     </div>
                 </div>
             </div>
 
 
+
+
+            <template if:true={showPopup}>
+                <section class="slds-modal slds-fade-in-open">
+                    <div class="slds-modal__container">
+                        <header class="slds-modal__header">
+                            <h2 class="slds-text-heading_medium">
+                                Attendance Reminder
+                            </h2>
+                        </header>
+
+                        <div class="slds-modal__content slds-p-around_medium">
+                            <p>
+                                You have not checked in today.
+                                Please check in before noon to mark attendance.
+                            </p>
+                        </div>
+
+                        <footer class="slds-modal__footer">
+                            <lightning-button variant="brand" label="Check In Now" onclick={closePopup}>
+                            </lightning-button>
+                        </footer>
+                    </div>
+                </section>
+
+                <div class="slds-backdrop slds-backdrop_open"></div>
+            </template>
+
+
+
             <!-- Metrics Dashboard -->
             <div class="metrics-grid">
-                
-                <!-- Attendance Rate Metric  (Attendancerate populated ....sri.....)-->
+
+                <!-- Attendance Rate Metric -->
                 <div class="metric-card attendance-metric" onclick={handleAttendanceMetricClick}>
                     <div class="metric-header">
                         <div class="metric-info">
@@ -60,83 +76,136 @@
                             <p class="metric-subtitle">this month</p>
                         </div>
                         <div class="metric-icon attendance-icon">
-                            <lightning-icon 
-                                icon-name="utility:clock" 
-                                size="medium" 
-                                variant="inverse"
+                            <lightning-icon icon-name="utility:clock" size="medium" variant="inverse"
                                 alternative-text="Attendance">
                             </lightning-icon>
                         </div>
                     </div>
                 </div>
 
+                <!-- My Requests Metric Card (MOVED HERE) -->
+                <div class="metric-card requests-metric" onclick={handleLeaveMetricClick}>
+                    <div class="metric-header">
+                        <div class="metric-info">
+                            <h3 class="metric-title">My Approval Requests</h3>
+                            <div class="requests-summary">
+                                <div class="request-row">
+                                    <span class="request-label">🏖️ Leave Pending</span>
+                                    <span class="request-badge leave-badge">{pendingLeaveCount}</span>
+                                </div>
+                                <div class="request-row">
+                                    <span class="request-label">🏖️ Leave Approved</span>
+                                    <span class="request-badge leave-badge">{approvedLeaveCount}</span>
+                                </div>
+                                <div class="request-row">
+                                    <span class="request-label">🏠 WFH Pending</span>
+                                    <span class="request-badge wfh-badge">{pendingWFHCount}</span>
+                                </div>
+                                <div class="request-row">
+                                    <span class="request-label">📄 OD Request Pending</span>
+                                    <span class="request-badge od-badge">{pendingODCount}</span>
+                                </div>
+                                <div class="request-row">
+                                    <span class="request-label">📄 Timesheet Approval Pending</span>
+                                    <span class="request-badge timesheet-badge">{submittedTimesheetCount}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="metric-icon leave-icon">
+                            <lightning-icon icon-name="utility:task" size="medium" variant="inverse"
+                                alternative-text="My Requests">
+                            </lightning-icon>
+                        </div>
+                    </div>
+                </div>
 
-                <!-- Hours This Week Metric -->
+                <!-- Current Month Productivity -->
                 <div class="metric-card hours-metric" onclick={handleHoursMetricClick}>
                     <div class="metric-header">
                         <div class="metric-info">
-                            <h3 class="metric-title">Hours This Week</h3>
-                            <div class="metric-value">{hoursThisWeek}</div>
-                            <p class="metric-subtitle">{overtimeText}</p>
+                            <h3 class="metric-title">{currentMonthName} Productivity</h3>
+                            <div class="metric-value">{productivityPct}%</div>
+                            <p class="metric-subtitle">Approved entries only</p>
+
+                            <div class="billing-summary">
+                                <div class="billing-row">
+                                    <span class="billing-label">💰 Billable</span>
+                                    <span class="billing-pct billable-pct">{billablePct}%</span>
+                                </div>
+                                <div class="billing-row">
+                                    <span class="billing-label">🔧 Non-Billable</span>
+                                    <span class="billing-pct nonbillable-pct">{nonBillablePct}%</span>
+                                </div>
+                                <div class="billing-row">
+                                    <span class="billing-label">👤 Shadow</span>
+                                    <span class="billing-pct shadow-pct">{shadowPct}%</span>
+                                </div>
+                            </div>
                         </div>
                         <div class="metric-icon hours-icon">
-                           <lightning-icon 
-                                icon-name='standard:timesheet_entry' 
-                                alternative-text='Timesheet Entry' 
-                                size='medium' 
-                                title='Hours Worked'
-                                variant="inverse">
+                            <lightning-icon icon-name="utility:chart" size="medium" variant="inverse"
+                                alternative-text="Productivity">
                             </lightning-icon>
                         </div>
                     </div>
                 </div>
 
-
-                <!-- Leave Balance Metric -->
-                <div class="metric-card leave-metric" onclick={handleLeaveMetricClick}>
+                <!-- Last Month Productivity -->
+                <div class="metric-card last-month-metric" onclick={handleHoursMetricClick}>
                     <div class="metric-header">
                         <div class="metric-info">
-                            <h3 class="metric-title">Leave Balance</h3>
-                            <div class="metric-value">{leaveBalance}</div>
-                            <p class="metric-subtitle">days remaining</p>
+                            <h3 class="metric-title">{lastMonthName} Productivity</h3>
+                            <div class="metric-value">{lastMonthProductivityPct}%</div>
+                            <p class="metric-subtitle">Final rating</p>
+
+                            <div class="billing-summary">
+                                <div class="billing-row">
+                                    <span class="billing-label">💰 Billable</span>
+                                    <span class="billing-pct">{lastMonthBillablePct}%</span>
+                                </div>
+                                <div class="billing-row">
+                                    <span class="billing-label">🔧 Non-Billable</span>
+                                    <span class="billing-pct">{lastMonthNonBillablePct}%</span>
+                                </div>
+                                <div class="billing-row">
+                                    <span class="billing-label">👤 Shadow</span>
+                                    <span class="billing-pct">{lastMonthShadowPct}%</span>
+                                </div>
+                                <div class="billing-row pending-row">
+                                    <span class="billing-label">⏳ Pending (Submitted)</span>
+                                    <span class="billing-pct">{lastMonthPendingHours}h</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="metric-icon leave-icon">
-                            <lightning-icon 
-                                icon-name="utility:event" 
-                                size="medium" 
-                                variant="inverse"
-                                alternative-text="Leave Balance">
+                        <div class="metric-icon last-month-icon">
+                            <lightning-icon icon-name="utility:layers" size="medium" variant="inverse"
+                                alternative-text="Last Month">
                             </lightning-icon>
                         </div>
                     </div>
                 </div>
-                
+
             </div>
 
 
             <!-- Navigation Tabs -->
             <div class="tab-container">
-                
+
                 <!-- Tab Navigation Header -->
                 <div class="tab-navigation">
                     <template for:each={tabOptions} for:item="tab">
-                        <button 
-                            key={tab.value} 
-                            class={tab.cssClass} 
-                            data-tab={tab.value}
-                            onclick={handleTabClick}
-                            title={tab.label}
-                            type="button">
+                        <button key={tab.value} class={tab.cssClass} data-tab={tab.value} onclick={handleTabClick}
+                            title={tab.label} type="button">
                             {tab.label}
                         </button>
                     </template>
                 </div>
-                
+
                 <!-- Tab Content Area -->
                 <div class="tab-content">
-                    
+
                     <!-- Overview Tab -->
-                    <template if:true={isOverviewActive}>
+                    <!--<template if:true={isOverviewActive}>
                         <div class="tab-panel">
                             <div class="content-placeholder">
                                 <lightning-icon 
@@ -145,29 +214,30 @@
                                     class="placeholder-icon">
                                 </lightning-icon>
                                 <h3>Overview Dashboard</h3>
-                                
-                               
-                                
+                                                                                       
                             </div>
                         </div>
+                    </template>-->
+                    <template if:true={isOverviewActive}>
+                        <div class="tab-panel overview-panel">
+                            <c-employee-profile current-photo-url={currentUserPhotoUrl}></c-employee-profile>
+                        </div>
                     </template>
-                    
+
                     <!-- Attendance Tab - Child Component -->
                     <template if:true={isAttendanceActive}>
                         <div class="tab-panel attendance-panel">
-                            <c-attendance-component 
-                                employee-id={employeeId}
-                                employee-name={currentUserName}
-                                employee-email={currentUserEmail}
-                                employee-profile={currentUserProfile}>
+                            <c-attendance-component employee-id={employeeId} employee-name={currentUserName}
+                                employee-email={currentUserEmail} employee-profile={currentUserProfile}  onnavigatetowfh={handleNavigateToWFH}>
                             </c-attendance-component>
                         </div>
+                        
                     </template>
-                    
+
                     <!-- Timesheet Tab -->
                     <template if:true={isTimesheetActive}>
                         <div class="tab-panel timesheet-panel">
-                            <c-timesheet-manager></c-timesheet-manager>
+                            <c-timesheet-manager onweektotalupdate={handleWeekTotalUpdate}></c-timesheet-manager>
                         </div>
                     </template>
 
@@ -175,14 +245,11 @@
                     <template if:true={isPayslipActive}>
                         <div class="tab-panel">
                             <div class="content-placeholder">
-                                <lightning-icon 
-                                    icon-name="utility:currency" 
-                                    size="large"
-                                    class="placeholder-icon">
+                                <lightning-icon icon-name="utility:currency" size="large" class="placeholder-icon">
                                 </lightning-icon>
                                 <h3>Payslip & Salary</h3>
                                 <p>Access your payslips and salary information</p>
-                               </div>
+                            </div>
                         </div>
                     </template>
 
@@ -191,10 +258,7 @@
                     <template if:true={isGoalsActive}>
                         <div class="tab-panel">
                             <div class="content-placeholder">
-                                <lightning-icon 
-                                    icon-name="utility:target" 
-                                    size="large"
-                                    class="placeholder-icon">
+                                <lightning-icon icon-name="utility:target" size="large" class="placeholder-icon">
                                 </lightning-icon>
                                 <h3>Goals & Performance</h3>
                                 <p>Track your goals and performance metrics, {displayUserName}</p>
@@ -215,22 +279,75 @@
                     </template>
 
 
-                    <!-- Leave Tab - MODIFIED: Now shows Leave Management Component -->
-                    <template if:true={isLeaveActive}>
+                    <!-- Parent  Tab - MODIFIED: Now shows Request Management Component -->
+                    <template if:true={isEmployeeSelfServiceActive}>
                         <div class="tab-panel leave-panel">
-                            <c-leave-management></c-leave-management>
+                            <c-parent-request active-sub-tab={wfhActiveSubTab}></c-parent-request>
                         </div>
                     </template>
+
+                    <!-- Admin Attendance  Tab -->
+                    <!-- Admin Attendance Tab -->
+                    <template if:true={isAdminAttendanceActive}>
+    <div class="tab-panel adminattendance-panel">
+
+        <!-- Admin user -->
+        <template if:true={showChild}>
+            <c-attendance-management-tabs></c-attendance-management-tabs>
+        </template>
+
+       <!-- Non-admin user -->
+        <template if:false={showChild}>
+            <div class="slds-box slds-theme_alert-texture slds-theme_warning slds-m-around_medium">
+                <strong>Access Restricted</strong>
+                <p class="slds-m-top_small">
+                    Only Admin can view Admin Attendance.
+                </p>
+            </div>
+        </template>
+
+    </div>
+</template>
+
+
+
+
+
+
+
+                    <!-- Admin leave Tab -->
+
+                    <!-- Admin Leave Tab -->
+                    <template if:true={isAdminLeaveActive}>
+    <div class="tab-panel adminleave-panel">
+
+        <!-- Admin user -->
+        <template if:true={showChild}>
+            <c-leave-admin-config></c-leave-admin-config>
+        </template>
+
+        <!-- Non-admin user -->
+        <template if:false={showChild}>
+            <div class="slds-box slds-theme_alert-texture slds-theme_warning slds-m-around_medium">
+                <strong>Access Restricted</strong>
+                <p class="slds-m-top_small">
+                    Only Admin can view Admin Leave.
+                </p>
+            </div>
+        </template>
+
+    </div>
+</template>
+
+
+
 
 
                     <!-- Learning Tab -->
                     <template if:true={isLearningActive}>
                         <div class="tab-panel">
                             <div class="content-placeholder">
-                                <lightning-icon 
-                                    icon-name="utility:education" 
-                                    size="large"
-                                    class="placeholder-icon">
+                                <lightning-icon icon-name="utility:education" size="large" class="placeholder-icon">
                                 </lightning-icon>
                                 <h3>Learning & Development</h3>
                                 <p>Continue your learning journey, {displayUserName}</p>
@@ -250,18 +367,26 @@
                                         </div>
                                     </div>
                                 </div>
-                              
+
                             </div>
                         </div>
                     </template>
-                    
+
                 </div>
             </div>
-            
+
         </template>
 
 
-    <!-- Error State
+
+
+
+
+
+
+
+
+        <!-- Error State
         <template if:false={isUserDataReady}>
             <template if:false={isLoading}>
                 <div class="error-state">
@@ -284,6 +409,11 @@
             </template>
         </template>  -->
 
+
+        <!-- Voice Chat Assistant (Floating) -->
+       <!-- <c-voice-chat-assistant employee-id={employeeId} employee-name={currentUserName}
+            onnavigatetotab={handleVoiceNavigation}>
+        </c-voice-chat-assistant>-->
 
     </div>
 </template>

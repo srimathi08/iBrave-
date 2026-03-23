@@ -1,0 +1,304 @@
+<!-- teamLeadDashboard.html -->
+<template>
+<div class="dash-root">
+
+    <!-- ══ NAV ══ -->
+    <div class="top-nav">
+        <div class="nav-left">
+            <div class="brand-box">Q</div>
+            <span class="brand-txt">QBay HR</span>
+            <span class="brand-tag">Team Lead Portal</span>
+        </div>
+        <div class="nav-right">
+            <div class="mgr-info">
+                <span class="mgr-name">{managerName}</span>
+                <span class="mgr-sub">Team Lead &nbsp;·&nbsp; {teamCount} Members</span>
+            </div>
+            <div class="mgr-avatar">{managerInitials}</div>
+        </div>
+    </div>
+
+    <div class="dash-body">
+
+        <!-- ══ HEADER ══ -->
+        <div class="pg-header">
+            <h1 class="pg-title">My Team</h1>
+            <p class="pg-sub">
+                Employees where <strong>Manager = {managerName}</strong>
+                &nbsp;·&nbsp; {todayDisplay}
+            </p>
+        </div>
+
+        <!-- ══ LOADING ══ -->
+        <template if:true={isLoading}>
+            <div class="spinner-wrap">
+                <lightning-spinner size="medium" alternative-text="Loading"></lightning-spinner>
+                <p class="spin-txt">Fetching records from Salesforce...</p>
+            </div>
+        </template>
+
+        <!-- ══ NO TEAM ══ -->
+        <template if:true={noTeamMembers}>
+            <div class="empty-box">
+                <div class="empty-icon">No Members</div>
+                <h3>No Team Members Found</h3>
+                <p>No Contact records have Manager__c pointing to your User ID.</p>
+            </div>
+        </template>
+
+        <!-- ══ TEAM CARDS ══ -->
+        <template if:true={hasTeam}>
+            <div class="cards-row">
+                <template for:each={teamMembers} for:item="emp">
+                    <div key={emp.Id}
+                         class={emp.cardClass}
+                         data-id={emp.Id}
+                         onclick={handleEmpSelect}>
+                        <template if:true={emp.isSelected}>
+                            <div class="card-bar"></div>
+                        </template>
+                        <div class="card-head">
+                            <div class="card-ava">{emp.initials}</div>
+                            <div class="card-meta">
+                                <div class="card-name">{emp.Name}</div>
+                                <div class="card-id">
+                                    ID: {emp.Employee_Id__c}
+                                </div>
+                            </div>
+                            <template if:true={emp.isSelected}>
+                                <span class="sel-dot">●</span>
+                            </template>
+                        </div>
+                        <div class="card-mgr">
+                            <span class="dot-yellow">●</span>
+                            Reports to &nbsp;<strong>{managerName}</strong>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- ══ DETAIL PANEL ══ -->
+            <template if:true={selectedEmp}>
+            <div class="detail-panel">
+
+                <!-- Panel header -->
+                <div class="panel-hdr">
+                    <div class="panel-emp">
+                        <div class="panel-ava">{selectedEmp.initials}</div>
+                        <div>
+                            <div class="panel-name">{selectedEmp.Name}</div>
+                            <div class="panel-sub">
+                                Employee ID: <strong>{selectedEmp.Employee_Id__c}</strong>
+                                &nbsp;·&nbsp; DOB: {selectedEmp.Birthdate}
+                                &nbsp;·&nbsp; {selectedEmp.Email}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab switcher -->
+                    <div class="tab-bar">
+                        <button class={tabAttClass}
+                                data-tab="attendance"
+                                onclick={handleTabClick}>
+                            Attendance
+                        </button>
+                        <button class={tabTsClass}
+                                data-tab="timesheet"
+                                onclick={handleTabClick}>
+                            Timesheet
+                        </button>
+                        <button class={tabLvClass}
+                                data-tab="leave"
+                                onclick={handleTabClick}>
+                            Leave Requests
+                            <template if:true={hasPending}>
+                                <span class="pend-dot">{pendingCount}</span>
+                            </template>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ══ ATTENDANCE TAB ══ -->
+                <template if:true={isAttendanceTab}>
+
+                    <!-- Summary strip — from Employee_Attendance__c -->
+                    <div class="sum-strip">
+                        <div class="sum-item">
+                            <span class="sum-val">{attendanceSummary.rateDisplay}</span>
+                            <span class="sum-lbl">This Month</span>
+                        </div>
+                        <div class="sum-item">
+                            <span class="sum-val green">{attendanceSummary.present}</span>
+                            <span class="sum-lbl">Present Days</span>
+                        </div>
+                        <div class="sum-item">
+                            <span class="sum-val amber">{attendanceSummary.late}</span>
+                            <span class="sum-lbl">Late Days</span>
+                        </div>
+                        <div class="sum-item">
+                            <span class="sum-val red">{attendanceSummary.absent}</span>
+                            <span class="sum-lbl">Absent Days</span>
+                        </div>
+                    </div>
+
+                    <div class="tbl-wrap">
+                        <div class="tbl-title">
+                            Attendance Records
+                            <span class="obj-tag">Employee_Attendance__c</span>
+                        </div>
+                        <template if:true={hasAttendance}>
+                        <table class="data-tbl">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Day</th>
+                                    <th>Status</th>
+                                    <th>Check In</th>
+                                    <th>Check Out</th>
+                                    <th>Duration</th>
+                                    <th>WFH Status</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={attendanceRecords} for:item="rec">
+                                <tr key={rec.Id}>
+                                    <td class="fw7 dark">{rec.displayDate}</td>
+                                    <td class="muted">{rec.displayDay}</td>
+                                    <td><span class={rec.statusBadge}>{rec.Status__c}</span></td>
+                                    <td>{rec.displayCheckIn}</td>
+                                    <td>{rec.displayCheckOut}</td>
+                                    <td class="fw7 accent">{rec.displayHours}</td>
+                                    <td class="muted">{rec.WFH_Approved_Status__c}</td>
+                                    <td class="muted small">{rec.Notes__c}</td>
+                                </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                        </template>
+                        <template if:false={hasAttendance}>
+                            <div class="no-rec">No attendance records found.</div>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- ══ TIMESHEET TAB ══ -->
+                <template if:true={isTimesheetTab}>
+                <div class="tbl-wrap">
+                    <div class="tbl-title">
+                        Timesheet Entries
+                        <span class="obj-tag">TimesheetEntry__c</span>
+                    </div>
+                    <template if:true={hasTimesheet}>
+                    <table class="data-tbl">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Timesheet</th>
+                                <th>Project</th>
+                                <th>Task</th>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                                <th>Regular Hrs</th>
+                                <th>OT Hrs</th>
+                                <th>Total Hrs</th>
+                                <th>Status</th>
+                                <th>Approval</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={timesheetRecords} for:item="ts">
+                            <tr key={ts.Id}>
+                                <td class="fw7 dark">{ts.displayDate}</td>
+                                <td class="muted small">{ts.tsName}</td>
+                                <td>{ts.projectName}</td>
+                                <td class="muted small">{ts.Task__c}</td>
+                                <td>{ts.displayStart}</td>
+                                <td>{ts.displayEnd}</td>
+                                <td>{ts.regularHrs}</td>
+                                <td class="amber">{ts.overtimeHrs}</td>
+                                <td class="fw7 accent">{ts.totalHrs}</td>
+                                <td><span class={ts.statusBadge}>{ts.Status__c}</span></td>
+                                <td><span class={ts.approvalBadge}>{ts.Approval_Status__c}</span></td>
+                            </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                    </template>
+                    <template if:false={hasTimesheet}>
+                        <div class="no-rec">No timesheet entries found.</div>
+                    </template>
+                </div>
+                </template>
+
+                <!-- ══ LEAVE TAB ══ -->
+                <template if:true={isLeaveTab}>
+                <div class="tbl-wrap">
+                    <div class="tbl-title">
+                        Leave Requests
+                        <span class="obj-tag">Leave_Request__c</span>
+                        <template if:true={hasPending}>
+                            <span class="pend-tag">{pendingCount} Pending</span>
+                        </template>
+                    </div>
+                    <template if:true={hasLeave}>
+                    <div class="leave-list">
+                        <template for:each={leaveRequests} for:item="lr">
+                        <div key={lr.Id} class={lr.cardClass}>
+                            <div class="lv-fields">
+                                <div class="lv-f">
+                                    <span class="lv-lbl">LEAVE TYPE</span>
+                                    <span class="lv-val fw7">{lr.Leave_Type__c}</span>
+                                </div>
+                                <div class="lv-f">
+                                    <span class="lv-lbl">FROM</span>
+                                    <span class="lv-val">{lr.displayFrom}</span>
+                                </div>
+                                <div class="lv-f">
+                                    <span class="lv-lbl">TO</span>
+                                    <span class="lv-val">{lr.displayTo}</span>
+                                </div>
+                                <div class="lv-f">
+                                    <span class="lv-lbl">DAYS</span>
+                                    <span class="lv-val fw7 accent">{lr.displayDays}</span>
+                                </div>
+                                <div class="lv-f">
+                                    <span class="lv-lbl">HALF DAY</span>
+                                    <span class="lv-val">{lr.Is_Half_Day__c}</span>
+                                </div>
+                                <div class="lv-f wide">
+                                    <span class="lv-lbl">REASON</span>
+                                    <span class="lv-val">{lr.Reason__c}</span>
+                                </div>
+                            </div>
+                            <div class="lv-actions">
+                                <span class={lr.statusBadge}>{lr.Status__c}</span>
+                                <template if:true={lr.isPending}>
+                                    <button class="btn-ok"
+                                            data-id={lr.Id}
+                                            onclick={handleApprove}>Approve</button>
+                                    <button class="btn-no"
+                                            data-id={lr.Id}
+                                            onclick={handleReject}>Reject</button>
+                                </template>
+                            </div>
+                        </div>
+                        </template>
+                    </div>
+                    </template>
+                    <template if:false={hasLeave}>
+                        <div class="no-rec">No leave requests found.</div>
+                    </template>
+                </div>
+                </template>
+
+            </div>
+            </template>
+        </template>
+
+        <div class="footer">
+            🔒 Role-based access: only employees where Contact.Manager__c = your User ID are visible
+        </div>
+    </div>
+</div>
+</template>

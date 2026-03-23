@@ -4,7 +4,7 @@
  * @date 2025-11-17
  * @version 1.0 - Initial implementation for hybrid work model
  */
-public with sharing class HybridWorkScheduleController {
+public without sharing class HybridWorkScheduleController {
     
     /**
      * @description Submit a new hybrid work schedule request for approval
@@ -54,13 +54,16 @@ public with sharing class HybridWorkScheduleController {
             ];
             
             if (employee.ManagerId == null) {
-                throw new AuraHandledException('You do not have a manager assigned. Please contact HR.');
+                response.put('success', false);
+            response.put('message', 'You do not have a manager assigned. Please contact HR.');
+            return response;
             }
             
-            // Parse schedule month date
-            Date monthDate = Date.valueOf(scheduleMonth);
-            Date startDate = monthDate.toStartOfMonth();
-            Date endDate = startDate.addMonths(1).addDays(-1); // Last day of month
+            
+           // Parse week start date (Monday of selected week)
+		Date monthDate = Date.valueOf(scheduleMonth);
+		Date startDate = monthDate;           // Week's Monday
+		Date endDate = monthDate.addDays(6);  // Week's Sunday
             
             // Check for existing schedule for the same month
             List<Hybrid_Work_Schedule__c> existingSchedules = [
@@ -73,12 +76,25 @@ public with sharing class HybridWorkScheduleController {
             ];
             
             if (!existingSchedules.isEmpty()) {
-                throw new AuraHandledException(
-                    'You already have a ' + existingSchedules[0].Approval_Status__c + 
-                    ' schedule for ' + monthDate.format() + '. Please cancel it first.'
-                );
+               // throw new AuraHandledException(
+                 //   'You already have a ' + existingSchedules[0].Approval_Status__c + 
+                 //   ' schedule for ' + monthDate.format() + '. Please cancel it first.'
+               // );
+               	 response.put('success', false);
+    response.put(
+        'alert',
+        'You already have a ' + existingSchedules[0].Approval_Status__c +
+        ' schedule for ' + monthDate.format() + '. Please contact your Admin.');
+                return response; //important
             }
             
+        
+        
+        
+        
+        
+        
+        
             // Calculate total WFH and Office days in the month
             Map<String, Integer> dayCounts = calculateMonthlyDayCounts(
                 startDate, endDate, wfhDays, officeDays
@@ -105,42 +121,34 @@ public with sharing class HybridWorkScheduleController {
             System.debug('✅ Hybrid schedule created: ' + schedule.Id);
             
             // Send approval email to manager
-            Boolean emailSent = sendApprovalEmailToManager(schedule.Id, employee);
+        Boolean emailSent = sendEmailToManager(schedule.Id, employee);
+
             
-            // Build success response
-            response.put('success', true);
-            response.put('scheduleId', schedule.Id);
-            response.put('scheduleName', schedule.Name);
-            response.put('approvalStatus', schedule.Approval_Status__c);
-            response.put('managerName', employee.Manager.Name);
-            response.put('emailSent', emailSent);
-            response.put('totalWFHDays', dayCounts.get('wfhDays'));
-            response.put('totalOfficeDays', dayCounts.get('officeDays'));
-            response.put('message', 'Hybrid work schedule submitted successfully. Approval request sent to ' + employee.Manager.Name);
-            
-            System.debug('=== SCHEDULE SUBMISSION SUCCESSFUL ===');
-            
-        } catch (QueryException qe) {
-            System.debug('❌ Query Exception: ' + qe.getMessage());
-            response.put('success', false);
-            response.put('error', 'Employee or manager not found');
+			response.put('success', true);
+			response.put('scheduleId', schedule.Id);
+            response.put('message', 'Request submitted successfully. ' + 
+            (emailSent ? 'Manager notified via email.' : 'Email notification failed.'));
+return response;
         } catch (DmlException dmlEx) {
-            System.debug('❌ DML Exception: ' + dmlEx.getMessage());
-            response.put('success', false);
-            response.put('error', 'Failed to create schedule: ' + dmlEx.getDmlMessage(0));
-        } catch (AuraHandledException ahe) {
-            System.debug('❌ Validation Error: ' + ahe.getMessage());
-            response.put('success', false);
-            response.put('error', ahe.getMessage());
-        } catch (Exception e) {
-            System.debug('❌ Unexpected Error: ' + e.getMessage());
-            System.debug('Stack Trace: ' + e.getStackTraceString());
-            response.put('success', false);
-            response.put('error', 'Unexpected error: ' + e.getMessage());
-        }
-        
+        System.debug('❌ DML Error: ' + dmlEx.getMessage());
+        response.put('success', false);
+        response.put('message', 'Database error: ' + dmlEx.getDmlMessage(0));
         return response;
+
+            
+        }catch (Exception e) {
+            System.debug('❌ Error: ' + e.getMessage());
+        System.debug('Stack Trace: ' + e.getStackTraceString());
+        response.put('success', false);
+        response.put('message', 'Error: ' + e.getMessage());
+        return response;
+        }
+            
+
     }
+
+       
+    
     
     /**
      * @description Calculate how many WFH and Office days occur in the month
@@ -206,44 +214,82 @@ public with sharing class HybridWorkScheduleController {
      * @param employee User record with manager details
      * @return Boolean Email sent successfully
      */
-    public static Boolean sendApprovalEmailToManager(Id scheduleId, User employee) {
-        try {
-            System.debug('📧 Sending approval email to manager...');
+ public static Boolean sendEmailToManager(Id scheduleId, User employee) {
+    try {
+                  // Query schedule
+        Hybrid_Work_Schedule__c schedule = [
+            SELECT Id, Name, Schedule_Month__c, Start_Date__c, End_Date__c,
+                   WFH_days__c, Office_Days__c, Schedule_Type__c, Reason__c,
+                   Total_WFH_Days__c, Total_Office_Days__c
+            FROM Hybrid_Work_Schedule__c
+            WHERE Id = :scheduleId
+            LIMIT 1
+        ];
             
-            // Query the schedule with all details
-            Hybrid_Work_Schedule__c schedule = [
-                SELECT Id, Name, Schedule_Month__c, Start_Date__c, End_Date__c,
-                       WFH_days__c, Office_Days__c, Schedule_Type__c, Reason__c,
-                       Total_WFH_Days__c, Total_Office_Days__c
-                FROM Hybrid_Work_Schedule__c
-                WHERE Id = :scheduleId
-                LIMIT 1
-            ];
+            // Get base URL and build approval page URL
+            //String baseUrl = System.URL.getOrgDomainUrl().toExternalForm();
+        //String baseUrl  = 'https://innovation-dream-9744--uatsandbox.sandbox.my.salesforce-sites.com/HybridApproval';
+        String baseUrl  = 'https://innovation-dream-9744.my.salesforce-sites.com/HybridApproval';
+        
+        
+        
+           // String approvalUrl = baseUrl + '/lightning/r/Leave_Request__c/' + request.Id + '/view';
+           //         // ✅ Build Visualforce Approval Page URL
+        //String baseUrl = URL.getSalesforceBaseUrl().toExternalForm();
+        String approvalUrl = baseUrl + '/apex/HybrideSchedulePage' + '?id=' + schedule.Id + '&mgr=' + employee.ManagerId;
             
-            // Build email
-            Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
-            email.setToAddresses(new List<String>{ employee.Manager.Email });
-            email.setSubject('🏠 Hybrid Work Schedule Approval Request - ' + employee.Name);
+            Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+            mail.setToAddresses(new String[] { employee.Manager.Email });
+            mail.setSubject('🏠 Hybrid Work Schedule Approval Request ' + employee.Name);
+              //mail.setOrgWideEmailAddressId('0D2fs00000001tl');
+// ✅ Dynamic org-wide email address
+            OrgWideEmailAddress owea = [SELECT Id FROM OrgWideEmailAddress WHERE IsAllowAllProfiles = true LIMIT 1];
+            mail.setOrgWideEmailAddressId(owea.Id);
             
-            // HTML Email Body
-            String htmlBody = buildManagerApprovalEmailHTML(schedule, employee);
-            email.setHtmlBody(htmlBody);
+            String body = '<html><body style="font-family: Arial, sans-serif;">';
+            body += '<h2 style="color: #0176d3;">New Hybrid Work Schedule Request Pending Approval</h2>';
+            body += '<p>Dear ' + employee.Manager.Name + ',</p>';
+            body += '<p>' + employee.Name + ' has requested Hybrid work schedule. Please review and approve/reject:</p>';
+            body += '<table border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse; width: 100%; max-width: 600px;">';
+            body += '<tr style="background-color: #f3f3f3;"><td><strong>Employee</strong></td><td>' + employee.Name + '</td></tr>';
+            body += '<tr><td><strong>Email</strong></td><td>' + employee.Email + '</td></tr>';
+            body += '<tr style="background-color: #f3f3f3;"><td><strong>Schedule Type</strong></td><td>' + schedule.Schedule_Type__c+ '</td></tr>';
+            body += '<tr><td><strong>Work From Home Days</strong></td><td>' + schedule.WFH_days__c.replace(';', ', ') + '</td></tr>';
+            body += '<tr style="background-color: #f3f3f3;"><td><strong>Work From Office Days</strong></td><td>' + schedule.Office_Days__c.replace(';', ', ')  + '</td></tr>';
+            body += '<tr><td><strong>Total WFH Days</strong></td><td>' + schedule.Total_WFH_Days__c  + '</td></tr>';
+            body += '<tr><td><strong>Total Office Days</strong></td><td>' + schedule.Total_Office_Days__c + '</td></tr>';
             
-            // Plain text fallback
-            String plainBody = buildManagerApprovalEmailPlainText(schedule, employee);
-            email.setPlainTextBody(plainBody);
+            body += '<tr><td><strong>Reason</strong></td><td>' + schedule.Reason__c + '</td></tr>';
             
-            // Send email
-            Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ email });
+            body += '</table>';
+            body += '<br/>';
+            body += '<div style="text-align: center; margin: 30px 0;">';
+            body += '<a href="' + approvalUrl + '" style="background-color: #0176d3; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">Click here to review</a>';
+            body += '</div>';
+            body += '<p style="color: #666; font-size: 12px;">Click the button above to view the Hybrid work schedule request in Salesforce.</p>';
+            body += '<p>Thank you,<br/><strong>HR Management System</strong></p>';
+            body += '</body></html>';
             
-            System.debug('✅ Approval email sent to: ' + employee.Manager.Email);
+            mail.setHtmlBody(body);
+            
+           // Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
+             Messaging.SendEmailResult[] results = Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
+         //return true; // ✅ REQUIRED
+        
+        if (results[0].isSuccess()) {
+            System.debug('✅ Email sent successfully to manager');
             return true;
-            
-        } catch (Exception e) {
-            System.debug('⚠️ Failed to send approval email: ' + e.getMessage());
+        } else {
+            System.debug('❌ Email failed: ' + results[0].getErrors()[0].getMessage());
             return false;
         }
-    }
+            
+        } catch (Exception e) {
+            System.debug('Error sending email: ' + e.getMessage());
+             return false; // ✅ REQUIRED
+        }
+}
+
     
     /**
      * @description Build HTML email body for manager approval
@@ -251,8 +297,11 @@ public with sharing class HybridWorkScheduleController {
      */
     public static String buildManagerApprovalEmailHTML(Hybrid_Work_Schedule__c schedule, User employee) {
         // ✅ FIXED: Use getOrgDomainUrl() instead of deprecated getSalesforceBaseUrl()
-        String baseUrl = URL.getOrgDomainUrl().toExternalForm();
-        String approveUrl = baseUrl + '/lightning/r/Hybrid_Work_Schedule__c/' + schedule.Id + '/view';
+        //String baseUrl  = 'https://innovation-dream-9744--uatsandbox.sandbox.my.salesforce-sites.com/HybridApproval';
+ String baseUrl  = 'https://innovation-dream-9744.my.salesforce-sites.com/HybridApproval';
+          String approvalUrl = baseUrl + '/apex/HybrideSchedulePage' + '?id=' + schedule.Id + '&mgr=' + employee.ManagerId;
+
+
         
         String monthName = schedule.Schedule_Month__c.format();
         
@@ -289,7 +338,7 @@ public with sharing class HybridWorkScheduleController {
         
         // Action Buttons
         html += '<div style="text-align: center; margin: 30px 0;">';
-        html += '<a href="' + approveUrl + '" style="background: #28a745; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 0 10px; display: inline-block;">✅ Review & Approve</a>';
+        html += '<a href="' + approvalUrl + '" style="background: #28a745; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 0 10px; display: inline-block;">✅ Review & Approve</a>';
         html += '</div>';
         
         html += '<p style="color: #666; font-size: 14px;">Please review and take action on this request at your earliest convenience.</p>';
@@ -315,8 +364,12 @@ public with sharing class HybridWorkScheduleController {
         String monthName = schedule.Schedule_Month__c.format();
         
         // ✅ FIXED: Use getOrgDomainUrl() instead of deprecated getSalesforceBaseUrl()
-        String baseUrl = URL.getOrgDomainUrl().toExternalForm();
-        String approveUrl = baseUrl + '/lightning/r/Hybrid_Work_Schedule__c/' + schedule.Id + '/view';
+       // String baseUrl = URL.getOrgDomainUrl().toExternalForm();
+        //String approveUrl = baseUrl + '/lightning/r/HybrideSchedulePage/' + schedule.Id + '/view';
+        
+         // String baseUrl  = 'https://innovation-dream-9744--uatsandbox.sandbox.my.salesforce-sites.com/HybridApproval';
+ String baseUrl  = 'https://innovation-dream-9744.my.salesforce-sites.com/HybridApproval';
+          String approvalUrl = baseUrl + '/apex/HybrideSchedulePage' + '?id=' + schedule.Id + '&mgr=' + employee.ManagerId;
         
         String text = '🏠 HYBRID WORK SCHEDULE APPROVAL REQUEST\n\n';
         text += 'Hello ' + employee.Manager.Name + ',\n\n';
@@ -331,7 +384,7 @@ public with sharing class HybridWorkScheduleController {
         text += '- Total Office Days in Month: ' + schedule.Total_Office_Days__c + '\n\n';
         text += '💬 REASON:\n' + schedule.Reason__c + '\n\n';
         text += 'To review and approve this request, please visit:\n';
-        text += approveUrl + '\n\n';
+        text += approvalUrl + '\n\n';
         text += 'Thank you,\nHRMS Attendance System';
         
         return text;
@@ -436,7 +489,10 @@ public with sharing class HybridWorkScheduleController {
             
             Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
             email.setToAddresses(new List<String>{ schedule.Employee__r.Email });
-            
+            //email.setOrgWideEmailAddressId('0D2fs00000001tl'); // ✅ ADD THIS LINE
+            // ✅ Dynamic org-wide email address
+            OrgWideEmailAddress owea = [SELECT Id FROM OrgWideEmailAddress WHERE IsAllowAllProfiles = true LIMIT 1];
+            email.setOrgWideEmailAddressId(owea.Id);
             String monthName = schedule.Schedule_Month__c.format();
             
             if (action == 'Approve') {
@@ -483,9 +539,14 @@ public with sharing class HybridWorkScheduleController {
                 email.setHtmlBody(htmlBody);
             }
             
-            Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ email });
+           // Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ email });
+                   Messaging.SendEmailResult[] results = Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ email });
             
-            System.debug('✅ Notification sent to employee');
+             if (results[0].isSuccess()) {
+            System.debug('✅ Employee notification sent successfully');
+        } else {
+            System.debug('❌ Employee notification failed: ' + results[0].getErrors()[0].getMessage());
+        }
             
         } catch (Exception e) {
             System.debug('⚠️ Failed to send employee notification: ' + e.getMessage());
@@ -579,7 +640,7 @@ public with sharing class HybridWorkScheduleController {
      * @param employeeId Employee ID
      * @return List of schedules
      */
-    @AuraEnabled(cacheable=true)
+   /** @AuraEnabled(cacheable=true)
     public static List<Hybrid_Work_Schedule__c> getEmployeeSchedules(String employeeId) {
         try {
             return [
@@ -587,7 +648,7 @@ public with sharing class HybridWorkScheduleController {
                        WFH_days__c, Office_Days__c, Schedule_Type__c,
                        Approval_Status__c, Is_Active__c, Approval_Date__c,
                        Total_WFH_Days__c, Total_Office_Days__c, Reason__c,
-                       Rejection_Reason__c, Manager__r.Name
+                       Rejection_Reason__c, Employee__r.Manager.Name
                 FROM Hybrid_Work_Schedule__c
                 WHERE Employee__c = :employeeId
                 ORDER BY Schedule_Month__c DESC
@@ -596,8 +657,69 @@ public with sharing class HybridWorkScheduleController {
         } catch (Exception e) {
             System.debug('❌ Error fetching schedules: ' + e.getMessage());
             throw new AuraHandledException('Failed to fetch schedules: ' + e.getMessage());
-        }
+        }      
+    }*/
+
+
+@AuraEnabled(cacheable=true)
+public static List<Map<String, Object>> getEmployeeSchedules(String employeeId) {
+
+    // 1️⃣ Fetch employee manager safely
+    User emp = [
+        SELECT Id, Manager.Name
+        FROM User
+        WHERE Id = :employeeId
+        LIMIT 1
+    ];
+
+    String managerName =
+        emp.Manager != null ? emp.Manager.Name : null;
+
+    // 2️⃣ Fetch schedules
+    List<Hybrid_Work_Schedule__c> schedules = [
+        SELECT Id, Name, Schedule_Month__c, Start_Date__c, End_Date__c,
+               WFH_days__c, Office_Days__c, Schedule_Type__c,
+               Approval_Status__c, Is_Active__c, Approval_Date__c,
+               Total_WFH_Days__c, Total_Office_Days__c,
+               Reason__c, Rejection_Reason__c
+        FROM Hybrid_Work_Schedule__c
+        WHERE Employee__c = :employeeId
+        ORDER BY Schedule_Month__c DESC
+        LIMIT 50
+    ];
+
+    // 3️⃣ Build response (FLATTENED)
+    List<Map<String, Object>> response = new List<Map<String, Object>>();
+
+    for (Hybrid_Work_Schedule__c s : schedules) {
+        Map<String, Object> row = new Map<String, Object>();
+
+        row.put('Id', s.Id);
+        row.put('Name', s.Name);
+        row.put('Schedule_Month__c', s.Schedule_Month__c);
+        row.put('Start_Date__c', s.Start_Date__c);
+        row.put('End_Date__c', s.End_Date__c);
+        row.put('WFH_days__c', s.WFH_days__c);
+        row.put('Office_Days__c', s.Office_Days__c);
+        row.put('Schedule_Type__c', s.Schedule_Type__c);
+        row.put('Approval_Status__c', s.Approval_Status__c);
+        row.put('Is_Active__c', s.Is_Active__c);
+        row.put('Approval_Date__c', s.Approval_Date__c);
+        row.put('Total_WFH_Days__c', s.Total_WFH_Days__c);
+        row.put('Total_Office_Days__c', s.Total_Office_Days__c);
+        row.put('Reason__c', s.Reason__c);
+        row.put('Rejection_Reason__c', s.Rejection_Reason__c);
+
+        // ✅ COMMUNITY SAFE
+        row.put('managerName', managerName);
+
+        response.add(row);
     }
+
+    return response;
+}
+
+
     
     /**
      * @description Get pending approval requests for a manager
@@ -623,5 +745,31 @@ public with sharing class HybridWorkScheduleController {
             System.debug('❌ Error fetching pending approvals: ' + e.getMessage());
             throw new AuraHandledException('Failed to fetch pending approvals: ' + e.getMessage());
         }
+    }
+    
+    
+      @AuraEnabled(cacheable=true)
+    public static String getEmployeeManagerName() {
+        // Get logged-in user
+        User u = [
+            SELECT ContactId
+            FROM User
+            WHERE Id = :UserInfo.getUserId()
+            LIMIT 1
+        ];
+
+        if (u.ContactId == null) {
+            return null;
+        }
+
+        // Fetch Contact + Manager
+        Contact c = [
+            SELECT Manager__r.Name
+            FROM Contact
+            WHERE Id = :u.ContactId
+            LIMIT 1
+        ];
+
+        return c.Manager__r != null ? c.Manager__r.Name : null;
     }
 }

@@ -215,7 +215,6 @@ System.debug('Error in getFilterOptions: ' + e.getMessage());
         @AuraEnabled public String projectName;
         @AuraEnabled public Date entryDate;
         @AuraEnabled public Decimal hours;
-        @AuraEnabled public String description;
         @AuraEnabled public String status;
     }
 }*/
@@ -337,7 +336,6 @@ public with sharing class TimesheetAdminController {
                                      entry.Project__r.Name : 'N/A';
                 wrapper.entryDate = entry.Date__c;
                 wrapper.hours = entry.Total_Hours__c != null ? entry.Total_Hours__c : 0;
-                wrapper.description = entry.Task__c != null ? entry.Task__c : '';
                 wrapper.status = entry.Approval_Status__c != null ? entry.Approval_Status__c : 'Pending';
                 wrappers.add(wrapper);
             }
@@ -508,7 +506,6 @@ public static List<String> searchFilterOptions(String filterType, String searchT
         @AuraEnabled public String projectName;
         @AuraEnabled public Date entryDate;
         @AuraEnabled public Decimal hours;
-        @AuraEnabled public String description;
         @AuraEnabled public String status;
     }
 }

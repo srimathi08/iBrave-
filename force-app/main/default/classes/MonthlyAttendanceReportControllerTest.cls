@@ -4,23 +4,24 @@ public class MonthlyAttendanceReportControllerTest {
     /* -------------------------
        CREATE USER
     --------------------------*/
-    private static User createUser(String firstName, Id managerId, String dept, Decimal empId) {
-        Profile p = [SELECT Id FROM Profile WHERE Name = 'Standard User' LIMIT 1];
+    private static User createUser(String firstName, Id managerId, String dept, String empId) {
+
+        Id profileId = UserInfo.getProfileId();
 
         User u = new User(
             FirstName = firstName,
             LastName = 'Test',
-            Alias = firstName.substring(0, 3),
+            Alias = firstName.length() >= 3 ? firstName.substring(0, 3) : 'tst',
             Email = firstName + '@test.com',
             Username = firstName + Datetime.now().getTime() + '@test.com',
             TimeZoneSidKey = 'Asia/Kolkata',
             LocaleSidKey = 'en_IN',
             EmailEncodingKey = 'UTF-8',
             LanguageLocaleKey = 'en_US',
-            ProfileId = p.Id,
+            ProfileId = profileId,
             ManagerId = managerId,
             Department = dept,
-            Employee_Id__c = empId,              // ✅ FIXED (Decimal)
+            Employee_IDs__c = empId,
             Date_of_Joining__c = Date.today().addMonths(-6)
         );
         insert u;
@@ -33,27 +34,21 @@ public class MonthlyAttendanceReportControllerTest {
     @IsTest
     static void testGenerateMonthlyReport() {
 
-        /* Manager */
-        User manager = createUser('Manager', null, 'HR', 9001);
+        User manager = createUser('Manager', null, 'HR', '9001');
+        User emp = createUser('Employee1', manager.Id, 'HR', '9002');
 
-        /* Employee */
-        User emp = createUser('Employee1', manager.Id, 'HR', 9002);
-
-        /* Branch (NO Name field) */
         Branch__c branch = new Branch__c(
             Branch_Name__c = 'Chennai HO',
             City__c = 'Chennai'
         );
         insert branch;
 
-        /* Holiday */
         Holiday__c holiday = new Holiday__c(
-           Holiday_Type__c = 'Public Holiday',
+            Holiday_Type__c = 'Public Holiday',
             Holiday_Date__c = Date.newInstance(2025, 1, 26)
         );
         insert holiday;
 
-        /* Leave Types */
         Leave_Type__c cl = new Leave_Type__c(
             Leave_Type_Name__c = 'Casual Leave',
             Leave_Code__c = 'CL'
@@ -66,7 +61,6 @@ public class MonthlyAttendanceReportControllerTest {
 
         insert new List<Leave_Type__c>{ cl, lop };
 
-        /* Attendance - Present */
         Employee_Attendance__c attendance = new Employee_Attendance__c(
             Employee_Name__c = emp.Id,
             Date__c = Date.newInstance(2025, 1, 10),
@@ -77,7 +71,6 @@ public class MonthlyAttendanceReportControllerTest {
         );
         insert attendance;
 
-        /* Paid Leave */
         Leave_Request__c paidLeave = new Leave_Request__c(
             Employee__c = emp.Id,
             Start_Date__c = Date.newInstance(2025, 1, 15),
@@ -85,11 +78,10 @@ public class MonthlyAttendanceReportControllerTest {
             Status__c = 'Approved',
             Leave_Type__c = cl.Id,
             Is_Half_Day__c = false,
-            Total_Days__c = 100
+            Total_Days__c = 1
         );
         insert paidLeave;
 
-        /* LOP Leave */
         Leave_Request__c lopLeave = new Leave_Request__c(
             Employee__c = emp.Id,
             Start_Date__c = Date.newInstance(2025, 1, 20),
@@ -97,7 +89,7 @@ public class MonthlyAttendanceReportControllerTest {
             Status__c = 'Approved',
             Leave_Type__c = lop.Id,
             Is_Half_Day__c = false,
-            Total_Days__c = 100
+            Total_Days__c = 1
         );
         insert lopLeave;
 
@@ -110,7 +102,6 @@ public class MonthlyAttendanceReportControllerTest {
 
         Test.stopTest();
 
-        /* Assertions */
         System.assertEquals(true, result.get('success'));
         System.assertEquals(1, result.get('totalEmployees'));
 
@@ -129,32 +120,50 @@ public class MonthlyAttendanceReportControllerTest {
     --------------------------*/
     @IsTest
     static void testGetDepartments() {
+
+        // Create user with department
+        createUser('DeptUser', null, 'Finance', '8001');
+
         Test.startTest();
         List<String> depts = MonthlyAttendanceReportController.getDepartments();
         Test.stopTest();
+
         System.assert(depts.size() > 0);
+        System.assert(depts.contains('Finance'));
     }
 
     /* -------------------------
        MANAGERS
     --------------------------*/
-    @IsTest
-    static void testGetManagers() {
-        Test.startTest();
-        List<Map<String, String>> managers =
-            MonthlyAttendanceReportController.getManagers();
-        Test.stopTest();
+   @IsTest
+static void testGetManagers() {
 
-        System.assert(managers.size() > 0);
-        System.assert(managers[0].containsKey('Id'));
-        System.assert(managers[0].containsKey('Name'));
-    }
+    // Create manager
+    User manager = createUser('MainManager', null, 'HR', '7001');
+
+    // Create employee reporting to manager
+    createUser('SubEmployee', manager.Id, 'HR', '7002');
+
+    Test.startTest();
+    List<Map<String, String>> managers =
+        MonthlyAttendanceReportController.getManagers();
+    Test.stopTest();
+
+    System.assert(managers.size() > 0);
+    System.assert(managers[0].containsKey('Id'));
+    System.assert(managers[0].containsKey('Name'));
+}
+ 
 
     /* -------------------------
        EXCEL EXPORT
     --------------------------*/
     @IsTest
     static void testExportReportToExcel() {
+
+        // Need at least one user for export logic
+        createUser('ExportUser', null, 'IT', '6001');
+
         Test.startTest();
 
         Map<String, Object> result =

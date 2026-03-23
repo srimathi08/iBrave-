@@ -149,7 +149,7 @@ export default class LeaveBalanceMatrix extends LightningElement {
         data.forEach(balance => {
             const empId = balance.Employee__c;
             const empName = balance.Employee__r.Name;
-            const empEmployeeId = balance.Employee__r.Employee_Id__c;
+            const empEmployeeId = balance.Employee__r.Employee_IDs__c;
             const empDepartment = balance.Employee__r.Department;
             const empGender = balance.Employee__r.Gender__c;
             const empMaritalStatus = balance.Employee__r.Marital_Status__c;

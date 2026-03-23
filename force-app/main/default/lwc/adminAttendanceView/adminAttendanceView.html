@@ -63,7 +63,7 @@
                 <!-- Row 1: Employee ID, Employee Name, Date Range, Department -->
                 <div class="filter-row">
                     <!-- Employee ID Dropdown -->
-                    <div class="filter-col">
+                <!--    <div class="filter-col">
                         <label class="filter-label">Employee ID</label>
                         <lightning-combobox
                             name="employeeId"
@@ -73,10 +73,10 @@
                             onchange={handleEmployeeIdChange}
                             class="filter-input">
                         </lightning-combobox>
-                    </div>
+                    </div>-->
 
                     <!-- Employee Name Dropdown -->
-                    <div class="filter-col">
+                  <!-- <div class="filter-col">
                         <label class="filter-label">Employee Name</label>
                         <lightning-combobox
                             name="employeeName"
@@ -86,7 +86,81 @@
                             onchange={handleEmployeeNameChange}
                             class="filter-input">
                         </lightning-combobox>
-                    </div>
+                    </div>--> 
+
+    <!-- Employee ID Searchable Field -->
+    <div class="filter-col">
+        <label class="filter-label">Employee ID</label>
+        <div class="search-field-wrapper">
+            <lightning-input
+                type="text"
+                name="employeeId"
+                value={employeeIdFilter}
+                onchange={handleEmployeeIdChange}
+                placeholder="Search Employee ID"
+                class="filter-input">
+            </lightning-input>
+            <template if:true={showEmployeeIdSuggestions}>
+                <div class="suggestions-dropdown">
+                    <template for:each={employeeIdSuggestions} for:item="emp">
+                        <div key={emp.Id} 
+                             class="suggestion-item" 
+                             data-id={emp.Id}
+                             data-name={emp.Name}
+                             data-empid={emp.Employee_IDs__c}
+                             onclick={handleEmployeeIdSuggestionClick}>
+                            <div class="suggestion-main">
+                                <lightning-icon icon-name="standard:user" size="x-small"></lightning-icon>
+                                <span class="emp-id">{emp.Employee_IDs__c}</span> - <span class="emp-name">{emp.Name}</span>
+                            </div>
+                            <template if:true={emp.Department}>
+                                <div class="suggestion-meta">{emp.Department}</div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- Employee Name Searchable Field -->
+    <div class="filter-col">
+        <label class="filter-label">Employee Name</label>
+        <div class="search-field-wrapper">
+            <lightning-input
+                type="text"
+                name="employeeName"
+                value={employeeNameFilter}
+                onchange={handleEmployeeNameChange}
+                placeholder="Search by name"
+                class="filter-input">
+            </lightning-input>
+            <template if:true={showEmployeeNameSuggestions}>
+                <div class="suggestions-dropdown">
+                    <template for:each={employeeNameSuggestions} for:item="emp">
+                        <div key={emp.Id} 
+                             class="suggestion-item" 
+                             data-id={emp.Id}
+                             data-name={emp.Name}
+                             data-empid={emp.Employee_IDs__c}
+                             onclick={handleEmployeeNameSuggestionClick}>
+                            <div class="suggestion-main">
+                                <lightning-icon icon-name="standard:user" size="x-small"></lightning-icon>
+                                <span class="emp-name">{emp.Name}</span> - <span class="emp-id">ID: {emp.Employee_IDs__c}</span>
+                            </div>
+                            <template if:true={emp.Department}>
+                                <div class="suggestion-meta">{emp.Department}</div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </div>
+    </div>
+
+
+
+
 
                     <!-- Date Range -->
                     <div class="filter-col date-range-col">

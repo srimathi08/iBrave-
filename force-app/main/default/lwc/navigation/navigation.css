@@ -110,10 +110,16 @@
 }
 
 
+.last-month-metric {
+    background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+    border-left: 4px solid #9c27b0;
+}
+
+
 .metric-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
 }
 
 
@@ -150,14 +156,15 @@
 
 
 .metric-icon {
-    width: 56px;
-    height: 56px;
+    width: 48px;
+    height: 48px;
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
     opacity: 0.9;
+    margin-top: 10px;
 }
 
 
@@ -173,6 +180,11 @@
 
 .leave-icon {
     background: #ff9800;
+}
+
+
+.last-month-icon {
+    background: #9c27b0;
 }
 
 
@@ -640,4 +652,142 @@
         flex-direction: column;
         gap: 8px;
     }
+}
+
+.requests-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.request-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+}
+
+.request-label {
+    color: #444;
+    font-weight: 500;
+}
+
+.request-badge {
+    font-weight: 700;
+    font-size: 13px;
+    padding: 2px 10px;
+    border-radius: 12px;
+    min-width: 28px;
+    text-align: center;
+}
+
+.leave-badge {
+    background-color: #fde8e8;
+    color: #c0392b;
+}
+
+.wfh-badge {
+    background-color: #e8f4fd;
+    color: #2471a3;
+}
+
+.timesheet-badge {
+    background-color: #e9f7ef;
+    color: #1e8449;
+}
+.billing-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-top: 8px;
+}
+
+.billing-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+}
+
+.approved-row .billing-label {
+    color: #27ae60;
+    font-weight: 600;
+}
+
+.pending-row {
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px dashed rgba(0,0,0,0.1);
+}
+
+.pending-row .billing-label {
+    color: #e67e22;
+    font-weight: 600;
+}
+
+.billing-label {
+    color: #444;
+    font-weight: 500;
+    min-width: 85px;
+}
+
+.billing-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mini-bar-track {
+    width: 55px;
+    height: 6px;
+    background-color: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.mini-bar {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.4s ease;
+}
+
+.billable-bar    { background-color: #27ae60; }
+.nonbillable-bar { background-color: #e67e22; }
+.shadow-bar      { background-color: #8e44ad; }
+
+.billing-pct {
+    font-weight: 700;
+    font-size: 12px;
+    min-width: 36px;
+    text-align: right;
+}
+
+.billable-pct    { color: #27ae60; }
+.nonbillable-pct { color: #e67e22; }
+.shadow-pct      { color: #8e44ad; }
+
+
+/* My Approval Requests card - matches orange leave card style */
+.requests-metric {
+    background: linear-gradient(135deg, #fff8f0 0%, #ffecd9 100%);
+    border-left: 4px solid #f59e0b;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.requests-metric:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(245, 158, 11, 0.2);
+}
+
+/* Match the icon background color */
+.requests-metric .metric-icon {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    border-radius: 12px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }

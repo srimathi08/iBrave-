@@ -9,6 +9,8 @@ private class OnboardingCompleteControllerTest {
             Personal_Email__c = 'john@test.com',
             Phone_No__c = '9999999999',
             Source_Of_Applicant__c = 'Referred',
+			Date_Of_Birth__c = Date.newInstance(2000, 12, 1),
+			Designations__c= 'Trainee Consultant',
             Offer_Acceptance_Token__c = 'ABC123TOKEN'
         );
         insert cand;

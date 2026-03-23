@@ -10,6 +10,9 @@ public without sharing class TimesheetApprovalController {
     public Boolean isLoading { get; set; }
     public String message { get; set; }
     
+	public static final String STATUS_SUBMITTED = 'Submitted';
+	public static final String STATUS_APPROVED  = 'Approved';
+	public static final String STATUS_REJECTED  = 'Rejected';
     // Timesheet details
     public String employeeName { get; set; }
     public Integer weekNumber { get; set; }
@@ -75,7 +78,7 @@ public without sharing class TimesheetApprovalController {
             }
             
             // Check if already processed
-            if (timesheet.Approval_Status__c != 'Submitted') {
+            if (timesheet.Approval_Status__c != STATUS_SUBMITTED) {
                 showMessage = true;
                 isSuccess = true;
                 message = 'This timesheet has already been ' + timesheet.Approval_Status__c.toLowerCase() + '.';
@@ -92,7 +95,7 @@ public without sharing class TimesheetApprovalController {
             
             // Load timesheet entries (READ ONLY)
             entries = [
-                SELECT Id, Date__c, Project__r.Name, Task__c, Description__c,
+                SELECT Id, Date__c, Project__r.Name, Task__c,
                        Total_Hours__c, Regular_Hours__c, Overtime_Hours__c
                 FROM TimesheetEntry__c
                 WHERE Timesheet__c = :timesheet.Id
@@ -263,21 +266,25 @@ public without sharing class TimesheetApprovalController {
             mail.setSubject('Timesheet ' + status + ': Week ' + weekNumber + ', ' + weekYear);
             mail.setHtmlBody(html);
             mail.setSaveAsActivity(false);
-            
-            // Use Org-Wide Email if available
-            List<OrgWideEmailAddress> owea = [
-                SELECT Id 
-                FROM OrgWideEmailAddress 
-                WHERE DisplayName = 'Timesheet Notifications' 
-                OR DisplayName = 'No Reply'
-                LIMIT 1
-            ];
-            
-            if (!owea.isEmpty()) {
-                mail.setOrgWideEmailAddressId(owea[0].Id);
-            }
-            
-            Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
+            // ✅ SAFE ORG-WIDE EMAIL RESOLUTION
+		List<OrgWideEmailAddress> oweaList = [
+    SELECT Id FROM OrgWideEmailAddress WHERE IsAllowAllProfiles = true LIMIT 1
+];
+
+if (!oweaList.isEmpty()) {
+    mail.setOrgWideEmailAddressId(oweaList[0].Id);
+}
+      
+    Messaging.SendEmailResult[] res =
+    Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
+
+if (!res[0].isSuccess()) {
+    for (Messaging.SendEmailError err : res[0].getErrors()) {
+        System.debug('### EMPLOYEE EMAIL FAILED: ' + err.getMessage());
+    }
+} else {
+    System.debug('### EMPLOYEE EMAIL SENT to ' + employee.Email);
+}
             
         } catch (Exception e) {
             System.debug('Error sending employee notification: ' + e.getMessage());

@@ -1,23 +1,32 @@
+/* ================================
+   Main Container
+================================ */
 .hybrid-schedule-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: #f3f2f2;
-    min-height: 100vh;
     font-family: 'Salesforce Sans', Arial, sans-serif;
+    background: #f7f9fc;
+    min-height: 100vh;
+    padding: 0;
 }
 
-/* Page Header */
+/* ================================
+   Page Header
+================================ */
 .page-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 24px 32px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.header-left {
     display: flex;
     align-items: center;
-    gap: 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 30px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    gap: 16px;
 }
 
 .header-icon {
@@ -26,42 +35,52 @@
     padding: 15px;
 }
 
+.header-text {
+    display: flex;
+    flex-direction: column;
+}
+
 .page-title {
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 700;
     margin: 0;
 }
 
 .page-subtitle {
     font-size: 14px;
-    margin: 8px 0 0 0;
+    margin: 4px 0 0 0;
     opacity: 0.9;
 }
 
-/* Instructions Card */
+/* ================================
+   Instructions Card
+================================ */
 .instructions-card {
     background: white;
     border-radius: 12px;
     padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin: 20px 32px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #667eea;
 }
 
 .instructions-header {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 15px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e5e5e5;
 }
 
 .info-icon {
-    color: #007bff;
+    color: #667eea;
 }
 
 .instructions-title {
     font-size: 18px;
     font-weight: 600;
-    color: #333;
+    color: #181818;
 }
 
 .instructions-list {
@@ -73,15 +92,57 @@
 
 .instructions-list li {
     margin-bottom: 8px;
+    font-size: 14px;
 }
 
-/* Schedule Form Card */
+/* ================================
+   Section Header
+================================ */
+.section-header {
+    padding: 24px 32px 16px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #181818;
+    margin: 0;
+}
+
+.section-title-with-count {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.count-badge {
+    background: #667eea;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* ================================
+   Schedule Form Card
+================================ */
 .schedule-form-card {
     background: white;
     border-radius: 12px;
     padding: 25px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin: 0 32px 20px 32px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #667eea;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.schedule-form-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 .form-header {
@@ -93,42 +154,100 @@
 .form-title {
     font-size: 22px;
     font-weight: 600;
-    color: #333;
+    color: #181818;
     margin: 0;
 }
 
+.form-content {
+    margin-top: 0;
+}
+
 .form-row {
-    margin-bottom: 25px;
+    margin-bottom: 20px;
 }
 
 .field-help {
     font-size: 13px;
-    color: #666;
+    color: #706e6b;
     margin-top: 8px;
     font-style: italic;
 }
 
-/* Days Selection */
+/* ================================
+   Input Fields Styling
+================================ */
+.input-field {
+    width: 100%;
+}
+
+lightning-input::part(label),
+lightning-textarea::part(label),
+lightning-combobox::part(label) {
+    font-weight: 600;
+    color: #181818;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+lightning-input::part(input),
+lightning-textarea::part(textarea),
+lightning-combobox::part(input) {
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+lightning-input::part(input):focus,
+lightning-textarea::part(textarea):focus,
+lightning-combobox::part(input):focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+lightning-input::part(input):hover,
+lightning-textarea::part(textarea):hover {
+    border-color: #667eea;
+}
+
+/* ================================
+   Days Selection Section
+================================ */
 .days-selection-section {
     border: 2px solid #e0e0e0;
     border-radius: 8px;
     padding: 20px;
     background: #f9f9f9;
+    transition: all 0.3s ease;
 }
 
 .days-selection-section.wfh-section {
     border-color: #28a745;
+    border-left: 4px solid #28a745;
+}
+
+.days-selection-section.wfh-section:hover {
+    background: #f1f9f4;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.1);
 }
 
 .days-selection-section.office-section {
-    border-color: #007bff;
+    border-color: #0176d3;
+    border-left: 4px solid #0176d3;
+}
+
+.days-selection-section.office-section:hover {
+    background: #f0f7ff;
+    box-shadow: 0 4px 12px rgba(1, 118, 211, 0.1);
 }
 
 .section-label {
     display: block;
     font-size: 16px;
     font-weight: 600;
-    color: #333;
+    color: #181818;
     margin-bottom: 15px;
 }
 
@@ -150,6 +269,12 @@
 .day-checkbox-item:hover {
     border-color: #667eea;
     box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+    transform: translateY(-2px);
+}
+
+.day-checkbox-item lightning-input::part(label) {
+    font-weight: 500;
+    font-size: 14px;
 }
 
 .days-summary {
@@ -158,23 +283,32 @@
     border-radius: 6px;
     font-size: 14px;
     color: #555;
+    border: 1px solid #e5e5e5;
 }
 
 .days-summary strong {
-    color: #333;
+    color: #181818;
+    font-weight: 700;
 }
 
-/* Validation Error */
+/* ================================
+   Validation Error
+================================ */
 .validation-error {
     display: flex;
     align-items: center;
     gap: 10px;
     background: #f8d7da;
     border: 1px solid #f5c6cb;
+    border-left: 4px solid #dc3545;
     border-radius: 6px;
     padding: 12px;
     color: #721c24;
     margin-bottom: 20px;
+}
+
+.validation-error lightning-icon {
+    flex-shrink: 0;
 }
 
 .error-text {
@@ -186,11 +320,13 @@
 
 .char-count {
     font-size: 13px;
-    color: #666;
+    color: #706e6b;
     margin-top: 8px;
 }
 
-/* Summary Section */
+/* ================================
+   Summary Section
+================================ */
 .summary-section {
     background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
     border: 2px solid #667eea;
@@ -202,7 +338,7 @@
 .summary-title {
     font-size: 18px;
     font-weight: 600;
-    color: #333;
+    color: #181818;
     margin: 0 0 15px 0;
 }
 
@@ -220,14 +356,14 @@
 
 .summary-label {
     font-size: 13px;
-    color: #666;
+    color: #706e6b;
     font-weight: 500;
 }
 
 .summary-value {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 700;
-    color: #333;
+    color: #181818;
 }
 
 .summary-value.wfh-count {
@@ -235,10 +371,43 @@
 }
 
 .summary-value.office-count {
-    color: #007bff;
+    color: #0176d3;
 }
 
-/* Form Actions */
+/* ================================
+   Message Display
+================================ */
+.message-success {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    border-left: 4px solid #28a745;
+    color: #155724;
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.message-error {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-left: 4px solid #dc3545;
+    color: #721c24;
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+/* ================================
+   Form Actions
+================================ */
 .form-actions {
     display: flex;
     gap: 15px;
@@ -248,12 +417,65 @@
     border-top: 2px solid #f0f0f0;
 }
 
-/* Existing Schedules Card */
+/* Button Styling */
+lightning-button.reset-button::part(button) {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    border: none;
+    color: white;
+    padding: 12px 24px;
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+    transition: all 0.3s ease;
+    border-radius: 10px;
+}
+
+lightning-button.reset-button::part(button):hover {
+    background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(108, 117, 125, 0.4);
+}
+
+lightning-button.submit-button::part(button) {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    padding: 12px 32px;
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    transition: all 0.3s ease;
+    border-radius: 10px;
+}
+
+lightning-button.submit-button::part(button):hover:not(:disabled) {
+    background: linear-gradient(135deg, #5568d3 0%, #6841a0 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+lightning-button.submit-button::part(button):disabled {
+    background: linear-gradient(135deg, #c9c7c5 0%, #a8a8a8 100%);
+    color: white;
+    cursor: not-allowed;
+    opacity: 0.6;
+    box-shadow: none;
+}
+
+/* ================================
+   Existing Schedules Card
+================================ */
 .existing-schedules-card {
     background: white;
     border-radius: 12px;
     padding: 25px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin: 0 32px 32px 32px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #0176d3;
 }
 
 .schedules-header {
@@ -268,25 +490,76 @@
 .schedules-title {
     font-size: 22px;
     font-weight: 600;
-    color: #333;
+    color: #181818;
     margin: 0;
 }
 
-.schedules-list {
-    display: grid;
-    gap: 15px;
+.refresh-button::part(button) {
+    background: white;
+    border: 2px solid #0176d3;
+    color: #0176d3;
+    padding: 8px 16px;
+    font-weight: 600;
+    font-size: 13px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
 }
 
+.refresh-button::part(button):hover {
+    background: #0176d3;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(1, 118, 211, 0.3);
+}
+
+/* ================================
+   Scrollable Schedule List
+================================ */
+.schedules-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-height: 600px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 8px;
+}
+
+/* Custom Scrollbar */
+.schedules-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.schedules-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.schedules-list::-webkit-scrollbar-thumb {
+    background: #667eea;
+    border-radius: 10px;
+}
+
+.schedules-list::-webkit-scrollbar-thumb:hover {
+    background: #5568d3;
+}
+
+/* ================================
+   Schedule Items
+================================ */
 .schedule-item {
     border: 1px solid #e0e0e0;
     border-radius: 8px;
     padding: 20px;
     background: #fafafa;
     transition: all 0.2s;
+    border-left: 4px solid #667eea;
 }
 
 .schedule-item:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateX(4px);
+    background: white;
 }
 
 .schedule-item-header {
@@ -301,52 +574,101 @@
 .schedule-month {
     font-size: 18px;
     font-weight: 600;
-    color: #333;
+    color: #181818;
 }
 
-.status-approved {
-    background: #28a745;
+/* Status Badges */
+.status-approved,
+lightning-badge.status-approved::part(badge) {
+    background: #e8f5e9;
+    color: #2e7d32;
+    font-weight: 700;
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid #66bb6a;
 }
 
-.status-pending {
-    background: #ffc107;
+.status-pending,
+lightning-badge.status-pending::part(badge) {
+    background: #fff8e1;
+    color: #f57c00;
+    font-weight: 700;
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid #ffb74d;
 }
 
-.status-rejected {
-    background: #dc3545;
+.status-rejected,
+lightning-badge.status-rejected::part(badge) {
+    background: #ffebee;
+    color: #c62828;
+    font-weight: 700;
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid #ef5350;
+}
+
+.schedule-item-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .schedule-detail {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     padding: 8px 0;
     font-size: 14px;
 }
 
 .detail-label {
-    color: #666;
+    color: #706e6b;
     font-weight: 500;
 }
 
 .detail-value {
-    color: #333;
+    color: #181818;
     font-weight: 600;
 }
 
 .rejection-reason {
-    background: #f8d7da;
-    border-left: 4px solid #dc3545;
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
     padding: 12px;
     margin-top: 12px;
     border-radius: 4px;
     font-size: 14px;
-    color: #721c24;
+    color: #856404;
 }
 
-/* Empty State */
+.rejection-reason strong {
+    font-weight: 700;
+    color: #ff9800;
+}
+
+/* ================================
+   Empty State
+================================ */
 .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 20px;
+    background: #fafafa;
+    border-radius: 8px;
     text-align: center;
-    padding: 60px 20px;
+    border: 2px dashed #e0e0e0;
 }
 
 .empty-icon {
@@ -357,7 +679,7 @@
 .empty-text {
     font-size: 18px;
     font-weight: 600;
-    color: #666;
+    color: #706e6b;
     margin: 0 0 8px 0;
 }
 
@@ -367,7 +689,17 @@
     margin: 0;
 }
 
-/* Loading Spinner */
+/* ================================
+   Loading Spinner
+================================ */
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+    padding: 40px;
+}
+
 .main-spinner {
     position: fixed;
     top: 50%;
@@ -376,31 +708,314 @@
     z-index: 9999;
 }
 
-/* Responsive */
+/* ================================
+   Required Field Indicator
+================================ */
+lightning-input[required]::part(label)::after,
+lightning-textarea[required]::part(label)::after,
+lightning-combobox[required]::part(label)::after {
+    content: ' *';
+    color: #c62828;
+    font-weight: 700;
+}
+
+/* ================================
+   Focus States
+================================ */
+lightning-button:focus-visible::part(button) {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
+.day-checkbox-item:focus-within {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+/* ================================
+   Scroll Indicator
+================================ */
+.scroll-indicator {
+    text-align: center;
+    padding: 8px;
+    font-size: 12px;
+    color: #706e6b;
+    font-style: italic;
+    background: linear-gradient(to bottom, transparent, #f7f9fc);
+}
+
+/* ================================
+   Responsive Design
+================================ */
+@media (max-width: 1024px) {
+    .days-checkbox-group {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    }
+}
+
 @media (max-width: 768px) {
-    .hybrid-schedule-container {
-        padding: 10px;
-    }
-    
     .page-header {
+        padding: 16px 20px;
         flex-direction: column;
-        text-align: center;
+        align-items: flex-start;
     }
-    
+
     .page-title {
-        font-size: 22px;
+        font-size: 20px;
     }
-    
+
+    .schedule-form-card,
+    .existing-schedules-card,
+    .instructions-card {
+        margin: 0 20px 20px 20px;
+        padding: 20px;
+    }
+
+    .form-title,
+    .schedules-title {
+        font-size: 18px;
+    }
+
     .days-checkbox-group {
         grid-template-columns: 1fr;
     }
-    
-    .form-actions {
-        flex-direction: column;
+
+    .summary-grid {
+        grid-template-columns: 1fr;
     }
-    
+
+    .form-actions {
+        flex-direction: column-reverse;
+        gap: 12px;
+    }
+
+    .form-actions lightning-button {
+        width: 100%;
+    }
+
     .schedule-item-header {
         flex-direction: column;
-        gap: 10px;
+        gap: 8px;
+        align-items: flex-start;
     }
+
+    .schedules-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .refresh-button {
+        width: 100%;
+    }
+
+    .schedules-list {
+        max-height: 400px;
+    }
+
+    .section-header {
+        padding: 20px 20px 12px 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-title {
+        font-size: 18px;
+    }
+
+    .schedule-form-card,
+    .existing-schedules-card,
+    .instructions-card {
+        margin: 0 12px 12px 12px;
+        padding: 16px;
+    }
+
+    .days-selection-section {
+        padding: 16px;
+    }
+
+    .summary-section {
+        padding: 16px;
+    }
+
+    .form-actions {
+        gap: 8px;
+    }
+
+    .schedule-item {
+        padding: 16px;
+    }
+
+    .schedule-month {
+        font-size: 16px;
+    }
+}
+
+/* ================================
+   Smooth Transitions
+================================ */
+* {
+    transition: background-color 0.2s ease, 
+                border-color 0.2s ease, 
+                color 0.2s ease;
+}
+
+/* ================================
+   Accessibility Improvements
+================================ */
+.schedule-item:focus-within {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
+/* ================================
+   Print Styles
+================================ */
+@media print {
+    .hybrid-schedule-container {
+        background: white;
+    }
+
+    .page-header {
+        background: white;
+        color: black;
+        box-shadow: none;
+    }
+    
+    .form-actions,
+    .refresh-button,
+    .main-spinner {
+        display: none;
+    }
+    
+    .schedule-item,
+    .schedule-form-card,
+    .existing-schedules-card {
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+}
+
+/* ================================
+   Animation for New Items
+================================ */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.schedule-item {
+    animation: slideInUp 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.schedule-form-card,
+.existing-schedules-card {
+    animation: slideIn 0.3s ease-out;
+}
+
+/* ================================
+   Hover Effects Enhancement
+================================ */
+.schedule-form-card:hover {
+    border-left-width: 6px;
+}
+
+.existing-schedules-card:hover {
+    border-left-width: 6px;
+}
+
+/* ================================
+   Disabled State
+================================ */
+lightning-input[disabled]::part(input),
+lightning-textarea[disabled]::part(textarea),
+lightning-combobox[disabled]::part(input) {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+    color: #6c757d;
+    cursor: not-allowed;
+}
+
+lightning-input[disabled]::part(label),
+lightning-textarea[disabled]::part(label),
+lightning-combobox[disabled]::part(label) {
+    color: #6c757d;
+    font-weight: 500;
+}
+
+/* Header Section */
+.header-section {
+    background: linear-gradient(135deg, #0176d3 0%, #0d4f8b 100%);
+    padding: 24px 32px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.header-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.page-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.page-subtitle {
+    font-size: 14px;
+    margin: 4px 0 0 0;
+    opacity: 0.9;
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+}
+.schedule-week-display {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.week-label {
+    font-size: 11px;
+    color: #6b7280;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.schedule-month {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1f2937;
 }

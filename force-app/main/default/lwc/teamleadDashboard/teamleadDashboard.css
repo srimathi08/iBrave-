@@ -1,0 +1,121 @@
+/* teamLeadDashboard.css */
+.dash-root { font-family:'Nunito','Segoe UI',sans-serif; background:linear-gradient(150deg,#EEF2FF,#F0FDFA); min-height:100vh; }
+
+/* NAV */
+.top-nav { background:#0F172A; height:56px; padding:0 24px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 12px rgba(0,0,0,.3); }
+.nav-left { display:flex; align-items:center; gap:10px; }
+.brand-box { width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#6366F1,#0EA5E9);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:13px; }
+.brand-txt { color:#fff;font-weight:800;font-size:15px; }
+.brand-tag { background:#1E293B;color:#64748B;font-size:11px;padding:2px 8px;border-radius:5px;font-weight:600; }
+.nav-right { display:flex;align-items:center;gap:10px; }
+.mgr-info { text-align:right; }
+.mgr-name { display:block;color:#E2E8F0;font-weight:700;font-size:13px; }
+.mgr-sub  { display:block;color:#64748B;font-size:11px; }
+.mgr-avatar { width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#F59E0B,#EF4444);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:12px; }
+
+/* BODY */
+.dash-body { padding:22px 24px; max-width:1100px; margin:0 auto; }
+.pg-header { margin-bottom:18px; }
+.pg-title { margin:0;font-size:22px;font-weight:900;color:#0F172A;letter-spacing:-.4px; }
+.pg-sub   { margin:4px 0 0;color:#64748B;font-size:13px; }
+
+/* LOADING / EMPTY */
+.spinner-wrap { text-align:center;padding:48px; }
+.spin-txt { color:#94A3B8;font-size:13px;margin-top:10px; }
+.empty-box { background:#fff;border-radius:16px;padding:56px 24px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.06); }
+.empty-icon { font-size:44px;margin-bottom:12px; }
+.empty-box h3 { color:#0F172A;font-weight:800;margin:0 0 8px; }
+.empty-box p  { color:#64748B;font-size:13px; }
+
+/* EMPLOYEE CARDS */
+.cards-row { display:flex;gap:13px;flex-wrap:wrap;margin-bottom:20px; }
+.emp-card { flex:1;min-width:190px;max-width:270px;background:#fff;border-radius:15px;padding:15px 17px;cursor:pointer;border:2.5px solid transparent;box-shadow:0 2px 10px rgba(0,0,0,.06);transition:all .2s;position:relative;overflow:hidden; }
+.emp-card:hover { box-shadow:0 6px 24px rgba(0,0,0,.1);transform:translateY(-1px); }
+.emp-card--active { border-color:#6366F1;box-shadow:0 8px 28px rgba(99,102,241,.2); }
+.card-bar { position:absolute;top:0;left:0;right:0;height:4px;background:#6366F1;border-radius:15px 15px 0 0; }
+.card-head { display:flex;align-items:center;gap:10px;margin-bottom:10px; }
+.card-ava  { width:40px;height:40px;border-radius:11px;background:#EEF2FF;color:#6366F1;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;flex-shrink:0; }
+.card-name { font-weight:800;color:#0F172A;font-size:13px;line-height:1.3; }
+.card-id   { color:#94A3B8;font-size:11px;margin-top:2px; }
+.sel-dot   { margin-left:auto;color:#6366F1;font-size:9px; }
+.card-mgr  { font-size:11px;color:#94A3B8;display:flex;align-items:center;gap:5px; }
+.dot-yellow { color:#F59E0B;font-size:8px; }
+.card-mgr strong { color:#F59E0B; }
+
+/* DETAIL PANEL */
+.detail-panel { background:#fff;border-radius:18px;box-shadow:0 4px 28px rgba(0,0,0,.07);overflow:hidden; }
+.panel-hdr { padding:16px 22px;background:#FAFBFF;border-bottom:1px solid #F1F5F9;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px; }
+.panel-emp { display:flex;align-items:center;gap:11px; }
+.panel-ava { width:38px;height:38px;border-radius:10px;background:#EEF2FF;color:#6366F1;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px; }
+.panel-name { font-weight:800;color:#0F172A;font-size:15px; }
+.panel-sub  { color:#94A3B8;font-size:11px;margin-top:2px; }
+.panel-sub strong { color:#6366F1; }
+
+/* TABS */
+.tab-bar { display:flex;gap:4px;background:#F1F5F9;border-radius:11px;padding:4px; }
+.tab-btn  { padding:7px 14px;border-radius:8px;border:none;cursor:pointer;font-weight:700;font-size:12px;background:transparent;color:#94A3B8;transition:all .15s;white-space:nowrap;position:relative; }
+.tab-active { background:#fff;color:#6366F1;box-shadow:0 2px 8px rgba(0,0,0,.08); }
+.pend-dot { display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:#EF4444;color:#fff;font-size:9px;font-weight:800;margin-left:4px; }
+
+/* SUMMARY STRIP */
+.sum-strip { display:flex;border-bottom:1px solid #F1F5F9;background:#FAFBFF; }
+.sum-item  { flex:1;text-align:center;padding:14px 8px;border-right:1px solid #F1F5F9;display:flex;flex-direction:column;align-items:center;gap:3px; }
+.sum-item:last-child { border-right:none; }
+.sum-ico { font-size:18px; }
+.sum-val { font-weight:800;font-size:17px;color:#0F172A; }
+.sum-lbl { font-size:11px;color:#94A3B8;font-weight:500; }
+.sum-val.green { color:#16A34A; }
+.sum-val.amber { color:#D97706; }
+.sum-val.red   { color:#DC2626; }
+
+/* TABLES */
+.tbl-wrap  { padding:18px 22px; overflow-x:auto; }
+.tbl-title { font-weight:800;color:#0F172A;font-size:13px;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
+.obj-tag   { background:#EEF2FF;color:#6366F1;font-size:10px;padding:2px 9px;border-radius:9px;font-weight:700;font-family:monospace; }
+.pend-tag  { background:#FEF3C7;color:#D97706;font-size:11px;padding:2px 9px;border-radius:9px;font-weight:700; }
+.data-tbl  { width:100%;border-collapse:collapse;min-width:700px; }
+.data-tbl thead tr { background:#F8FAFC; }
+.data-tbl th { padding:9px 12px;text-align:left;color:#64748B;font-weight:700;font-size:11px;white-space:nowrap; }
+.data-tbl th small { color:#94A3B8;font-weight:400;font-family:monospace;font-size:10px; }
+.data-tbl tbody tr { border-bottom:1px solid #F1F5F9;transition:background .1s; }
+.data-tbl tbody tr:hover { background:#F8FAFF; }
+.data-tbl td { padding:11px 12px;font-size:12px;color:#334155; }
+.no-rec { text-align:center;padding:32px;color:#94A3B8;font-size:13px;background:#F8FAFC;border-radius:10px; }
+
+/* Utilities */
+.fw7    { font-weight:700; }
+.dark   { color:#0F172A!important; }
+.muted  { color:#94A3B8!important; }
+.small  { font-size:11px; }
+.accent { color:#6366F1!important; }
+.amber  { color:#D97706!important; }
+.green  { color:#16A34A!important; }
+
+/* STATUS BADGES */
+.status-badge { display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.2px;white-space:nowrap; }
+.status-present,.status-approved  { background:#DCFCE7;color:#15803D; }
+.status-late,.status-pending      { background:#FEF9C3;color:#A16207; }
+.status-absent,.status-rejected   { background:#FEE2E2;color:#B91C1C; }
+.status-weekend,.status-draft     { background:#F1F5F9;color:#94A3B8; }
+.status-submitted                 { background:#DBEAFE;color:#1D4ED8; }
+
+/* LEAVE CARDS */
+.leave-list { display:flex;flex-direction:column;gap:10px; }
+.leave-card { border-radius:12px;padding:14px 16px;border:1.5px solid transparent;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px; }
+.leave-card--pending  { background:#FFFBEB;border-color:#FDE68A; }
+.leave-card--approved { background:#F0FDF4;border-color:#BBF7D0; }
+.leave-card--rejected { background:#FFF5F5;border-color:#FECACA; }
+.lv-fields { display:flex;gap:14px;flex-wrap:wrap; }
+.lv-f   { display:flex;flex-direction:column;gap:2px;min-width:80px; }
+.lv-f.wide { min-width:160px; }
+.lv-lbl { font-size:9px;color:#94A3B8;font-weight:700;letter-spacing:.4px; }
+.lv-lbl em { font-style:normal;font-family:monospace;font-size:9px;color:#CBD5E1; }
+.lv-val { font-size:13px;color:#334155;font-weight:600; }
+.lv-actions { display:flex;align-items:center;gap:8px;flex-shrink:0; }
+.btn-ok { padding:6px 13px;border-radius:7px;border:none;background:#16A34A;color:#fff;font-weight:700;font-size:11px;cursor:pointer; }
+.btn-ok:hover { opacity:.85; }
+.btn-no { padding:6px 13px;border-radius:7px;border:none;background:#DC2626;color:#fff;font-weight:700;font-size:11px;cursor:pointer; }
+.btn-no:hover { opacity:.85; }
+
+/* FOOTER */
+.footer { margin-top:16px;text-align:center;font-size:11px;color:#94A3B8;padding-bottom:20px; }

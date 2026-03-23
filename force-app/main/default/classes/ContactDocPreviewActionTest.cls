@@ -6,7 +6,8 @@ public class ContactDocPreviewActionTest {
 
         // 1. Create test data
         Contact con = new Contact(
-            LastName = 'Test User'
+             FirstName = 'Test',
+            LastName  = 'User'
         );
         insert con;
 
@@ -29,11 +30,11 @@ public class ContactDocPreviewActionTest {
 
         ContactDocPreviewAction.PreviewResult res = results[0];
 
-        System.assert(res.appointmentFileName.contains(con.Id),
-                      'Appointment file name should include Contact ID');
+         System.assert( res.appointmentFileName.contains('Test User'),
+            'Appointment file name should include contact name');
 
-        System.assert(res.ndaFileName.contains(con.Id),
-                      'NDA file name should include Contact ID');
+        System.assert(res.ndaFileName.contains('Test User'),
+            'NDA file name should include contact name');
 
         System.assertNotEquals(null,
             res.appointmentBase64, 'Appointment Base64 should not be null');

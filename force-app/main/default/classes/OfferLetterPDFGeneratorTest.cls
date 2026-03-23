@@ -6,7 +6,11 @@ private class OfferLetterPDFGeneratorTest {
         Candidate__c cand = new Candidate__c(
             First_Name__c = 'John',
             Last_Name__c = 'Doe',
-            Personal_Email__c = 'john.doe@test.com'
+            Personal_Email__c = 'john.doe@test.com',
+			Date_Of_Birth__c = Date.newInstance(2007, 12, 1),
+			Phone_No__c= '9000000000',
+			Department__c='Salesforce',
+			Designations__c ='Consultant'
         );
         insert cand;
         return cand;
@@ -72,7 +76,12 @@ private class OfferLetterPDFGeneratorTest {
         ];
         System.assertNotEquals(null, cv.ContentDocumentId, 'ContentDocumentId must exist');
 
-
+// *** NEW ASSERTION FOR UPDATED FILE NAME ***
+        String expectedNamePrefix = 'Offer_Letter_John Doe';
+        System.assert(
+    cv.Title.startsWith('Offer_Letter_John Doe'),
+    'File name must start with Offer_Letter_John Doe but was: ' + cv.Title
+);
         // Validate ContentDistribution created
         ContentDistribution cd = [
             SELECT Id, ContentVersionId, ContentDownloadUrl

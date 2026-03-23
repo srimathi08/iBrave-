@@ -3,7 +3,6 @@ public with sharing class CandidateConversionService {
         @InvocableVariable(required=true)
         public Id candidateId;
     }
-
     public class CandidateOutput {
         @InvocableVariable
         public String message;
@@ -22,17 +21,17 @@ public with sharing class CandidateConversionService {
                     continue;
                 }
     
-        // Query the candidate record with needed fields
+        //1. Query the candidate record with needed fields
         Candidate__c candidate = [SELECT Id, First_Name__c, Last_Name__c, Middle_Name__c, Date_Of_Birth__c,
             Gender__c,  Personal_Email__c, Phone_No__c, Aadhar_Card_Number__c, Blood_Group__c,
-            Campus_City__c, Campus_Name__c, Consultancy_Name__c, Joining_Date__c, Designation__c,Department__c,
+            Campus_City__c, Campus_Name__c, Consultancy_Name__c, Joining_Date__c, Designations__c,Department__c,
             Driving_License_Number__c, Emergency_Contact_Name__c, Emergency_Contact_Phone__c, Marital_Status__c,
             Number_of_Children__c, PAN_Number__c, Referred_Person_Name__c,
             Salutation__c, Source_Of_Applicant__c, UAN_Number__c, 
             Communication_Address__Street__s, Communication_Address__City__s, Communication_Address__StateCode__s,
             Communication_Address__PostalCode__s, Communication_Address__CountryCode__s,
             Permanent_Address__Street__s, Permanent_Address__City__s, Permanent_Address__StateCode__s,
-            Permanent_Address__PostalCode__s, Permanent_Address__CountryCode__s,Place_of_Posting_Base_Location__c,Work_Location__c
+            Permanent_Address__PostalCode__s, Permanent_Address__CountryCode__s,Place_of_Posting_Base_Location__c
              FROM Candidate__c WHERE Id = :input.candidateId LIMIT 1];
 
         if (candidate == null) {
@@ -40,14 +39,22 @@ public with sharing class CandidateConversionService {
                     outputs.add(output);
                     continue;
                 }
-        // Create Contact from Candidate data
+// 2) Get "Qbay Employees" Account (create test data in test class)
+            Account qbayAcc = [
+                SELECT Id
+                FROM Account
+                WHERE Name = 'Qbay Employees'
+                LIMIT 1
+            ];
+        // 3.Create Contact from Candidate data
         Contact con = new Contact();
+ 		con.AccountId = qbayAcc.Id;   
         con.FirstName = candidate.First_Name__c;
         con.LastName = candidate.Last_Name__c;
         con.MiddleName = candidate.Middle_Name__c;
         con.Birthdate = candidate.Date_Of_Birth__c;
         con.GenderIdentity = candidate.Gender__c;
-        con.Department = candidate.Department__c;
+        con.User_Department__c = candidate.Department__c;
         con.Personal_Email__c = candidate.Personal_Email__c;
         con.Phone = candidate.Phone_No__c;
         con.MobilePhone = candidate.Phone_No__c;
@@ -56,8 +63,8 @@ public with sharing class CandidateConversionService {
         con.Campus_City__c = candidate.Campus_City__c;
         con.Campus_Name__c = candidate.Campus_Name__c;
         con.Consultancy_Name__c = candidate.Consultancy_Name__c;
-        con.Date_of_joining__c = candidate.Joining_Date__c;
-        con.Designation__c = candidate.Designation__c;
+        con.Expected_Joining_Date__c = candidate.Joining_Date__c;
+        con.User_Designation__c = candidate.Designations__c;
         con.Driving_License_Number__c = candidate.Driving_License_Number__c;
         con.Emergency_Contact_Name__c = candidate.Emergency_Contact_Name__c;
         con.Emergency_Contact_Phone__c = candidate.Emergency_Contact_Phone__c;
@@ -69,7 +76,7 @@ public with sharing class CandidateConversionService {
         con.Salutation = candidate.Salutation__c;
         con.Source_Of_Applicant__c = candidate.Source_Of_Applicant__c;
         con.UAN_Number__c = candidate.UAN_Number__c;
-        con.Work_Location__c = candidate.Work_Location__c;
+        
 
         // Map address fields
         con.MailingStreet = candidate.Communication_Address__Street__s;
@@ -130,11 +137,18 @@ public with sharing class CandidateConversionService {
         }
         update bankList;
 
-        List<CandidateRoleResponsibility__c> roles = [SELECT Id, Candidate__c FROM CandidateRoleResponsibility__c WHERE Candidate__c = :candidate.Id];
-        for (CandidateRoleResponsibility__c role : roles) {
-            role.Contact__c = con.Id;
-        }
-        update roles;
+        // Update Person Responsibilities (NEW STRUCTURE)
+List<Person_Responsibility__c> presList = [
+    SELECT Id, Candidate__c
+    FROM Person_Responsibility__c
+    WHERE Candidate__c = :candidate.Id
+];
+
+for (Person_Responsibility__c pres : presList) {
+    pres.Contact__c = con.Id;
+}
+update presList;
+
 		// Update related Salary Details records, replace Salary_Details__c with actual API name
 		List<Salary_Details__c> salaryList = [SELECT Id, Candidate__c FROM Salary_Details__c WHERE Candidate__c = :candidate.Id];
 		for (Salary_Details__c sal : salaryList) {
@@ -143,9 +157,9 @@ public with sharing class CandidateConversionService {
 update salaryList;
           // IT Department Notification email
                 Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-                //mail.setToAddresses(new String[] { 'it-team@example.com' }); // Replace with your IT department email
-mail.setToAddresses(new String[] { 'gpriyalakshmi@gmail.com' }); 
-                mail.setSubject('New Employee Contact Created: ' + con.FirstName + ' ' + con.LastName);
+                //mail.setToAddresses(new String[] { 'it-admin@quadrobay.com' }); //  IT department email
+                mail.setToAddresses(new String[] { 'gpriyalakshmi@gmail.com' });
+				mail.setSubject('New Employee Contact Created: ' + con.FirstName + ' ' + con.LastName);
                 mail.setPlainTextBody(
                     'Dear IT Team,\n\n'
                     + 'A new employee Contact has been created in Salesforce.\n'
@@ -158,6 +172,7 @@ mail.setToAddresses(new String[] { 'gpriyalakshmi@gmail.com' });
                 Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
 //Intimation to HR for Asset Allocation email
 Messaging.SingleEmailMessage hrMail = new Messaging.SingleEmailMessage();
+//hrMail.setToAddresses(new String[] { 'it-admin@quadrobay.com' }); // Your HR team email
 hrMail.setToAddresses(new String[] { 'priyadharsini.gunasekaran@quadrobay.com' }); // Your HR team email
 hrMail.setSubject('Intimation to HR Dept for Asset Allocation: ' + con.FirstName + ' ' + con.LastName);
 hrMail.setPlainTextBody(
@@ -170,7 +185,6 @@ hrMail.setPlainTextBody(
     + 'Thank you.\n'
 );
 Messaging.sendEmail(new Messaging.SingleEmailMessage[] { hrMail });
-
 
                 output.message = 'Contact created successfully with Employee ID: ' + con.Employee_ID__c;
             } catch (Exception e) {

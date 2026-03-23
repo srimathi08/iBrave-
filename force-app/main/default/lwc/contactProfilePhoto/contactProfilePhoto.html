@@ -1,0 +1,21 @@
+<template>
+    <lightning-card title="Profile Photo (HR)">
+        <div class="slds-p-horizontal_small slds-p-vertical_small">
+
+            <lightning-file-upload
+                label="Upload Profile Photo"
+                name="profilePhotoUpload"
+                accept=".jpg,.jpeg,.png"
+                record-id={recordId}
+                onuploadfinished={handleUploadFinished}>
+            </lightning-file-upload>
+
+            <template if:true={currentPhotoUrl}>
+                <div class="slds-m-top_medium">
+                    <p class="slds-text-title">Current Profile Photo Preview</p>
+                    <img src={currentPhotoUrl} class="photo-preview" alt="Profile Photo"/>
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

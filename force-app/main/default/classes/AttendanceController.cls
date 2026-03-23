@@ -1,4 +1,4 @@
-public with sharing class AttendanceController {
+public without sharing class AttendanceController {
     
     @AuraEnabled
     public static Map<String, Object> getCurrentAttendanceStatus() {
@@ -159,4 +159,13 @@ public with sharing class AttendanceController {
             throw new AuraHandledException('Error getting attendance history: ' + e.getMessage());
         }
     }
+    
+ 	    
+   @AuraEnabled(cacheable=true)
+public static User getUserDetails() {
+    return [SELECT Name, Email, Profile.Name,Manager.Name FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
+
+    }
+   
+    
 }

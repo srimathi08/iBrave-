@@ -44,21 +44,40 @@ public static Map<String, Object> getEmployeeAttendanceRecords(String employeeId
                        Branch__c, Branch__r.Branch_Name__c, 
                        Branch__r.City__c, Session_Number__c, Is_Multiple_Session__c,
                        Branch__r.State__c,
-                       Client_Place_Details__c, Field_Work_Details__c, WFH_Reason__c,
-                       Check_In_Photo_Id__c, Check_Out_Photo_Id__c,
-                       CreatedDate, LastModifiedDate, 
-                       CreatedBy.Name, LastModifiedBy.Name
-                FROM Employee_Attendance__c 
-                WHERE Employee_Name__c = :employeeId 
-                ORDER BY Date__c DESC, CreatedDate DESC 
-                LIMIT :limitRecords
-            ];
-        } catch (Exception queryException) {
-            System.debug('❌ Query Exception: ' + queryException.getMessage());
-            throw new AuraHandledException('Unable to access attendance records: ' + queryException.getMessage());
-        }
-        
-        System.debug('Found ' + records.size() + ' attendance records');
+                        Client_Place_Details__c, Field_Work_Details__c, WFH_Reason__c,
+                        Check_In_Photo_Id__c, Check_Out_Photo_Id__c,
+                        Is_OD_Request__c, OD_Approval_Status__c,
+                        CreatedDate, LastModifiedDate, 
+                        CreatedBy.Name, LastModifiedBy.Name
+                 FROM Employee_Attendance__c 
+                 WHERE Employee_Name__c = :employeeId 
+                 ORDER BY Date__c DESC, CreatedDate DESC 
+                 LIMIT :limitRecords
+             ];
+         } catch (Exception queryException) {
+             System.debug('❌ Query Exception: ' + queryException.getMessage());
+             throw new AuraHandledException('Unable to access attendance records: ' + queryException.getMessage());
+         }
+         
+         System.debug('Found ' + records.size() + ' attendance records');
+ 
+         // ✅ Fetch WFH request statuses for the records found
+         Map<Date, String> wfhStatusByDate = new Map<Date, String>();
+         if (!records.isEmpty()) {
+             Date minDate = records[records.size()-1].Date__c;
+             Date maxDate = records[0].Date__c;
+             for (Work_from_home_Request__c wfh : [
+                 SELECT Start_Date__c, End_Date__c, Status__c
+                 FROM Work_from_home_Request__c
+                 WHERE Employee__c = :employeeId
+                 AND ((Start_Date__c >= :minDate AND Start_Date__c <= :maxDate)
+                      OR (End_Date__c >= :minDate AND End_Date__c <= :maxDate))
+             ]) {
+                 for (Date d = wfh.Start_Date__c; d <= wfh.End_Date__c; d = d.addDays(1)) {
+                     wfhStatusByDate.put(d, wfh.Status__c);
+                 }
+             }
+         }
         
         // Format the records for Lightning Web Component
         List<Map<String, Object>> formattedRecords = new List<Map<String, Object>>();
@@ -161,7 +180,7 @@ public static Map<String, Object> getEmployeeAttendanceRecords(String employeeId
                     locationDisplay = 'Field Work';
                 }
             } else if (workLocation == 'Work from Home') {
-                locationDisplay = 'Home';
+                locationDisplay = 'Work from Home';
             } else {
                 locationDisplay = workLocation;
             }
@@ -180,6 +199,20 @@ public static Map<String, Object> getEmployeeAttendanceRecords(String employeeId
             formattedRecord.put('clientPlaceDetails', record.Client_Place_Details__c);
             formattedRecord.put('fieldWorkDetails', record.Field_Work_Details__c);
             formattedRecord.put('wfhReason', record.WFH_Reason__c);
+
+            // ✅ OD Approval Status
+            formattedRecord.put('isODRequest', record.Is_OD_Request__c == true);
+            String odStatus = record.OD_Approval_Status__c != null ? record.OD_Approval_Status__c : 'Pending';
+            formattedRecord.put('odApprovalStatus', odStatus);
+            formattedRecord.put('odApprovalStatusText', record.Is_OD_Request__c == true ? odStatus : '--');
+            formattedRecord.put('odApprovalBadgeClass', getApprovalBadgeClass(odStatus, record.Is_OD_Request__c == true));
+
+            // ✅ WFH Approval Status (using the map for real status)
+            String realWFHStatus = wfhStatusByDate.get(record.Date__c);
+            formattedRecord.put('submittedForApproval', workLocation == 'Work from Home' || realWFHStatus != null);
+            formattedRecord.put('wfhApprovalStatus', realWFHStatus);
+            formattedRecord.put('wfhApprovalStatusText', realWFHStatus != null ? realWFHStatus : '--');
+            formattedRecord.put('wfhApprovalBadgeClass', getApprovalBadgeClass(realWFHStatus, realWFHStatus != null));
             
             // Notes
             if (String.isNotBlank(record.Notes__c)) {
@@ -766,6 +799,28 @@ public static Map<String, Object> getTodayAttendanceRecord(String employeeId) {
         }
     }
     /**
+ * ✅ Helper method to get badge class for approval status
+ */
+private static String getApprovalBadgeClass(String status, Boolean isActive) {
+    if (!isActive || String.isBlank(status)) return 'approval-badge approval-none';
+    
+    switch on status.toLowerCase() {
+        when 'approved' {
+            return 'approval-badge approval-approved';
+        }
+        when 'rejected', 'declined' {
+            return 'approval-badge approval-rejected';
+        }
+        when 'pending' {
+            return 'approval-badge approval-pending';
+        }
+        when else {
+            return 'approval-badge approval-pending';
+        }
+    }
+}
+
+/**
  * @description Get CSS class for status badge
  */
 private static String getStatusClass(String status) {
@@ -890,5 +945,142 @@ public static Map<String, Object> checkLeaveForDate(Id employeeId, String checkD
     return result;
 }
 
+
+/**
+ * ADD THIS METHOD to your existing AttendanceViewController.cls
+ * (or whichever controller handles updateAttendance)
+ * 
+ * Uses only existing fields: Check_Out_Time__c and Notes__c
+ * No new fields needed.
+ */
+
+@AuraEnabled
+public static Map<String, Object> autoCheckOut(String recordId) {
+    Map<String, Object> result = new Map<String, Object>();
+
+    try {
+        if (String.isBlank(recordId)) {
+            result.put('success', false);
+            result.put('error', 'Record ID is required');
+            return result;
+        }
+
+        // Query existing record — only if NOT already checked out
+        List<Employee_Attendance__c> records = [
+            SELECT Id,
+                   Employee_Name__c,
+                   Employee_Name__r.Name,
+                   Check_In_Time__c,
+                   Check_Out_Time__c,
+                   Notes__c,
+                   Date__c
+            FROM   Employee_Attendance__c
+            WHERE  Id               = :recordId
+            AND    Check_Out_Time__c = null
+            LIMIT  1
+        ];
+
+        if (records.isEmpty()) {
+            result.put('success', false);
+            result.put('error', 'Record not found or already checked out');
+            return result;
+        }
+
+        Employee_Attendance__c rec = records[0];
+
+        // Safety check — must be today's record
+        if (rec.Date__c != Date.today()) {
+            result.put('success', false);
+            result.put('error', 'Record is not for today');
+            return result;
+        }
+
+        // Auto checkout = 11:59 PM tonight
+        DateTime autoOut = DateTime.newInstance(Date.today(), Time.newInstance(23, 59, 0, 0));
+
+        // Calculate hours worked
+        Decimal hrs = 0;
+        if (rec.Check_In_Time__c != null) {
+            Long diff = autoOut.getTime() - rec.Check_In_Time__c.getTime();
+            if (diff > 0) hrs = (diff / (1000.0 * 60 * 60)).setScale(2);
+        }
+
+        // Append auto-checkout note to existing Notes__c
+        String existing = String.isNotBlank(rec.Notes__c) ? rec.Notes__c + '\n' : '';
+        String autoNote = '[AUTO CHECKOUT] System checked out at 11:59 PM on '
+            + Date.today().format()
+            + '. Hours worked: ' + hrs + 'h. Please check out manually next time.';
+
+        // Update ONLY existing fields
+        rec.Check_Out_Time__c = autoOut;
+        rec.Notes__c          = existing + autoNote;
+
+        update rec;
+
+        System.debug('✅ LWC auto-checkout done for: ' + rec.Employee_Name__r?.Name
+            + ' | Hours: ' + hrs);
+
+        result.put('success',     true);
+        result.put('recordId',    rec.Id);
+        result.put('hoursWorked', String.valueOf(hrs));
+        result.put('checkOutTime', autoOut.format());
+        result.put('message',     'Auto-checked out at 11:59 PM. Hours worked: ' + hrs + 'h');
+
+    } catch (DmlException dmlEx) {
+        System.debug('❌ DML error in autoCheckOut: ' + dmlEx.getMessage());
+        result.put('success', false);
+        result.put('error',   'Database error: ' + dmlEx.getMessage());
+    } catch (Exception e) {
+        System.debug('❌ Error in autoCheckOut: ' + e.getMessage());
+        result.put('success', false);
+        result.put('error',   'Unexpected error: ' + e.getMessage());
+    }
+
+    return result;
+}
+    
+@AuraEnabled
+public static Map<String, Object> checkYesterdayAttendance(Id employeeId, Date checkDate) {
+    Map<String, Object> result = new Map<String, Object>();
+    try {
+        // Only count REAL attendance records (not OD requests)
+        List<Employee_Attendance__c> records = [
+            SELECT Id FROM Employee_Attendance__c
+            WHERE Employee_Name__c = :employeeId
+            AND Date__c = :checkDate
+            AND (Is_OD_Request__c = false OR Is_OD_Request__c = null)
+            LIMIT 1
+        ];
+
+        List<Leave_Request__c> leaves = [
+            SELECT Id FROM Leave_Request__c
+            WHERE Employee__c = :employeeId
+            AND Start_Date__c <= :checkDate
+            AND End_Date__c >= :checkDate
+            AND Status__c IN ('Approved', 'Pending')
+            LIMIT 1
+        ];
+
+        // OD already submitted — banner should hide
+        List<Employee_Attendance__c> odRecords = [
+            SELECT Id FROM Employee_Attendance__c
+            WHERE Employee_Name__c = :employeeId
+            AND Date__c = :checkDate
+            AND Is_OD_Request__c = true
+            LIMIT 1
+        ];
+
+        result.put('success', true);
+        result.put('hasRecord', !records.isEmpty());
+        result.put('hasLeave', !leaves.isEmpty());
+        result.put('hasHoliday', false);
+        result.put('hasODSubmitted', !odRecords.isEmpty());
+
+    } catch (Exception e) {
+        result.put('success', false);
+        result.put('error', e.getMessage());
+    }
+    return result;
+}
 
 }

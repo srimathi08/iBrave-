@@ -1,548 +1,653 @@
 /*:host {
-    z-index: 9999;
+    --slds-c-modal-content-spacing-block-start: 0;
+    --slds-c-modal-content-spacing-block-end: 0;
+    --slds-c-modal-content-background-color: #f3f3f3;
+    /* Add this line to remove footer-specific spacing 
+    --slds-c-modal-footer-spacing-block-start: 0;
 }
 
-.modal-container {
-    background: #fff;
-    border-radius: 12px;
-    width: 430px;
-    max-width: 98vw;
-    box-shadow: 0 8px 36px #1e26381a;
-    margin: 24px auto;
-    padding: 32px 28px 22px 28px;
+/* ========== MODAL HEADER ========== 
+.modal-header-container {
     display: flex;
-    flex-direction: column;
-    position: relative;
-}
-
-.modal-header {
-    display: flex;
-    align-items: center;
     justify-content: space-between;
-    padding-bottom: 2px;
-}
-
-.modal-icon {
-    font-size: 1.4em;
-    margin-right: 7px;
+    align-items: center;
+    width: 100%;
+    padding-right: 20px;
 }
 
 .modal-title {
-    flex: 1;
-    font-size: 1.14em;
+    font-size: 1.25rem;
     font-weight: 600;
-}
-
-.modal-close {
-    background: transparent;
-    border: none;
-    font-size: 2em;
-    color: #bbb;
-    cursor: pointer;
-    margin-left: 8px;
-    transition: color .15s;
-}
-.modal-close:hover {
-    color: #e35c5c;
-}
-
-.modal-subtitle {
-    font-size: 0.96em;
-    color: #9094a6;
-    margin-bottom: 18px;
-}
-
-.form-row {
-    display: flex;
-    gap: 16px;
-    margin-bottom: 14px;
-}
-
-.form-input {
-    flex: 1;
-    min-width: 0;
-    margin-bottom: 0;
-}
-.calculated-box {
-    background: #f8fafc;
-    border-radius: 8px;
-    margin: 26px 0 14px 0;
-    padding: 19px 12px 8px 12px;
-}
-
-.calculated-header {
-    font-size: 0.97em;
-    color: #4760c0;
-    margin-bottom: 7px;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-}
-
-.calculated-grid {
-    display: flex;
-    gap: 36px;
-    justify-content: center;
-    align-items: flex-end;
-    margin-top: 5px;
-}
-
-.calculated-cell {
-    font-size: 1.05em;
-    text-align: center;
-    min-width: 80px;
-    font-weight: 500;
-    padding-bottom: 2px;
-    letter-spacing: 0.2px;
-}
-
-.calculated-cell span {
-    font-size: 2em;
-    font-weight: 700;
-    display: block;
-    margin-bottom: 3px;
-}
-.calculated-cell.regular span {
-    color: #256de3;
-}
-.calculated-cell.overtime span {
-    color: #e3453a;
-}
-.calculated-cell.total span {
-    color: #25c943;
-}
-
-.action-row {
-    display: flex;
-    gap: 12px;
-    margin-top: 16px;
-    justify-content: space-between;
-}
-
-.save-btn {
-    background: #25c943;
-    color: #fff;
-    font-size: 1.07em;
-    font-weight: 600;
-    border: none;
-    border-radius: 7px;
-    padding: 10px 28px;
-    cursor: pointer;
-    box-shadow: 0 2px 7px #28791d23;
-    flex: 1;   
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: background 0.2s, transform 0.1s;
-}
-.save-btn .action-icon {
-    display: flex;
-    align-items: center;
-}
-
-.save-btn:hover {
-    background: #188f2b;
-    transform: translateY(-1px);
-}
-.save-btn:active {
-    transform: translateY(0);
-}
-.cancel-btn {
-       flex: 1;   
-    background: #ecf4ee;
-    color: #222;
-    font-size: 1.07em;
-    border: none;
-    border-radius: 7px;
-    padding: 10px 28px;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.1s;
-}
-
-.cancel-btn:hover {
-    background: #e5e5e5;
-      transform: translateY(-1px);
-}
-.cancel-btn:active {
-    transform: translateY(0);
-}
-@media (max-width: 600px) {
-    .modal-container { width: 98vw; padding: 18px 8vw 18px 8vw; }
-    .form-row, .calculated-grid, .action-row { flex-direction: column; gap: 10px; }
-    .calculated-cell { min-width: 70px; }
-    .action-row {
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .save-btn,
-    .cancel-btn {
-        width: 100%;
-    }
-}
-template {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.3); /* dim background *
-    z-index: 10000;
-}*/
-:host {
-    z-index: 9999;
-}
-
-.modal-backdrop {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.3);
-    z-index: 10000;
-    padding: 10px 0;               /* Reduced vertical padding */
-    overflow-y: auto;              /* Allow scrolling of the entire backdrop */
-}
-
-.modal-container {
-    background: #fff;
-    border-radius: 12px;
-    width: 600px;                  /* MODIFIED: Reduced fixed width for better fit */
-    max-width: 90vw;               /* MODIFIED: Max width of 90% of viewport width */
-    max-height: 95vh;              /* MODIFIED: Max height of 95% of viewport height */
-    box-shadow: 0 8px 36px #1e26381a;
-    margin: auto;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;              /* Crucial: Prevents modal content from overflowing the container */
-}
-
-
-.modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-bottom: 4px;
-    flex-shrink: 0;
-}
-
-.modal-icon {
-    font-size: 1.4em;
-    margin-right: 7px;
-}
-
-.modal-title {
-    flex: 1;
-    font-size: 1.14em;
-    font-weight: 600;
-}
-
-.modal-close {
-    background: transparent;
-    border: none;
-    font-size: 2em;
-    color: #bbb;
-    cursor: pointer;
-    margin-left: 8px;
-    transition: color .15s;
-}
-.modal-close:hover {
-    color: #e35c5c;
-}
-
-.modal-subtitle {
-    font-size: 0.96em;
-    color: #9094a6;
-    margin-bottom: 14px;
-    flex-shrink: 0;
-}
-
-/* --------- single-entry form --------- */
-lightning-modal-body {
-    overflow-x: hidden;
-    overflow-y: auto;              /* Enable vertical scrolling for content area */
-    flex: 1;                       /* Take available space between header and footer */
-    min-height: 0;                 /* Essential for flex scrolling */
-}
-.form-row {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 12px;
-    overflow-x: auto;
-    max-width: 100%;
-    box-sizing: border-box;
-}
-
-.row-block{
-    /* display: flex;
-    flex-direction: column;
-    gap: 6px; */
-    flex: 0 0 auto;
-    min-width: 240px;
-}
-
-.description-field {
-    width: 250px;
-}
-
-.calculated-box {
-    background: #f8fafc;
-    border-radius: 8px;
-    margin: 18px 0 14px 0;
-    padding: 14px 12px 8px 12px;
-}
-
-.calculated-header {
-    font-size: 0.97em;
-    color: #4760c0;
-    margin-bottom: 7px;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-}
-
-.calculated-grid {
-    display: flex;
-    gap: 32px;
-    justify-content: center;
-    align-items: flex-end;
-    margin-top: 5px;
-}
-
-.calculated-cell {
-    font-size: 1.05em;
-    text-align: center;
-    min-width: 80px;
-    font-weight: 500;
-    padding-bottom: 2px;
-    letter-spacing: 0.2px;
-}
-
-.calculated-cell span {
-    font-size: 2em;
-    font-weight: 700;
-    display: block;
-    margin-bottom: 3px;
-}
-.calculated-cell.regular span {
-    color: #256de3;
-}
-.calculated-cell.overtime span {
-    color: #e3453a;
-}
-.calculated-cell.total span {
-    color: #25c943;
-}
-
-/* --------- multi-row header & table --------- */
-
-.multi-header {
-    margin-bottom: 6px;
-}
-
-.multi-title {
-    font-weight: 600;
-    font-size: 1.05em;
-}
-
-.multi-help {
-    font-size: 0.86em;
-    color: #81848f;
-    margin-top: 2px;
-}
-
-.toolbar-row {
-    display: flex;
-    justify-content: flex-end;
-    margin: 6px 0 8px 0;
+    margin: 0;
+    color: #181818;
 }
 
 .add-row-btn {
     background: #0176d3;
-    color: #fff;
+    color: white;
     border: none;
-    border-radius: 6px;
-    padding: 6px 14px;
-    font-size: 0.86em;
+    padding: 9px 18px;
+    border-radius: 4px;
     cursor: pointer;
-    box-shadow: 0 2px 6px rgba(1, 118, 211, 0.25);
-    transition: background 0.15s, transform 0.1s;
-}
-.add-row-btn:hover {
-    background: #0157a4;
-    transform: translateY(-1px);
-}
-
-.table-wrapper {
-    flex: 1;
-    overflow-x: auto;
-    overflow-y: visible;
-    border-radius: 8px;
-    border: 1px solid #e5e5e5;
-    background: #fafbfc;
-    margin-bottom: 12px;
-    position: relative;
-}
-
-.entry-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.8rem;
-}
-
-.entry-table thead {
-    background: #f3f4f6;
-    position: sticky;
-    top: 0;
-    z-index: 1;
-}
-.entry-table td {
-    overflow: visible !important;
-    position: relative;
-    z-index: 5;
-}
-.entry-table th:nth-child(6),
-.entry-table td:nth-child(6) {
-    width: 220px !important;
-    min-width: 220px !important;
-}
-.entry-table th:nth-child(7),
-.entry-table td:nth-child(7) {
-    width: 260px !important;
-    min-width: 260px !important;
-}
-.entry-table td lightning-input,
-.entry-table td lightning-combobox,
-.entry-table td lightning-textarea {
-    width: 100%;
-    max-width: 100%;
-}
-.entry-table th {
-    text-align: left;
     font-weight: 600;
-    font-size: 0.72rem;
-    color: #4b4b4b;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
+    font-size: 0.9rem;
+    transition: background 0.2s ease;
 }
 
-.entry-table tbody tr:nth-child(even) {
-    background: #ffffff;
-}
-.entry-table tbody tr:nth-child(odd) {
-    background: #fdfdfd;
+.add-row-btn:hover {
+    background: #014f9d;
 }
 
-.billing-pill {
-    padding: 4px 8px;
-    border-radius: 12px;
-    background: #eef2ff;
-    font-size: 0.72rem;
-    color: #3b4caa;
-    min-height: 26px;
+/* ========== MODAL BODY ========== */
+/*lightning-modal-body {
+    background-color: #f3f3f3 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    max-height: calc(80vh - 140px);
+    min-height: 400px;
+}
+lightning-modal-body {
+    background-color: #f3f3f3 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    /* Changed from calc(80vh - 140px) to ensure it pushes to footer 
     display: flex;
+    flex-direction: column;
+}
+/* ========== ERROR BANNER ========== 
+.error-banner {
+    margin: 1rem 1rem 0 1rem;
+    padding: 12px 16px;
+    background: #c23934;
+    color: white;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+}
+
+/* ========== SCROLL CONTAINER ========== 
+.horizontal-scroll-container {
+    display: flex;
+    padding: 1rem;
+    gap: 1rem;
+    overflow-x: auto;
+    overflow-y: auto;
+    height: 100%;
+    max-height: calc(80vh - 140px);
+}
+
+.horizontal-scroll-container::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+}
+
+.horizontal-scroll-container::-webkit-scrollbar-track {
+     background: #e0e0e0;
+    border-radius: 4px;
+}
+
+.horizontal-scroll-container::-webkit-scrollbar-thumb {
+    background: #999;
+    border-radius: 4px;
+}
+
+.horizontal-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: #666;
+}
+
+/* ========== ENTRY CARD (ROW BLOCK) ========== 
+.row-block {
+    flex: 0 0 340px;
+    background: #ffffff;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    height: fit-content;
+}
+
+.single-edit {
+    margin: 1rem auto;
+    flex: 0 0 500px;
+    max-width: 90%;
+}
+
+/* ========== DELETE BUTTON ========== 
+.delete-button {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    z-index: 10;
+    background: white !important;
+    border-radius: 50%;
+}
+
+/* ========== GRID LAYOUT ========== 
+.grid-2-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+/* ========== TIME SECTION ========== 
+.time-section {
+    background: #f0f9ff;
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid #bfdbfe;
+}
+
+.total-hours-display {
+    text-align: right;
+    font-size: 0.85rem;
+    color: #0176d3;
+    margin-top: 6px;
+    font-weight: 600;
+}
+
+/* ========== TASK FIELD - MATCH DESCRIPTION STYLE ========== 
+.task-field textarea {
+    min-height: 70px !important;
+    max-height: 120px !important;
+}
+
+/* ========== DESCRIPTION FIELD ========== 
+.description-field textarea {
+    min-height: 90px !important;
+    max-height: 150px !important;
+}
+
+/* ========== FORM INPUTS GENERAL ========== 
+.form-input {
+    --slds-c-input-shadow: none;
+    --slds-c-textarea-shadow: none;
+}
+
+/* ========== MODAL FOOTER - FIXED ========== */
+/*lightning-modal-footer {
+    border-top: 1px solid #d0d0d0;
+    padding: 12px 16px !important;
+    background: #ffffff !important;
+    margin: 0 !important;
+}
+lightning-modal-footer {
+    /* Remove the top border if it's creating that 'line' effect 
+    border-top: none !important; 
+    padding: 12px 16px !important;
+    background: #ffffff !important;
+    margin: 0 !important;
+    /* Ensure no box shadow is adding perceived gap 
+    box-shadow: none !important; 
+    display: block; 
+}
+.action-row {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
     align-items: center;
 }
 
-.hours-col {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.hours-total {
+/* ========== BUTTONS ========== 
+.save-btn {
+    background: #22c55e;
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 4px;
     font-weight: 600;
     font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.2s ease;
 }
 
-.hours-col small {
-    font-size: 0.7rem;
-    color: #777;
+.save-btn:hover {
+    background: #16a34a;
 }
 
-.row-actions {
-    text-align: center;
+.save-btn:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
 }
 
+.cancel-btn {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    padding: 10px 24px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
 
-/* --------- buttons --------- */
+.cancel-btn:hover {
+    background: #e5e7eb;
+}
+
+/* ========== RESPONSIVE DESIGN ========== 
+@media (max-width: 768px) {
+    .horizontal-scroll-container {
+        flex-direction: column;
+        overflow-x: hidden;
+        padding: 1rem;
+    }
+    
+    .row-block {
+        flex: 0 0 auto;
+        width: 100%;
+    }
+    
+    .modal-header-container {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+    
+    .add-row-btn {
+        width: 100%;
+    }
+
+    .action-row {
+        width: 100%;
+    }
+
+    .save-btn,
+    .cancel-btn {
+        flex: 1;
+    }
+}*/
+:host {
+    /* Enhanced design tokens */
+    --slds-c-modal-content-spacing-block-start: 0;
+    --slds-c-modal-content-spacing-block-end: 0;
+    --slds-c-modal-footer-spacing-block-start: 0;
+    --slds-c-modal-content-background-color: #f8fafc;
+    --modal-primary-color: #3b82f6;
+    --modal-primary-hover: #2563eb;
+    --modal-success-color: #10b981;
+    --modal-success-hover: #059669;
+    --modal-card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    --modal-card-hover-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+    /* Non-italic font */
+    font-style: normal;
+}
+
+/* ========== MODAL HEADER - GRADIENT DESIGN ========== */
+.modal-header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 1.5rem 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #3b82f6 100%);
+    border-bottom: none;
+}
+
+.modal-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: -0.02em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.add-row-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(4px);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.add-row-btn:hover {
+    background: rgba(255, 255, 255, 0.35);
+    border-color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* ========== MODAL BODY - ENHANCED ========== */
+lightning-modal-body {
+    background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(80vh - 140px);
+    min-height: 450px;
+    overflow: visible !important;
+}
+
+/* Scrollable container with smooth scrolling */
+.horizontal-scroll-container {
+    display: flex;
+    padding: 1rem 1.5rem 1.5rem 1.5rem;
+    gap: 1.5rem;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    flex-grow: 1;
+    scroll-behavior: smooth;
+    align-items: flex-start;
+}
+
+/* Custom Scrollbar - Always Visible */
+.horizontal-scroll-container::-webkit-scrollbar {
+    height: 12px;
+    display: block;
+}
+
+.horizontal-scroll-container::-webkit-scrollbar-track {
+    background: #e2e8f0;
+    border-radius: 6px;
+    margin: 0 1rem;
+}
+
+.horizontal-scroll-container::-webkit-scrollbar-thumb {
+    background: #64748b;
+    border-radius: 6px;
+    border: 2px solid #e2e8f0;
+}
+
+.horizontal-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
+
+/* ========== ENTRY CARDS - PREMIUM DESIGN ========== */
+.row-block,
+.single-edit {
+    flex: 0 0 360px;
+    background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    border-radius: 16px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    box-shadow: var(--modal-card-shadow);
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.single-edit {
+    margin: 2rem auto;
+    max-width: 500px;
+    flex: 0 0 auto;
+}
+
+.row-block:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--modal-card-hover-shadow);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+/* ========== DELETE BUTTON - ENHANCED ========== */
+.delete-button {
+    position: absolute;
+    top: -12px;
+    right: -12px;
+    z-index: 10;
+    background: linear-gradient(135deg, #ffffff 0%, #fef2f2 100%) !important;
+    border: 2px solid #fecaca !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.delete-button:hover {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%) !important;
+    border-color: #f87171 !important;
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.3);
+}
+
+/* ========== TIME SECTION - PREMIUM LOOK ========== */
+.time-section {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid #bfdbfe;
+    box-shadow: inset 0 2px 4px rgba(59, 130, 246, 0.05);
+}
+
+.total-hours-display {
+    text-align: right;
+    font-size: 0.9rem;
+    color: #1d4ed8;
+    margin-top: 5px;
+    font-weight: 700;
+}
+
+/* ========== INPUT FIELDS - ENHANCED STYLING ========== */
+.form-input {
+    --slds-c-input-radius-border: 8px;
+    --slds-c-textarea-radius-border: 8px;
+}
+
+/* Style all labels in the form */
+.row-block .slds-form-element__label,
+.single-edit .slds-form-element__label {
+    font-weight: 600 !important;
+    font-style: normal !important;
+    color: #334155 !important;
+    font-size: 0.8rem !important;
+    margin-bottom: 4px !important;
+}
+
+/* Input focus states */
+.row-block lightning-input input:focus,
+.single-edit lightning-input input:focus,
+.row-block lightning-combobox input:focus,
+.single-edit lightning-combobox input:focus {
+    border-color: var(--modal-primary-color) !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+}
+
+.task-field textarea {
+    min-height: 75px !important;
+}
+
+.description-field textarea {
+    min-height: 100px !important;
+}
+
+/* ========== MODAL FOOTER - PREMIUM DESIGN ========== */
+lightning-modal-footer {
+    border-top: 1px solid #e2e8f0 !important;
+    padding: 1.25rem 1.5rem !important;
+    background: #ffffff !important;
+    margin: 0 !important;
+    display: block;
+}
 
 .action-row {
     display: flex;
     gap: 12px;
-    margin-top: 12px;
     justify-content: flex-end;
-   flex-shrink: 0;        /* ADD: Prevent shrinking */
 }
 
 .save-btn {
-    background: #25c943;
-    color: #fff;
-    font-size: 0.95em;
-    font-weight: 600;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 10px 30px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
     border: none;
-    border-radius: 7px;
-    padding: 8px 20px;
-    cursor: pointer;
-    box-shadow: 0 2px 7px #28791d23;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: background 0.2s, transform 0.1s;
 }
-.save-btn .action-icon {
-    display: flex;
-    align-items: center;
+
+.save-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(16, 185, 129, 0.45);
 }
-.save-btn:hover {
-    background: #188f2b;
-    transform: translateY(-1px);
-}
-.save-btn:active {
-    transform: translateY(0);
+
+.save-btn:disabled {
+    background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+    cursor: not-allowed;
+    box-shadow: none;
 }
 
 .cancel-btn {
-    background: #ecf4ee;
-    color: #222;
-    font-size: 0.95em;
-    border: none;
-    border-radius: 7px;
-    padding: 8px 20px;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.1s;
+    background: #ffffff;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
 }
+
 .cancel-btn:hover {
-    background: #e5e5e5;
-    transform: translateY(-1px);
-}
-.cancel-btn:active {
-    transform: translateY(0);
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #334155;
 }
 
-/* --------- responsive --------- */
+/* ========== GRID LAYOUT ========== */
+.grid-2-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
 
+/* ========== FIX DROPDOWN & DATE PICKER OVERLAPPING ========== */
+/* Each field needs proper z-index stacking to prevent overlap */
+
+/* Row block needs visible overflow for dropdowns */
+.row-block {
+    overflow: visible !important;
+}
+
+/* Horizontal scroll needs auto for X, visible for Y to allow dropdowns */
+.horizontal-scroll-container {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+}
+
+/* Modal body allows visible overflow */
+lightning-modal-body {
+    overflow: visible !important;
+}
+
+/* Date field - highest z-index since it's at top */
+.date-field {
+    position: relative;
+    z-index: 300 !important;
+}
+
+/* Project dropdown - high z-index so it appears above status */
+.project-field {
+    position: relative;
+    z-index: 200 !important;
+}
+
+/* Status row - lower z-index than project */
+.status-row {
+    position: relative;
+    z-index: 100 !important;
+}
+
+.status-field {
+    position: relative;
+    z-index: 100 !important;
+}
+
+/* Task field */
+.task-field {
+    position: relative;
+    z-index: 50 !important;
+}
+
+/* SLDS dropdown elements need high z-index */
+.slds-dropdown,
+.slds-datepicker,
+.slds-combobox__dropdown,
+.slds-listbox {
+    z-index: 10000 !important;
+}
+
+/* Validation error messages styling */
+.row-block .slds-form-element__help,
+.single-edit .slds-form-element__help {
+    color: #dc2626;
+    font-size: 0.8rem;
+    margin-top: 6px;
+    font-weight: 500;
+}
+
+/* ========== INLINE WARNING BANNER - ENHANCED ========== */
+.warning-banner {
+    margin: 0.75rem 2rem;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, #fef3cd 0%, #fde68a 100%);
+    color: #92400e;
+    border: 1px solid #f59e0b;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    z-index: 9999;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========== RESPONSIVE DESIGN ========== */
 @media (max-width: 768px) {
-    .modal-container {
-        width: 98vw;
-        padding: 18px 10px 12px 10px;
-    }
-
-    .form-row {
+    .modal-header-container {
         flex-direction: column;
+        gap: 14px;
+        padding: 1.25rem 1.5rem;
     }
 
-    .entry-table th,
-    .entry-table td {
-        padding: 4px 4px;
+    .add-row-btn {
+        width: 100%;
+    }
+
+    .horizontal-scroll-container {
+        flex-direction: column;
+        overflow-x: hidden;
+        padding: 1.5rem;
+    }
+
+    .row-block {
+        flex: 0 0 auto;
+        width: 100%;
     }
 
     .action-row {
@@ -552,5 +657,6 @@ lightning-modal-body {
     .save-btn,
     .cancel-btn {
         width: 100%;
+        justify-content: center;
     }
 }

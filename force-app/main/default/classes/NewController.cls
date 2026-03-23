@@ -4,7 +4,7 @@
  * @date 2025-10-08
  * @version 4.0 - Added Client Place and Field Work Details fields + WFH Approval support
  */
-public with sharing class NewController {
+public without sharing class NewController {
 @AuraEnabled
 public static Map<String, Object> createAttendance(Map<String, Object> payload) {
     Map<String, Object> result = new Map<String, Object>();
@@ -122,6 +122,35 @@ public static Map<String, Object> createAttendance(Map<String, Object> payload) 
                 System.debug('🏠 WFH Reason: ' + att.WFH_Reason__c);
             }
         }
+
+	// ✅ ADD THESE 3 BLOCKS before "insert att;"
+
+// OD Request flag
+if (payload.containsKey('Is_OD_Request__c')) {
+    att.Is_OD_Request__c = (Boolean) payload.get('Is_OD_Request__c');
+    System.debug('Is OD Request: ' + att.Is_OD_Request__c);
+}
+
+// OD Approval Status
+if (payload.containsKey('OD_Approval_Status__c') && payload.get('OD_Approval_Status__c') != null) {
+    att.OD_Approval_Status__c = (String) payload.get('OD_Approval_Status__c');
+    System.debug('OD Approval Status: ' + att.OD_Approval_Status__c);
+}
+
+// OD Reason
+if (payload.containsKey('OD_Reason__c') && payload.get('OD_Reason__c') != null) {
+    String odReason = (String) payload.get('OD_Reason__c');
+    if (String.isNotBlank(odReason)) {
+        att.OD_Reason__c = odReason;
+        System.debug('OD Reason: ' + att.OD_Reason__c);
+    }
+}
+
+// Submitted For Approval
+if (payload.containsKey('Submitted_For_Approval__c')) {
+    att.Submitted_For_Approval__c = (Boolean) payload.get('Submitted_For_Approval__c');
+    System.debug('Submitted For Approval: ' + att.Submitted_For_Approval__c);
+}
         
         // Insert the attendance record first
         System.debug('Attempting to insert attendance record...');
@@ -520,5 +549,521 @@ public static Map<String, Object> createAttendance(Map<String, Object> payload) 
         }
         
         return debugInfo;
+    }
+
+
+@AuraEnabled
+public static Map<String, Object> createODAttendance(Map<String, Object> payload) {
+    Map<String, Object> result = new Map<String, Object>();
+    try {
+        System.debug('=== CREATE OD ATTENDANCE ===');
+        System.debug('Payload: ' + JSON.serializePretty(payload));
+
+        payload.put('Is_OD_Request__c',         true);
+        payload.put('OD_Approval_Status__c',     'Pending');
+        payload.put('Submitted_For_Approval__c', true);
+
+        result = createAttendance(payload);
+        System.debug('createAttendance result: ' + JSON.serializePretty(result));
+
+        if (result.containsKey('success') && (Boolean) result.get('success') == true) {
+            String newRecordId = (String) result.get('recordId');
+            Id     employeeId  = (Id)     payload.get('Employee_Name__c');
+            String odReason    = payload.containsKey('OD_Reason__c')     ? (String) payload.get('OD_Reason__c')     : '';
+            String odDate      = payload.containsKey('Date__c')           ? (String) payload.get('Date__c')           : '';
+            String workLoc     = payload.containsKey('Work_Location__c')  ? (String) payload.get('Work_Location__c')  : '';
+            String checkIn     = payload.containsKey('Check_In_Time__c')  ? (String) payload.get('Check_In_Time__c')  : '';
+            String checkOut    = payload.containsKey('Check_Out_Time__c') ? (String) payload.get('Check_Out_Time__c') : '';
+
+            System.debug('Record created: ' + newRecordId);
+            System.debug('Employee ID: ' + employeeId);
+            System.debug('OD Reason: ' + odReason);
+            System.debug('OD Date: ' + odDate);
+            System.debug('CheckIn raw: ' + checkIn);
+            System.debug('CheckOut raw: ' + checkOut);
+
+            try {
+                // Query employee with manager — no IsActive filter on manager
+                List<User> users = [
+                    SELECT Id, Name, Email,
+                           ManagerId,
+                           Manager.Id,
+                           Manager.Name,
+                           Manager.Email,
+                           Manager.IsActive
+                    FROM   User
+                    WHERE  Id = :employeeId
+                    LIMIT  1
+                ];
+
+                System.debug('Users found: ' + users.size());
+                if (!users.isEmpty()) {
+                    User emp = users[0];
+                    System.debug('Employee: ' + emp.Name + ' | ' + emp.Email);
+                    System.debug('ManagerId: ' + emp.ManagerId);
+                    System.debug('Manager object null? ' + (emp.Manager == null));
+                    System.debug('Manager Name: ' + emp.Manager?.Name);
+                    System.debug('Manager Email: ' + emp.Manager?.Email);
+                    System.debug('Manager IsActive: ' + emp.Manager?.IsActive);
+                }
+
+                // Determine recipient
+                String toEmail = null;
+                String toName  = null;
+
+                if (!users.isEmpty()
+                    && users[0].ManagerId != null
+                    && users[0].Manager != null
+                    && String.isNotBlank(users[0].Manager.Email)) {
+
+                    toEmail = users[0].Manager.Email;
+                    toName  = users[0].Manager.Name;
+                    System.debug('✅ Sending to manager: ' + toEmail);
+
+                } else {
+                    // Fallback to System Administrator
+                    System.debug('⚠️ No manager email — using admin fallback');
+                    List<User> admins = [
+                        SELECT Id, Name, Email
+                        FROM   User
+                        WHERE  Profile.Name = 'System Administrator'
+                        AND    IsActive = true
+                        AND    Email   != null
+                        ORDER BY CreatedDate ASC
+                        LIMIT  1
+                    ];
+                    if (!admins.isEmpty()) {
+                        toEmail = admins[0].Email;
+                        toName  = admins[0].Name + ' (Admin)';
+                        System.debug('✅ Fallback admin: ' + toEmail);
+                    }
+                }
+
+                if (String.isBlank(toEmail)) {
+                    System.debug('❌ No recipient found — email skipped');
+                    result.put('emailSent',    false);
+                    result.put('emailMessage', 'No recipient found');
+                } else {
+                    User emp = users[0];
+
+                    // Format date
+                    String fDate = odDate;
+                    try { fDate = Date.valueOf(odDate).format(); } catch(Exception ex){
+                        System.debug('Date format warn: ' + ex.getMessage());
+                    }
+
+                    // Format times
+                    String fIn = '--', fOut = '--';
+                    try {
+                        fIn = DateTime.valueOf(checkIn.replace('T',' ').replace('Z','')).format('hh:mm a');
+                    } catch(Exception ex){ System.debug('CheckIn format warn: ' + ex.getMessage()); }
+                    try {
+                        fOut = DateTime.valueOf(checkOut.replace('T',' ').replace('Z','')).format('hh:mm a');
+                    } catch(Exception ex){ System.debug('CheckOut format warn: ' + ex.getMessage()); }
+
+                    System.debug('Formatted date: ' + fDate);
+                    System.debug('Formatted checkIn: ' + fIn);
+                    System.debug('Formatted checkOut: ' + fOut);
+
+                    // Record URL
+                   //String baseUrl = 'https://innovation-dream-9744--uatsandbox.sandbox.my.salesforce-sites.com/ODSiteApproval';
+                     String baseUrl =  'https://innovation-dream-9744.my.salesforce-sites.com/ODSiteApproval';
+                     String approvalUrl = baseUrl + '/apex/ODvfpage?id=' + newRecordId + '&emp=' + employeeId;
+
+                    // Build HTML email
+                    String htmlBody =
+                        '<html><body style="font-family:Arial,sans-serif;margin:0;padding:0;background:#f4f4f4;">' +
+                        '<table width="100%" cellpadding="0" cellspacing="0" style="padding:30px 0;">' +
+                        '<tr><td align="center">' +
+                        '<table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:8px;overflow:hidden;">' +
+                        '<tr><td style="background:#1a6bbf;padding:24px 32px;">' +
+                        '<h2 style="color:#fff;margin:0;font-size:20px;">OD Attendance Approval Request</h2>' +
+                        '<p style="color:#cce0ff;margin:4px 0 0;font-size:13px;">Action required — please approve or reject</p>' +
+                        '</td></tr>' +
+                        '<tr><td style="padding:24px 32px 0;">' +
+                        '<p style="margin:0;font-size:15px;color:#333;">Dear <strong>' + toName + '</strong>,</p>' +
+                        '<p style="margin:12px 0 0;font-size:14px;color:#555;line-height:1.6;">' +
+                        '<strong>' + emp.Name + '</strong> has submitted an OD request for a previous working day.</p>' +
+                        '</td></tr>' +
+                        '<tr><td style="padding:20px 32px;">' +
+                        '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f8faff;border:1px solid #dce8f8;border-radius:6px;">' +
+                        '<tr><td style="background:#e8f0fe;padding:10px 16px;">' +
+                        '<strong style="color:#1a6bbf;font-size:13px;">REQUEST DETAILS</strong></td></tr>' +
+                        '<tr><td style="padding:12px 16px;">' +
+                        '<table width="100%" cellpadding="5" cellspacing="0">' +
+                        '<tr><td style="color:#888;width:130px;font-size:13px;">Employee</td><td style="font-size:13px;">' + emp.Name + '</td></tr>' +
+                        '<tr style="background:#f5f5f5;"><td style="color:#888;font-size:13px;">Date</td><td style="font-size:13px;">' + fDate + '</td></tr>' +
+                        '<tr><td style="color:#888;font-size:13px;">Work Location</td><td style="font-size:13px;">' + workLoc + '</td></tr>' +
+                        '<tr style="background:#f5f5f5;"><td style="color:#888;font-size:13px;">Check-in</td><td style="font-size:13px;">' + fIn + '</td></tr>' +
+                        '<tr><td style="color:#888;font-size:13px;">Check-out</td><td style="font-size:13px;">' + fOut + '</td></tr>' +
+                        '<tr style="background:#f5f5f5;"><td style="color:#888;font-size:13px;">Status</td>' +
+                        '<td><span style="background:#fff3cd;color:#856404;padding:2px 8px;border-radius:10px;font-size:12px;">Pending Approval</span></td></tr>' +
+                        '</table></td></tr></table></td></tr>' +
+                        '<tr><td style="padding:0 32px 20px;">' +
+                        '<div style="background:#fffbf0;border:1px solid #fde8a0;border-radius:6px;padding:16px;">' +
+                        '<p style="margin:0 0 8px;font-weight:700;color:#92600a;font-size:13px;">REASON FOR OD</p>' +
+                        '<p style="margin:0;font-size:14px;color:#444;">' + odReason + '</p>' +
+                        '</div></td></tr>' +
+                        '<tr><td style="padding:0 32px 28px;">' +
+                        '<a href="' + approvalUrl + '" style="display:inline-block;background:#1a6bbf;color:#fff;padding:12px 24px;border-radius:5px;text-decoration:none;font-size:14px;font-weight:600;">Review &amp; Take Action in Salesforce</a>' +
+                        '<p style="margin:12px 0 0;font-size:12px;color:#666;">Open the record → set OD Approval Status to Approved or Rejected.</p>' +
+                        '</td></tr>' +
+                        '<tr><td style="background:#f8f8f8;border-top:1px solid #eee;padding:16px 32px;">' +
+                        '<p style="margin:0;font-size:11px;color:#999;">Automated notification — Attendance Management System | Record: ' + newRecordId + '</p>' +
+                        '</td></tr>' +
+                        '</table></td></tr></table>' +
+                        '</body></html>';
+
+                    Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+                    mail.setToAddresses(new List<String>{toEmail });
+// mail.setOrgWideEmailAddressId('0D2fs00000001tl');
+	OrgWideEmailAddress owea = [SELECT Id FROM OrgWideEmailAddress WHERE IsAllowAllProfiles = true LIMIT 1];
+mail.setOrgWideEmailAddressId(owea.Id);
+                    if (String.isNotBlank(emp.Email)) {
+                        mail.setCcAddresses(new List<String>{ emp.Email });
+                    }
+                    mail.setSubject('OD Approval Required: ' + emp.Name + ' — ' + fDate);
+                    mail.setHtmlBody(htmlBody);
+                    mail.setSaveAsActivity(false);
+                    mail.setUseSignature(false);
+
+                    System.debug('Sending email TO: ' + toEmail);
+
+                    Messaging.SendEmailResult[] sendRes =
+                        Messaging.sendEmail(
+                            new List<Messaging.SingleEmailMessage>{ mail },
+                            false  // allOrNothing = false
+                        );
+
+                    System.debug('sendResults null? ' + (sendRes == null));
+                    System.debug('sendResults size: ' + (sendRes != null ? sendRes.size() : 0));
+
+                    if (sendRes != null && !sendRes.isEmpty()) {
+                        Boolean emailOk = sendRes[0].isSuccess();
+                        System.debug('Email isSuccess: ' + emailOk);
+
+                        if (emailOk) {
+                            System.debug('✅ Email delivered to: ' + toEmail);
+                            result.put('emailSent',    true);
+                            result.put('emailMessage', 'Manager notified at ' + toEmail);
+                        } else {
+                            String errDetail = '';
+                            for (Messaging.SendEmailError e : sendRes[0].getErrors()) {
+                                errDetail += e.getStatusCode() + ': ' + e.getMessage() + '; ';
+                                System.debug('❌ Email error: ' + e.getStatusCode() + ' — ' + e.getMessage());
+                            }
+                            result.put('emailSent',  false);
+                            result.put('emailError', errDetail);
+                        }
+                    } else {
+                        System.debug('⚠️ Empty sendResults returned');
+                        result.put('emailSent',  false);
+                        result.put('emailError', 'Empty send results');
+                    }
+                }
+
+            } catch (Exception emailEx) {
+                System.debug('⚠️ Email exception: ' + emailEx.getMessage());
+                System.debug('Stack: ' + emailEx.getStackTraceString());
+                result.put('emailSent',  false);
+                result.put('emailError', emailEx.getMessage());
+            }
+
+            result.put('message', 'OD request submitted. Email status: ' +
+                (result.get('emailSent') == true ? 'Sent' : 'Failed - ' + result.get('emailError')));
+        }
+
+    } catch (Exception e) {
+        System.debug('❌ createODAttendance outer error: ' + e.getMessage());
+        System.debug('Stack: ' + e.getStackTraceString());
+        result.put('success', false);
+        result.put('error',   e.getMessage());
+    }
+    return result;
+}
+    // ===================================================================
+    // ✅ PRIVATE: Send OD approval email to manager
+    // ===================================================================
+@TestVisible    private static void sendODApprovalEmailToManager(
+        Id employeeId,
+        String attendanceRecordId,
+        String odReason,
+        String odDate,
+        String workLocation,
+        String checkInTime,
+        String checkOutTime
+    ) {
+        System.debug('=== SENDING OD APPROVAL EMAIL TO MANAGER ===');
+ 
+        // Step 1: Get employee details and manager
+        List<User> employees = [
+            SELECT Id, Name, Email, ManagerId, Manager.Name, Manager.Email,
+                   Department, Title
+            FROM User
+            WHERE Id = :employeeId
+            AND IsActive = true
+            LIMIT 1
+        ];
+ 
+        if (employees.isEmpty()) {
+            throw new AuraHandledException('Employee not found: ' + employeeId);
+        }
+ 
+        User employee = employees[0];
+        System.debug('Employee: ' + employee.Name);
+        System.debug('Manager ID: ' + employee.ManagerId);
+        System.debug('Manager Name: ' + employee.Manager?.Name);
+        System.debug('Manager Email: ' + employee.Manager?.Email);
+ 
+        // Step 2: Check if manager exists and has email
+        if (employee.ManagerId == null) {
+            System.debug('⚠️ No manager assigned to employee. Sending email to HR or admin.');
+            // Optionally send to a fallback HR email
+            sendFallbackODEmail(employee, attendanceRecordId, odReason, odDate, workLocation, checkInTime, checkOutTime);
+            return;
+        }
+ 
+        if (String.isBlank(employee.Manager?.Email)) {
+            throw new AuraHandledException('Manager does not have a valid email address.');
+        }
+ 
+        // Step 3: Format the date nicely
+        String formattedDate = odDate;
+        try {
+            Date parsedDate = Date.valueOf(odDate);
+            formattedDate = parsedDate.format();
+        } catch (Exception ex) {
+            formattedDate = odDate;
+        }
+ 
+        // Step 4: Format times (strip seconds for display)
+        String displayCheckIn  = formatTimeForEmail(checkInTime);
+        String displayCheckOut = formatTimeForEmail(checkOutTime);
+ 
+        // Step 5: Build the Salesforce record URL
+       // String orgBaseUrl = 'https://innovation-dream-9744--uatsandbox.sandbox.my.salesforce-sites.com/ODSiteApproval';
+        String orgBaseUrl = 'https://innovation-dream-9744.my.salesforce-sites.com/ODSiteApproval';
+        String recordUrl  = orgBaseUrl + '/' + attendanceRecordId;
+ 
+        // Step 6: Build HTML email body
+        String emailBody = buildODEmailBody(
+            employee.Name,
+            employee.Manager.Name,
+            formattedDate,
+            workLocation,
+            displayCheckIn,
+            displayCheckOut,
+            odReason,
+            recordUrl,
+            attendanceRecordId
+        );
+ 
+        // Step 7: Send the email
+        Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+        mail.setToAddresses(new List<String>{ employee.Manager.Email });
+        mail.setCcAddresses(new List<String>{ employee.Email }); // CC the employee
+        mail.setSubject('OD Approval Required: ' + employee.Name + ' - ' + formattedDate);
+        mail.setHtmlBody(emailBody);
+        mail.setSaveAsActivity(false);
+ 
+        Messaging.SendEmailResult[] results = Messaging.sendEmail(
+            new List<Messaging.SingleEmailMessage>{ mail }
+        );
+ 
+        if (results != null && !results.isEmpty()) {
+            if (results[0].isSuccess()) {
+                System.debug('✅ OD approval email sent to: ' + employee.Manager.Email);
+            } else {
+                List<Messaging.SendEmailError> errors = results[0].getErrors();
+                String errMsg = !errors.isEmpty() ? errors[0].getMessage() : 'Unknown email error';
+                throw new AuraHandledException('Email send failed: ' + errMsg);
+            }
+        }
+    }
+ 
+    // ===================================================================
+    // ✅ PRIVATE: Fallback email if no manager assigned
+    // ===================================================================
+ @TestVisible   private static void sendFallbackODEmail(
+        User employee,
+        String attendanceRecordId,
+        String odReason,
+        String odDate,
+        String workLocation,
+        String checkInTime,
+        String checkOutTime
+    ) {
+        // Get org admin or HR email — query for an active admin user
+        List<User> admins = [
+            SELECT Id, Name, Email
+            FROM User
+            WHERE Profile.Name = 'System Administrator'
+            AND IsActive = true
+            AND Email != null
+            ORDER BY CreatedDate ASC
+            LIMIT 1
+        ];
+ 
+        if (admins.isEmpty()) {
+            System.debug('⚠️ No admin user found for fallback email');
+            return;
+        }
+ 
+        String formattedDate   = odDate;
+        String displayCheckIn  = formatTimeForEmail(checkInTime);
+        String displayCheckOut = formatTimeForEmail(checkOutTime);
+        String orgBaseUrl      = URL.getOrgDomainUrl().toExternalForm();
+        String recordUrl       = orgBaseUrl + '/' + attendanceRecordId;
+ 
+        String emailBody = buildODEmailBody(
+            employee.Name,
+            admins[0].Name + ' (Admin - No Manager Assigned)',
+            formattedDate,
+            workLocation,
+            displayCheckIn,
+            displayCheckOut,
+            odReason,
+            recordUrl,
+            attendanceRecordId
+        );
+ 
+        Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+        mail.setToAddresses(new List<String>{ admins[0].Email });
+        mail.setCcAddresses(new List<String>{ employee.Email });
+        mail.setSubject('OD Request (No Manager Assigned): ' + employee.Name + ' - ' + formattedDate);
+        mail.setHtmlBody(emailBody);
+        mail.setSaveAsActivity(false);
+ 
+        Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
+        System.debug('✅ Fallback OD email sent to admin: ' + admins[0].Email);
+    }
+ 
+    // ===================================================================
+    // ✅ PRIVATE: Build professional HTML email body
+    // ===================================================================
+ @TestVisible   private static String buildODEmailBody(
+        String employeeName,
+        String managerName,
+        String odDate,
+        String workLocation,
+        String checkInTime,
+        String checkOutTime,
+        String odReason,
+        String recordUrl,
+        String recordId
+    ) {
+        return '<!DOCTYPE html>' +
+        '<html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f4f4f4;">' +
+        '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:30px 0;">' +
+        '  <tr><td align="center">' +
+        '    <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);">' +
+        
+        // Header
+        '      <tr><td style="background:#1a6bbf;padding:28px 32px;">' +
+        '        <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:600;">OD Attendance Approval Request</h1>' +
+        '        <p style="margin:6px 0 0;color:#cce0ff;font-size:13px;">Action required — please review and approve or reject</p>' +
+        '      </td></tr>' +
+ 
+        // Greeting
+        '      <tr><td style="padding:28px 32px 0;">' +
+        '        <p style="margin:0;font-size:15px;color:#333;">Dear <strong>' + managerName + '</strong>,</p>' +
+        '        <p style="margin:12px 0 0;font-size:14px;color:#555;line-height:1.6;">' +
+        '          <strong>' + employeeName + '</strong> has submitted an OD (On Duty) attendance request ' +
+        '          for a previous working day. Please review the details below and take action.' +
+        '        </p>' +
+        '      </td></tr>' +
+ 
+        // Details card
+        '      <tr><td style="padding:20px 32px;">' +
+        '        <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8faff;border:1px solid #dce8f8;border-radius:6px;overflow:hidden;">' +
+        '          <tr><td style="background:#e8f0fe;padding:12px 20px;">' +
+        '            <p style="margin:0;font-size:13px;font-weight:700;color:#1a6bbf;text-transform:uppercase;letter-spacing:0.5px;">Request Details</p>' +
+        '          </td></tr>' +
+        '          <tr><td style="padding:16px 20px;">' +
+        '            <table width="100%" cellpadding="6" cellspacing="0">' +
+        buildEmailRow('Employee', employeeName) +
+        buildEmailRow('Date', odDate) +
+        buildEmailRow('Work Location', workLocation) +
+        buildEmailRow('Check-in Time', checkInTime) +
+        buildEmailRow('Check-out Time', checkOutTime) +
+        buildEmailRow('Status', '<span style="background:#fff3cd;color:#856404;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;">Pending Approval</span>') +
+        '            </table>' +
+        '          </td></tr>' +
+        '        </table>' +
+        '      </td></tr>' +
+ 
+        // Reason section
+        '      <tr><td style="padding:0 32px 20px;">' +
+        '        <table width="100%" cellpadding="0" cellspacing="0" style="background:#fffbf0;border:1px solid #fde8a0;border-radius:6px;">' +
+        '          <tr><td style="background:#fef3c7;padding:12px 20px;">' +
+        '            <p style="margin:0;font-size:13px;font-weight:700;color:#92600a;text-transform:uppercase;letter-spacing:0.5px;">Reason for OD</p>' +
+        '          </td></tr>' +
+        '          <tr><td style="padding:16px 20px;">' +
+        '            <p style="margin:0;font-size:14px;color:#444;line-height:1.7;">' + odReason + '</p>' +
+        '          </td></tr>' +
+        '        </table>' +
+        '      </td></tr>' +
+ 
+        // Action buttons
+        '      <tr><td style="padding:0 32px 28px;">' +
+        '        <p style="margin:0 0 16px;font-size:13px;color:#666;">To approve or reject this request, please click the button below to view the record in Salesforce:</p>' +
+        '        <table cellpadding="0" cellspacing="0">' +
+        '          <tr>' +
+        '            <td style="padding-right:12px;">' +
+        '              <a href="' + recordUrl + '" style="display:inline-block;background:#1a6bbf;color:#ffffff;padding:12px 28px;border-radius:5px;text-decoration:none;font-size:14px;font-weight:600;">Review &amp; Take Action</a>' +
+        '            </td>' +
+        '          </tr>' +
+        '        </table>' +
+        '      </td></tr>' +
+ 
+        // Info note
+        '      <tr><td style="padding:0 32px 24px;">' +
+        '        <table width="100%" cellpadding="0" cellspacing="0" style="background:#e8f4fd;border-left:4px solid #1a6bbf;border-radius:0 4px 4px 0;">' +
+        '          <tr><td style="padding:12px 16px;">' +
+        '            <p style="margin:0;font-size:13px;color:#0c5aa6;line-height:1.6;">' +
+        '              <strong>Note:</strong> Once you review the record in Salesforce, update the <em>OD Approval Status</em> field to <strong>Approved</strong> or <strong>Rejected</strong>. ' +
+        '              The employee will be notified of your decision.' +
+        '            </p>' +
+        '          </td></tr>' +
+        '        </table>' +
+        '      </td></tr>' +
+ 
+        // Footer
+        '      <tr><td style="background:#f8f8f8;border-top:1px solid #ebebeb;padding:20px 32px;">' +
+        '        <p style="margin:0;font-size:12px;color:#888;line-height:1.6;">' +
+        '          This is an automated notification from the Attendance Management System. ' +
+        '          Please do not reply to this email. Record ID: ' + recordId +
+        '        </p>' +
+        '      </td></tr>' +
+ 
+        '    </table>' +
+        '  </td></tr>' +
+        '</table>' +
+        '</body></html>';
+    }
+ 
+    // ===================================================================
+    // ✅ PRIVATE: Helper to build a table row in the email
+    // ===================================================================
+ @TestVisible   private static String buildEmailRow(String label, String value) {
+        return '<tr>' +
+        '  <td style="width:140px;font-size:13px;color:#888;font-weight:600;vertical-align:top;padding:4px 8px 4px 0;">' + label + '</td>' +
+        '  <td style="font-size:13px;color:#333;vertical-align:top;padding:4px 0;">' + (String.isNotBlank(value) ? value : '--') + '</td>' +
+        '</tr>';
+    }
+ 
+    // ===================================================================
+    // ✅ PRIVATE: Format datetime string for email display
+    // ===================================================================
+@TestVisible    private static String formatTimeForEmail(String datetimeStr) {
+        if (String.isBlank(datetimeStr)) return '--';
+        try {
+            // Input format: "2026-03-13 09:15:00"
+            DateTime dt = DateTime.valueOf(datetimeStr.replace('T', ' ').replace('Z', ''));
+            return dt.format('hh:mm a');
+        } catch (Exception e) {
+            // If it's already just a time like "09:15:00"
+            return datetimeStr.length() >= 5 ? datetimeStr.substring(0, 5) : datetimeStr;
+        }
     }
 }

@@ -693,6 +693,7 @@ export default class WeeklyTimesheetView extends LightningElement {
 }*/
 import { LightningElement, api, track, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import LightningAlert from 'lightning/alert';
 import { refreshApex } from '@salesforce/apex';
 import submitWeeklyEntriesForApproval from '@salesforce/apex/TimesheetController.submitWeeklyEntriesForApproval';
 import checkWeeklySubmissionStatus from '@salesforce/apex/TimesheetController.checkWeeklySubmissionStatus';
@@ -714,23 +715,26 @@ export default class WeeklyTimesheetView extends LightningElement {
     };
     wiredEntriesResult;
     wiredStatusResult;
-   
-@wire(getPendingApprovals)
-pendingApprovals;
+
+    @wire(getPendingApprovals)
+    pendingApprovals;
     // Wire adapter to fetch entries for the current week
-    @wire(getEntriesForWeek, { 
-        weekNumber: '$currentWeekNumber', 
-        year: '$currentYear' 
+    @wire(getEntriesForWeek, {
+        weekNumber: '$currentWeekNumber',
+        year: '$currentYear'
     })
     wiredEntriesHandler(result) {
         this.wiredEntriesResult = result;
-       if (result.data) {
-    this.processEntries(result.data);
-
-    // Wait for LWC reactivity to update currentWeekNumber
-    setTimeout(() => {
-        this.checkSubmissionStatus();
-    }, 50);
+        if (result.data) {
+            this.processEntries(result.data);
+            // ✅ Fire AFTER weeklyEntries is ready
+            Promise.resolve().then(() => {
+                this.notifyWeekTotal();
+            });
+            // Wait for LWC reactivity to update currentWeekNumber
+            setTimeout(() => {
+                this.checkSubmissionStatus();
+            }, 50);
 
         } else if (result.error) {
             console.error('Error loading entries:', result.error);
@@ -748,8 +752,14 @@ pendingApprovals;
     calculateCurrentWeek() {
         const targetDate = new Date();
         targetDate.setDate(targetDate.getDate() + (this.currentWeekOffset * 7));
-        this.currentWeekNumber = this.getWeekNumber(targetDate);
-        this.currentYear = targetDate.getFullYear();
+
+        // Use ISO logic for both Week and Year
+        const d = new Date(Date.UTC(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate()));
+        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+
+        const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+        this.currentWeekNumber = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        this.currentYear = d.getUTCFullYear(); // Crucial: Use year of the Thursday
     }
 
     // Process entries into display format
@@ -758,7 +768,7 @@ pendingApprovals;
             const regular = entry.Regular_Hours__c || 0;
             const overtime = entry.Overtime_Hours__c || 0;
             const entryDate = new Date(entry.Date__c);
-            
+
             return {
                 id: entry.Id,
                 date: this.formatDate(entryDate),
@@ -778,7 +788,7 @@ pendingApprovals;
 
     // Get CSS class based on approval status
     getStatusClass(approvalStatus) {
-        switch(approvalStatus) {
+        switch (approvalStatus) {
             case 'Approved':
                 return 'status-approved';
             case 'Submitted':
@@ -801,9 +811,9 @@ pendingApprovals;
     }
 
     get disableSubmitButton() {
-        return !this.weeklySubmissionStatus.canSubmit || 
-               this.weeklyEntries.length === 0 ||
-               this.isLoading;
+        return !this.weeklySubmissionStatus.canSubmit ||
+            this.weeklyEntries.length === 0 ||
+            this.isLoading;
     }
 
     get weekStartDate() {
@@ -833,32 +843,38 @@ pendingApprovals;
 
     // Navigation handlers
     handlePrevWeek() {
-    this.currentWeekOffset -= 1;
-    this.calculateCurrentWeek();
-
-    setTimeout(() => {
-        this.checkSubmissionStatus();
-    }, 50);
-}
-
-handleNextWeek() {
-    if (!this.isCurrentWeek) {
-        this.currentWeekOffset += 1;
+        this.currentWeekOffset -= 1;
         this.calculateCurrentWeek();
+        Promise.resolve().then(() => {
+            this.notifyWeekTotal();
+        });
 
         setTimeout(() => {
             this.checkSubmissionStatus();
         }, 50);
     }
-}
+
+    handleNextWeek() {
+        if (!this.isCurrentWeek) {
+            this.currentWeekOffset += 1;
+            this.calculateCurrentWeek();
+            Promise.resolve().then(() => {
+                this.notifyWeekTotal();
+            });
+
+            setTimeout(() => {
+                this.checkSubmissionStatus();
+            }, 50);
+        }
+    }
 
     // Check submission status from server
     async checkSubmissionStatus() {
         try {
             const status = await checkWeeklySubmissionStatus({
-    weekNumber: Number(this.currentWeekNumber),
-    year: Number(this.currentYear)
-});
+                weekNumber: Number(this.currentWeekNumber),
+                year: Number(this.currentYear)
+            });
             this.weeklySubmissionStatus = status;
         } catch (error) {
             console.error('Error checking submission status:', error);
@@ -867,7 +883,7 @@ handleNextWeek() {
 
     // Submit weekly entries for approval
     async handleWeeklySubmitForApproval() {
-          console.log('=== SUBMIT STARTED ===');
+        console.log('=== SUBMIT STARTED ===');
         console.log('Week:', this.currentWeekNumber, 'Year:', this.currentYear);
         this.isLoading = true;
         try {
@@ -876,23 +892,23 @@ handleNextWeek() {
                 year: this.currentYear
             });
             // Show success message with manager info
-            const message = result.message || 
-                          `Timesheet submitted successfully to ${result.managerName || 'your manager'}`;
-            this.showToast('Success', message, 'success');
-            
+            const message = result.message ||
+                `Timesheet submitted successfully to ${result.managerName || 'your manager'}`;
+            await this.showToast('Success', message, 'success');
+
             // Refresh the entries to show updated approval status
-             console.log('Refreshing entries...');
+            console.log('Refreshing entries...');
             await refreshApex(this.wiredEntriesResult);
-// Wait a bit for Salesforce to update
+            // Wait a bit for Salesforce to update
             await this.delay(200);
-            
-setTimeout(() => {
-    this.checkSubmissionStatus();
-}, 100);
+
+            setTimeout(() => {
+                this.checkSubmissionStatus();
+            }, 100);
             // Update submission status
             console.log('Checking submission status...');
             await this.checkSubmissionStatus();
-            
+
             // Notify parent component to refresh (if needed)
             this.dispatchEvent(new CustomEvent('refreshentries'));
             console.log('=== SUBMIT COMPLETED ===');
@@ -900,7 +916,7 @@ setTimeout(() => {
             console.error('=== SUBMIT FAILED ===');
             console.error('Error details:', error);
             const errorMsg = error.body?.message || 'Failed to submit timesheet for approval';
-            this.showToast('Error', errorMsg, 'error');
+            await this.showToast('Error', errorMsg, 'error');
             console.error('Submission error:', error);
         } finally {
             this.isLoading = false;
@@ -910,26 +926,26 @@ setTimeout(() => {
     delay(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
-handleExportExcel() {
+    handleExportExcel() {
         console.log('=== Starting Export ===');
         this.isLoading = true;
-        
+
         try {
             if (!this.weeklyEntries || this.weeklyEntries.length === 0) {
                 this.showToast('Warning', 'No entries found for this week', 'warning');
                 return;
             }
-            
+
             console.log('Exporting', this.weeklyEntries.length, 'entries');
-            
+
             let csvContent = '\uFEFF';
-            
+
             csvContent += `Weekly Timesheet - Week ${this.currentWeekNumber}, ${this.currentYear}\n`;
             csvContent += `${this.weekStartDate} - ${this.weekEndDate}\n`;
             csvContent += '\n';
-            
+
             csvContent += 'Date,Day,Project,Task,Regular Hours,Overtime Hours,Total Hours,Approval Status\n';
-            
+
             this.weeklyEntries.forEach(entry => {
                 const date = String(entry.date || '').replace(/,/g, ';');
                 const day = String(entry.day || '').replace(/,/g, ';');
@@ -940,61 +956,61 @@ handleExportExcel() {
                 const overtime = entry.overtime || 0;
                 const total = entry.totalHours || 0;
                 const status = String(entry.approvalStatus || 'Draft').replace(/,/g, ';');
-                
+
                 csvContent += `${date},${day},${project},${task},${regular},${overtime},${total},${status}\n`;
             });
-            
+
             csvContent += '\n';
             csvContent += 'WEEK SUMMARY\n';
             csvContent += `Total Regular Hours,${this.weekRegularHours}\n`;
             csvContent += `Total Overtime Hours,${this.weekOvertimeHours}\n`;
             csvContent += `Total Hours,${this.weekTotalHours}\n`;
-            
+
             csvContent += '\n';
             csvContent += `Week Number,${this.currentWeekNumber}\n`;
             csvContent += `Year,${this.currentYear}\n`;
             csvContent += `Export Date,${new Date().toLocaleString()}\n`;
-            
+
             console.log('CSV generated, size:', csvContent.length, 'characters');
-            
+
             const filename = `Timesheet_Week${this.currentWeekNumber}_${this.currentYear}.csv`;
-            
+
             const dataUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent);
-            
+
             const link = document.createElement('a');
             link.setAttribute('href', dataUri);
             link.setAttribute('download', filename);
             link.style.display = 'none';
-            
+
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            
+
             console.log('=== Export Completed Successfully ===');
             this.showToast('Success', 'Timesheet exported successfully', 'success');
-            
+
         } catch (error) {
             console.error('=== Export Failed ===');
             console.error('Error:', error);
-            
+
             this.showToast('Error', 'Failed to export: ' + error.message, 'error');
         } finally {
             this.isLoading = false;
         }
     }
-    
 
 
-// Get current user name
-getCurrentUserName() {
-    // This will be available from the component context
-    // If not, it will show as 'Unknown' in export
-    try {
-        this.currentUserName = this.weeklyEntries[0]?.CreatedBy?.Name || 'Employee';
-    } catch (e) {
-        this.currentUserName = 'Employee';
+
+    // Get current user name
+    getCurrentUserName() {
+        // This will be available from the component context
+        // If not, it will show as 'Unknown' in export
+        try {
+            this.currentUserName = this.weeklyEntries[0]?.CreatedBy?.Name || 'Employee';
+        } catch (e) {
+            this.currentUserName = 'Employee';
+        }
     }
-}
     // Utility methods
     getWeekStartDate(weekOffset) {
         const date = new Date();
@@ -1023,15 +1039,26 @@ getCurrentUserName() {
         const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
         return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
     }
-
-    showToast(title, message, variant) {
+    notifyWeekTotal() {
+        console.log('Dispatching week total:', this.weekTotalHours);
         this.dispatchEvent(
-            new ShowToastEvent({
-                title: title,
-                message: message,
-                variant: variant,
-                mode: 'dismissable'
+            new CustomEvent('weektotalupdate', {
+                detail: {
+                    weekTotalHours: this.weekTotalHours,
+                    overtimeHours: this.weekOvertimeHours
+                },
+                bubbles: true,
+                composed: true
             })
         );
+    }
+
+    async showToast(title, message, variant) {
+        // Use LightningAlert for Experience Site compatibility
+        await LightningAlert.open({
+            message: message,
+            theme: variant, // success | error | warning | info
+            label: title
+        });
     }
 }

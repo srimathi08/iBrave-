@@ -10,11 +10,11 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 // Import Apex Methods
 import getAdminAttendanceRecords from '@salesforce/apex/AdminAttendanceViewController.getAdminAttendanceRecords';
-import getEmployeeIds from '@salesforce/apex/AdminAttendanceViewController.getEmployeeIds';
-import getEmployeeNames from '@salesforce/apex/AdminAttendanceViewController.getEmployeeNames';
+//import getEmployeeIds from '@salesforce/apex/AdminAttendanceViewController.getEmployeeIds';
+//import getEmployeeNames from '@salesforce/apex/AdminAttendanceViewController.getEmployeeNames';
 import getDepartments from '@salesforce/apex/AdminAttendanceViewController.getDepartments';
 import exportAttendanceToCSV from '@salesforce/apex/AdminAttendanceViewController.exportAttendanceToCSV';
-
+import searchEmployeesLightweight from '@salesforce/apex/AdminAttendanceViewController.searchEmployeesLightweight';
 export default class AdminAttendanceView extends LightningElement {
     
     // ============================================
@@ -51,6 +51,12 @@ export default class AdminAttendanceView extends LightningElement {
     @track employeeIdOptions = [];
     @track employeeNameOptions = [];
     @track departmentOptions = [];
+
+    // Employee Search Suggestions
+@track employeeIdSuggestions = [];
+@track employeeNameSuggestions = [];
+@track showEmployeeIdSuggestions = false;
+@track showEmployeeNameSuggestions = false;
     
     // ✅ NEW: Track if filters have been applied
     @track filtersHaveBeenApplied = false;
@@ -62,8 +68,36 @@ export default class AdminAttendanceView extends LightningElement {
     connectedCallback() {
         console.log('=== Admin Attendance View Initialized ===');
         this.initializeComponent();
+        // ✅ NEW: Add event listener to close suggestions when clicking outside
+        document.addEventListener('click', this.handleDocumentClick.bind(this));
+    }
+
+    disconnectedCallback() {
+    // ✅ NEW: Clean up event listener
+    document.removeEventListener('click', this.handleDocumentClick.bind(this));
+}
+    
+
+    handleDocumentClick(event) {
+    // Close suggestions if clicking outside the search fields
+    const empIdField = this.template.querySelector('[name="employeeId"]');
+    const empNameField = this.template.querySelector('[name="employeeName"]');
+    
+    if (empIdField && !empIdField.contains(event.target)) {
+        // Small delay to allow suggestion click to register first
+        setTimeout(() => {
+            this.showEmployeeIdSuggestions = false;
+        }, 200);
     }
     
+    if (empNameField && !empNameField.contains(event.target)) {
+        setTimeout(() => {
+            this.showEmployeeNameSuggestions = false;
+        }, 200);
+    }
+}
+
+
     /**
      * ✅ UPDATED: Initialize component - Load dropdown options ONLY (no data initially)
      */
@@ -79,8 +113,8 @@ export default class AdminAttendanceView extends LightningElement {
         console.log('Default date range:', this.startDate, 'to', this.endDate);
         
         // Load dropdown options only
-        this.loadEmployeeIds();
-        this.loadEmployeeNames();
+        //this.loadEmployeeIds();
+        //this.loadEmployeeNames();
         this.loadDepartments();
         
         // ✅ CHANGED: DO NOT load initial data - wait for user to apply filters
@@ -243,15 +277,86 @@ export default class AdminAttendanceView extends LightningElement {
     // FILTER HANDLERS
     // ============================================
     
-    handleEmployeeIdChange(event) {
-        this.employeeIdFilter = event.detail.value;
-        console.log('Employee ID filter:', this.employeeIdFilter);
-    }
     
-    handleEmployeeNameChange(event) {
-        this.employeeNameFilter = event.detail.value;
-        console.log('Employee Name filter:', this.employeeNameFilter);
+    // handleEmployeeIdChange(event) {
+    //     this.employeeIdFilter = event.detail.value;
+    //     console.log('Employee ID filter:', this.employeeIdFilter);
+    // }
+    
+    // handleEmployeeNameChange(event) {
+    //     this.employeeNameFilter = event.detail.value;
+    //     console.log('Employee Name filter:', this.employeeNameFilter);
+    // }
+
+
+
+// ============================================
+// FILTER HANDLERS
+// ============================================
+
+handleEmployeeIdChange(event) {
+    this.employeeIdFilter = event.target.value;
+    
+    if (this.employeeIdFilter && this.employeeIdFilter.length >= 1) {
+        this.searchEmployeesByField('employeeId', this.employeeIdFilter);
+    } else {
+        this.showEmployeeIdSuggestions = false;
+        this.employeeIdSuggestions = [];
     }
+}
+
+handleEmployeeNameChange(event) {
+    this.employeeNameFilter = event.target.value;
+    
+    if (this.employeeNameFilter && this.employeeNameFilter.length >= 2) {
+        this.searchEmployeesByField('name', this.employeeNameFilter);
+    } else {
+        this.showEmployeeNameSuggestions = false;
+        this.employeeNameSuggestions = [];
+    }
+}
+
+searchEmployeesByField(fieldType, searchTerm) {
+    searchEmployeesLightweight({ 
+        searchType: fieldType,
+        searchTerm: searchTerm
+    })
+    .then(result => {
+        if (fieldType === 'employeeId') {
+            this.employeeIdSuggestions = result;
+            this.showEmployeeIdSuggestions = result.length > 0;
+        } else if (fieldType === 'name') {
+            this.employeeNameSuggestions = result;
+            this.showEmployeeNameSuggestions = result.length > 0;
+        }
+    })
+    .catch(error => {
+        console.error('Error searching employees:', error);
+        this.showToast('Error', 'Failed to search employees', 'error');
+    });
+}
+
+handleEmployeeIdSuggestionClick(event) {
+    const selectedId = event.currentTarget.dataset.id;
+    const selectedName = event.currentTarget.dataset.name;
+    const selectedEmpId = event.currentTarget.dataset.empid;
+    
+    this.employeeIdFilter = selectedEmpId;
+    this.employeeNameFilter = selectedName;
+    this.showEmployeeIdSuggestions = false;
+    this.employeeIdSuggestions = [];
+}
+
+handleEmployeeNameSuggestionClick(event) {
+    const selectedId = event.currentTarget.dataset.id;
+    const selectedName = event.currentTarget.dataset.name;
+    const selectedEmpId = event.currentTarget.dataset.empid;
+    
+    this.employeeNameFilter = selectedName;
+    this.employeeIdFilter = selectedEmpId;
+    this.showEmployeeNameSuggestions = false;
+    this.employeeNameSuggestions = [];
+}
     
     handleDepartmentChange(event) {
         this.departmentFilter = event.detail.value;
@@ -283,6 +388,13 @@ export default class AdminAttendanceView extends LightningElement {
         this.employeeIdFilter = '';
         this.employeeNameFilter = '';
         this.departmentFilter = '';
+
+
+        // Clear suggestions
+    this.showEmployeeIdSuggestions = false;
+    this.showEmployeeNameSuggestions = false;
+    this.employeeIdSuggestions = [];
+    this.employeeNameSuggestions = [];
         
         // Reset to default date range (last 7 days)
         const today = new Date();
@@ -343,7 +455,7 @@ export default class AdminAttendanceView extends LightningElement {
         
         // Map frontend field names to backend field names
         const fieldMapping = {
-            'employeeId': 'Employee_Name__r.Employee_Id__c',
+            'employeeId': 'Employee_Name__r.Employee_IDs__c',
             'employeeName': 'Employee_Name__r.Name',
             'managerName': 'Employee_Name__r.Manager.Name',
             'department': 'Employee_Name__r.Department',

@@ -1,19 +1,23 @@
-import { LightningElement, track, wire } from 'lwc';
-import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { LightningElement, track } from 'lwc';
 import USER_ID from '@salesforce/user/Id';
+import LightningAlert from 'lightning/alert';
 
-// Import Apex methods
-import submitHybridScheduleRequest from '@salesforce/apex/HybridWorkScheduleController.submitHybridScheduleRequest';
-import getEmployeeSchedules from '@salesforce/apex/HybridWorkScheduleController.getEmployeeSchedules';
+import submitHybridScheduleRequest from
+    '@salesforce/apex/HybridWorkScheduleController.submitHybridScheduleRequest';
+import getEmployeeSchedules from
+    '@salesforce/apex/HybridWorkScheduleController.getEmployeeSchedules';
 
 export default class HybridScheduleRequest extends LightningElement {
-    // User data
+
     employeeId = USER_ID;
-    
-    // Form data
+
+    @track showForm = false;
+    @track isLoading = false;
+
     @track selectedMonth = '';
     @track scheduleType = 'Fixed Days';
     @track reason = '';
+
     @track daysOfWeek = [
         { label: 'Monday', value: 'Monday', isWFH: false, isOffice: false },
         { label: 'Tuesday', value: 'Tuesday', isWFH: false, isOffice: false },
@@ -21,299 +25,507 @@ export default class HybridScheduleRequest extends LightningElement {
         { label: 'Thursday', value: 'Thursday', isWFH: false, isOffice: false },
         { label: 'Friday', value: 'Friday', isWFH: false, isOffice: false }
     ];
-    
-    // UI state
-    @track isLoading = false;
+
     @track hasValidationError = false;
     @track validationErrorMessage = '';
     @track existingSchedules = [];
-    
-    // Computed properties
-    get minMonth() {
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        return `${year}-${month}`;
+
+    @track selectedMonth = '';
+@track scheduleType = 'Fixed Days';
+@track reason = '';
+
+@track selectedMonth = '';
+@track selectedWeek = '';
+@track weekStartDate = '';
+@track scheduleType = 'Fixed Days';
+@track reason = '';
+
+    connectedCallback() {
+        this.loadExistingSchedules();
     }
-    
+
+    /* ======================
+        GETTERS
+    ======================= */
+
+    get minMonth() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    }
+
     get scheduleTypeOptions() {
         return [
-            { label: 'Fixed Days (Same pattern every week)', value: 'Fixed Days' },
-            { label: 'Flexible (May vary)', value: 'Flexible' },
+            { label: 'Fixed Days', value: 'Fixed Days' },
+            { label: 'Flexible', value: 'Flexible' },
             { label: 'Custom Pattern', value: 'Custom Pattern' }
         ];
     }
-    
+
     get selectedWFHDaysText() {
-        const selected = this.daysOfWeek.filter(day => day.isWFH).map(day => day.label);
-        return selected.length > 0 ? selected.join(', ') : 'None';
+        return this.getSelectedWFHDays().join(', ') || 'None';
     }
-    
+
     get selectedOfficeDaysText() {
-        const selected = this.daysOfWeek.filter(day => day.isOffice).map(day => day.label);
-        return selected.length > 0 ? selected.join(', ') : 'None';
+        return this.getSelectedOfficeDays().join(', ') || 'None';
     }
-    
+
     get reasonCharCount() {
-        return this.reason ? this.reason.length : 0;
+        return this.reason.length;
     }
-    
-    get isReasonTooShort() {
-        return this.reasonCharCount > 0 && this.reasonCharCount < 20;
-    }
-    
-    get showSummary() {
-        return this.selectedMonth && (this.getSelectedWFHDays().length > 0 || this.getSelectedOfficeDays().length > 0);
-    }
-    
-    get selectedMonthDisplay() {
-        if (!this.selectedMonth) return '';
-        const date = new Date(this.selectedMonth + '-01');
-        return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    }
-    
-    get totalWFHDays() {
-        return this.getSelectedWFHDays().length;
-    }
-    
-    get totalOfficeDays() {
-        return this.getSelectedOfficeDays().length;
-    }
-    
+
     get isSubmitDisabled() {
-        return !this.selectedMonth || 
-               (this.getSelectedWFHDays().length === 0 && this.getSelectedOfficeDays().length === 0) ||
-               !this.reason || 
+        const totalSelectedDays = this.getSelectedWFHDays().length + this.getSelectedOfficeDays().length;
+        
+       return !this.selectedWeek ||        // ← was !this.selectedMonth
+           !this.weekStartDate ||       // ← extra safety check
+               !this.reason ||
                this.reason.length < 20 ||
+               totalSelectedDays !== 5 || // ✅ Must select exactly 5 days
                this.isLoading;
     }
-    
+
     get hasExistingSchedules() {
-        return this.existingSchedules && this.existingSchedules.length > 0;
+        return this.existingSchedules.length > 0;
     }
-    
-    // Lifecycle
-    connectedCallback() {
-        console.log('Hybrid Schedule Request component initialized');
-        this.loadExistingSchedules();
+
+    /* ======================
+        HANDLERS
+    ======================= */
+
+    handleNewRequest() {
+        this.resetForm();
+        this.showForm = true;
     }
-    
-    // Event handlers
-    handleMonthChange(event) {
-        this.selectedMonth = event.target.value;
-        console.log('Selected month:', this.selectedMonth);
-        this.validateForm();
+
+    handleCancel() {
+        this.showForm = false;
+        this.resetForm();
     }
-    
-    handleScheduleTypeChange(event) {
-        this.scheduleType = event.detail.value;
-        console.log('Schedule type:', this.scheduleType);
+
+    handleMonthChange(e) {
+        this.selectedMonth = e.target.value;
     }
-    
-    handleWFHDayChange(event) {
-        const dayValue = event.target.dataset.day;
-        const isChecked = event.target.checked;
+
+    handleScheduleTypeChange(e) {
+        this.scheduleType = e.detail.value;
+    }
+
+    handleWFHDayChange(e) {
+        const day = e.target.dataset.day;
+        const checked = e.target.checked;
         
-        this.daysOfWeek = this.daysOfWeek.map(day => {
-            if (day.value === dayValue) {
-                return { ...day, isWFH: isChecked };
-            }
-            return day;
-        });
+        console.log('WFH Day Change:', day, 'Checked:', checked);
         
-        console.log('WFH days updated:', this.getSelectedWFHDays());
-        this.validateForm();
-    }
-    
-    handleOfficeDayChange(event) {
-        const dayValue = event.target.dataset.day;
-        const isChecked = event.target.checked;
+        // Find the current state of this day
+        const dayConfig = this.daysOfWeek.find(d => d.value === day);
+        console.log('Current Day Config:', dayConfig);
         
-        this.daysOfWeek = this.daysOfWeek.map(day => {
-            if (day.value === dayValue) {
-                return { ...day, isOffice: isChecked };
-            }
-            return day;
-        });
-        
-        console.log('Office days updated:', this.getSelectedOfficeDays());
-        this.validateForm();
-    }
-    
-    handleReasonChange(event) {
-        this.reason = event.target.value;
-        this.validateForm();
-    }
-    
-    handleReset() {
-        this.selectedMonth = '';
-        this.scheduleType = 'Fixed Days';
-        this.reason = '';
-        this.daysOfWeek = this.daysOfWeek.map(day => ({
-            ...day,
-            isWFH: false,
-            isOffice: false
-        }));
-        this.hasValidationError = false;
-        this.validationErrorMessage = '';
-        
-        this.showToast('Reset', 'Form has been reset', 'info');
-    }
-    
-    handleRefresh() {
-        this.loadExistingSchedules();
-    }
-    
-    async handleSubmit() {
-        // Final validation
-        if (!this.validateForm()) {
-            return;
+        // If trying to check and it's already in Office, prevent it
+        if (checked && dayConfig.isOffice) {
+            console.log('⚠️ Conflict detected - Day already in Office');
+            this.hasValidationError = true;
+            this.validationErrorMessage = `⚠️ CONFLICT: ${day} is already selected as an Office day. Please deselect it from Office Days first.`;
+            
+            // Show alert
+            LightningAlert.open({
+                message: `${day} is already selected for Office Days. A day cannot be both Work From Home and Office day simultaneously. Please deselect it from Office Days first.`,
+                theme: 'error',
+                label: '⚠️ Conflict Detected'
+            });
+            
+            return; // Don't update state
         }
         
-        this.isLoading = true;
+        // Update WFH selection
+        this.daysOfWeek = this.daysOfWeek.map(d =>
+            d.value === day ? { ...d, isWFH: checked } : d
+        );
         
+        console.log('Updated daysOfWeek:', JSON.parse(JSON.stringify(this.daysOfWeek)));
+        
+        this.validateDaySelection();
+    }
+
+    handleOfficeDayChange(e) {
+        const day = e.target.dataset.day;
+        const checked = e.target.checked;
+        
+        console.log('Office Day Change:', day, 'Checked:', checked);
+        
+        // Find the current state of this day
+        const dayConfig = this.daysOfWeek.find(d => d.value === day);
+        console.log('Current Day Config:', dayConfig);
+        
+        // If trying to check and it's already in WFH, prevent it
+        if (checked && dayConfig.isWFH) {
+            console.log('⚠️ Conflict detected - Day already in WFH');
+            this.hasValidationError = true;
+            this.validationErrorMessage = `⚠️ CONFLICT: ${day} is already selected as a Work From Home day. Please deselect it from WFH Days first.`;
+            
+            // Show alert
+            LightningAlert.open({
+                message: `${day} is already selected for Work From Home Days. A day cannot be both Work From Home and Office day simultaneously. Please deselect it from WFH Days first.`,
+                theme: 'error',
+                label: '⚠️ Conflict Detected'
+            });
+            
+            return; // Don't update state
+        }
+        
+        // Update Office selection
+        this.daysOfWeek = this.daysOfWeek.map(d =>
+            d.value === day ? { ...d, isOffice: checked } : d
+        );
+        
+        console.log('Updated daysOfWeek:', JSON.parse(JSON.stringify(this.daysOfWeek)));
+        
+        this.validateDaySelection();
+    }
+
+    handleReasonChange(e) {
+        this.reason = e.target.value;
+    }
+
+    async handleSubmit() {
+        console.log('=== SUBMITTING HYBRID SCHEDULE REQUEST ===');
+
+          // ✅ Guard: ensure weekStartDate is valid
+    if (!this.weekStartDate || this.weekStartDate.startsWith('-')) {
+        await LightningAlert.open({
+            message: 'Please re-select the schedule week and try again.',
+            theme: 'error',
+            label: 'Invalid Week'
+        });
+        return;
+    }
+        
+        // ✅ Final validation before submit
+        const totalSelectedDays = this.getSelectedWFHDays().length + this.getSelectedOfficeDays().length;
+        
+        if (totalSelectedDays !== 5) {
+            await LightningAlert.open({
+                message: `You must select all 5 weekdays. Currently selected: ${totalSelectedDays} days. Please select ${5 - totalSelectedDays} more day(s).`,
+                theme: 'warning',
+                label: '⚠️ Incomplete Selection'
+            });
+            return;
+            
+        }
+        
+        
+        this.isLoading = true;
+
         try {
-            const wfhDays = this.getSelectedWFHDays().join(';');
-            const officeDays = this.getSelectedOfficeDays().join(';');
-            const scheduleMonth = this.selectedMonth + '-01'; // Format: YYYY-MM-01
-            
-            console.log('Submitting schedule request...');
-            console.log('Employee ID:', this.employeeId);
-            console.log('Month:', scheduleMonth);
-            console.log('WFH Days:', wfhDays);
-            console.log('Office Days:', officeDays);
-            
             const result = await submitHybridScheduleRequest({
                 employeeId: this.employeeId,
-                scheduleMonth: scheduleMonth,
-                wfhDays: wfhDays,
-                officeDays: officeDays,
+                scheduleMonth: this.weekStartDate,
+                wfhDays: this.getSelectedWFHDays().join(';'),
+                officeDays: this.getSelectedOfficeDays().join(';'),
                 scheduleType: this.scheduleType,
                 reason: this.reason
             });
-            
-            console.log('Submission result:', JSON.stringify(result, null, 2));
-            
+            console.log('Submit Result:', result);
+
             if (result.success) {
-                this.showToast(
-                    'Success!',
-                    result.message || 'Your hybrid work schedule request has been submitted for approval',
-                    'success'
-                );
-                
-                // Reset form
-                this.handleReset();
-                
-                // Refresh existing schedules
-                this.loadExistingSchedules();
+
+                this.isLoading = false; // ← stop spinner BEFORE showing alert
+                await LightningAlert.open({
+                    message: result.message || 'Request submitted successfully',
+                    theme: 'success',
+                    label: 'Success'
+                });
+
+                this.showForm = false;
+                this.resetForm();
+                await this.loadExistingSchedules();
+
             } else {
-                this.showToast(
-                    'Error',
-                    result.error || 'Failed to submit schedule request',
-                    'error'
-                );
+                await LightningAlert.open({
+                    message: result.message || result.alert || 'You already have a hybrid schedule request for this month',
+                    theme: 'info',
+                    label: 'Alert'
+                });
+            }
+        } catch (error) {
+            console.error('❌ Submit Error:', error);
+            
+            let errorMessage = 'An unexpected error occurred';
+            if (error.body && error.body.message) {
+                errorMessage = error.body.message;
+            } else if (error.message) {
+                errorMessage = error.message;
             }
             
-        } catch (error) {
-            console.error('Error submitting schedule:', error);
-            this.showToast(
-                'Error',
-                error.body?.message || 'An error occurred while submitting your request',
-                'error'
-            );
+            await LightningAlert.open({
+                message: errorMessage,
+                theme: 'error',
+                label: 'Error'
+            });
+            
         } finally {
             this.isLoading = false;
         }
     }
-    
-    // Helper methods
+
+    /* ======================
+        HELPERS
+    ======================= */
+
     getSelectedWFHDays() {
-        return this.daysOfWeek.filter(day => day.isWFH).map(day => day.value);
+        return this.daysOfWeek.filter(d => d.isWFH).map(d => d.value);
     }
-    
+
     getSelectedOfficeDays() {
-        return this.daysOfWeek.filter(day => day.isOffice).map(day => day.value);
+        return this.daysOfWeek.filter(d => d.isOffice).map(d => d.value);
     }
+
+    get minWeek() {
+    const d = new Date();
+    const year = d.getFullYear();
     
-    validateForm() {
-        this.hasValidationError = false;
-        this.validationErrorMessage = '';
-        
-        // Check if at least one day is selected
-        if (this.getSelectedWFHDays().length === 0 && this.getSelectedOfficeDays().length === 0) {
-            this.hasValidationError = true;
-            this.validationErrorMessage = 'Please select at least one WFH day or Office day';
-            return false;
+    // Get ISO week number safely
+    const tempDate = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const dayNum = tempDate.getUTCDay() || 7;
+    tempDate.setUTCDate(tempDate.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(tempDate.getUTCFullYear(), 0, 1));
+    const weekNum = Math.ceil((((tempDate - yearStart) / 86400000) + 1) / 7);
+    
+    return `${year}-W${String(weekNum).padStart(2, '0')}`;
+}
+
+
+// Update getWeekDates to use the same method
+getWeekDates(weekStr) {
+    try {
+        if (!weekStr || !weekStr.includes('-W')) {
+            return { start: new Date(), end: new Date() };
         }
-        
-        // Check for overlapping days
-        const wfhDays = this.getSelectedWFHDays();
-        const officeDays = this.getSelectedOfficeDays();
-        const overlap = wfhDays.filter(day => officeDays.includes(day));
-        
-        if (overlap.length > 0) {
-            this.hasValidationError = true;
-            this.validationErrorMessage = `Cannot select same day for both WFH and Office: ${overlap.join(', ')}`;
-            return false;
+        const parts = weekStr.split('-W');
+        const year = parseInt(parts[0], 10);
+        const week = parseInt(parts[1], 10);
+
+        if (isNaN(year) || isNaN(week)) {
+            return { start: new Date(), end: new Date() };
         }
-        
-        return true;
+
+        const start = this.getMondayOfISOWeek(week, year);
+        const end = new Date(start);
+        end.setDate(start.getDate() + 6);
+
+        return { start, end };
+    } catch(e) {
+        console.error('getWeekDates error:', e);
+        return { start: new Date(), end: new Date() };
     }
+}
+
+handleWeekChange(e) {
+    const raw = e.target.value;
+    console.log('Raw week input value:', raw);
+    this.selectedWeek = raw;
+    this.weekStartDate = '';
+
+    if (!raw) return;
+
+    try {
+        // LWC type="week" returns "2026-W11" format
+        // But sometimes returns just the week number differently
+        let year, week;
+
+        if (raw.includes('-W')) {
+            const parts = raw.split('-W');
+            year = parseInt(parts[0], 10);
+            week = parseInt(parts[1], 10);
+        } else {
+            console.error('Unexpected week format:', raw);
+            return;
+        }
+
+        console.log('Parsed year:', year, 'week:', week);
+
+        if (!year || !week || isNaN(year) || isNaN(week)) {
+            console.error('Invalid year/week values');
+            return;
+        }
+
+        const startDate = this.getMondayOfISOWeek(week, year);
+        console.log('Calculated startDate:', startDate);
+
+        if (!startDate || isNaN(startDate.getTime())) {
+            console.error('Invalid start date calculated');
+            return;
+        }
+
+        const y = startDate.getFullYear();
+        const m = String(startDate.getMonth() + 1).padStart(2, '0');
+        const d = String(startDate.getDate()).padStart(2, '0');
+        this.weekStartDate = `${y}-${m}-${d}`;
+
+        console.log('weekStartDate final:', this.weekStartDate);
+
+    } catch(err) {
+        console.error('handleWeekChange error:', err);
+        this.weekStartDate = '';
+    }
+}
+
+// Separate clean method - ISO 8601 week to Monday date
+getMondayOfISOWeek(week, year) {
+    // Jan 4th is always in week 1 of ISO calendar
+    const jan4 = new Date(year, 0, 4);
     
+    // Get day of week for Jan 4 (0=Sun, make it 1=Mon...7=Sun)
+    const jan4DayOfWeek = jan4.getDay() === 0 ? 7 : jan4.getDay();
+    
+    // Monday of week 1
+    const mondayWeek1 = new Date(jan4);
+    mondayWeek1.setDate(jan4.getDate() - (jan4DayOfWeek - 1));
+    
+    // Monday of target week
+    const targetMonday = new Date(mondayWeek1);
+    targetMonday.setDate(mondayWeek1.getDate() + (week - 1) * 7);
+    
+    return targetMonday;
+}
+    validateDaySelection() {
+        const totalSelected = this.getSelectedWFHDays().length + this.getSelectedOfficeDays().length;
+        
+        if (totalSelected < 5) {
+            this.hasValidationError = true;
+            this.validationErrorMessage = `⚠️ You must select all 5 weekdays. Currently selected: ${totalSelected}/5 days. Please select ${5 - totalSelected} more day(s).`;
+        } else if (totalSelected === 5) {
+            this.hasValidationError = false;
+            this.validationErrorMessage = '';
+        } else if (totalSelected > 5) {
+            this.hasValidationError = true;
+            this.validationErrorMessage = `⚠️ You can only select 5 weekdays total. Currently selected: ${totalSelected}/5 days. Please deselect ${totalSelected - 5} day(s).`;
+        }
+    }
+
+    resetForm() {
+    this.selectedMonth = '';
+    this.selectedWeek = '';
+    this.weekStartDate = '';
+    this.scheduleType = 'Fixed Days';
+    this.reason = '';
+    this.hasValidationError = false;
+    this.validationErrorMessage = '';
+
+    this.daysOfWeek = this.daysOfWeek.map(d => ({
+        ...d,
+        isWFH: false,
+        isOffice: false
+    }));
+}
     async loadExistingSchedules() {
         this.isLoading = true;
         
         try {
-            console.log('Loading existing schedules for employee:', this.employeeId);
+            const schedules = await getEmployeeSchedules({ employeeId: this.employeeId });
             
-            const schedules = await getEmployeeSchedules({
-                employeeId: this.employeeId
-            });
+            console.log('📋 Loaded Schedules:', schedules);
             
-            console.log('Existing schedules:', JSON.stringify(schedules, null, 2));
-            
-            // Format schedules for display
-            this.existingSchedules = schedules.map(schedule => {
-                const monthDate = new Date(schedule.Schedule_Month__c);
-                const monthDisplay = monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            this.existingSchedules = schedules.map(s => {
+              /*  const monthDate = new Date(s.Schedule_Month__c);
+                const monthDisplay = monthDate.toLocaleDateString('en-US', { 
+                    month: 'long', 
+                    year: 'numeric' 
+                });*/
+
+                const monthDate = new Date(s.Schedule_Month__c);
+
+// Calculate week number within the month
+const getWeekOfMonth = (date) => {
+    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+    return Math.ceil((date.getDate() + firstDay.getDay()) / 7);
+};
+
+// Calculate week start (Monday) and end (Sunday)
+const dayOfWeek = monthDate.getDay(); // 0=Sun, 1=Mon...
+const diffToMonday = (dayOfWeek === 0) ? -6 : 1 - dayOfWeek;
+const weekStart = new Date(monthDate);
+weekStart.setDate(monthDate.getDate() + diffToMonday);
+const weekEnd = new Date(weekStart);
+weekEnd.setDate(weekStart.getDate() + 6);
+
+const formatDate = (d) => d.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+});
+
+const weekNumber = getWeekOfMonth(weekStart);
+const monthName = weekStart.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+const monthDisplay = `Week ${weekNumber} — ${formatDate(weekStart)} to ${formatDate(weekEnd)}`;
+                
+                const wfhDaysDisplay = s.WFH_days__c 
+                    ? s.WFH_days__c.replace(/;/g, ', ') 
+                    : 'None';
+                
+                const officeDaysDisplay = s.Office_Days__c 
+                    ? s.Office_Days__c.replace(/;/g, ', ') 
+                    : 'None';
+                
+                const managerName = s.managerName || 'N/A';
                 
                 let statusClass = 'status-pending';
-                if (schedule.Approval_Status__c === 'Approved') {
+                if (s.Approval_Status__c === 'Approved') {
                     statusClass = 'status-approved';
-                } else if (schedule.Approval_Status__c === 'Rejected') {
+                } else if (s.Approval_Status__c === 'Rejected') {
                     statusClass = 'status-rejected';
                 }
                 
+                let approvalDateDisplay = null;
+                let showApprovalDate = false;
+                if (s.Approval_Date__c) {
+                    const approvalDate = new Date(s.Approval_Date__c);
+                    approvalDateDisplay = approvalDate.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    showApprovalDate = true;
+                }
+                
+                const showRejectionReason = s.Approval_Status__c === 'Rejected' && 
+                                           s.Rejection_Reason__c != null;
+                
                 return {
-                    ...schedule,
+                    Id: s.Id,
+                    Name: s.Name,
+                    Schedule_Month__c: s.Schedule_Month__c,
                     monthDisplay: monthDisplay,
-                    wfhDaysDisplay: schedule.WFH_days__c ? schedule.WFH_days__c.replace(/;/g, ', ') : 'None',
-                    officeDaysDisplay: schedule.Office_Days__c ? schedule.Office_Days__c.replace(/;/g, ', ') : 'None',
+                    wfhDaysDisplay: wfhDaysDisplay,
+                    officeDaysDisplay: officeDaysDisplay,
+                    managerName: managerName,
+                    Approval_Status__c: s.Approval_Status__c,
                     statusClass: statusClass,
-                    showApprovalDate: schedule.Approval_Date__c && schedule.Approval_Status__c === 'Approved',
-                    approvalDateDisplay: schedule.Approval_Date__c ? new Date(schedule.Approval_Date__c).toLocaleDateString() : '',
-                    showRejectionReason: schedule.Approval_Status__c === 'Rejected' && schedule.Rejection_Reason__c
+                    Rejection_Reason__c: s.Rejection_Reason__c,
+                    showRejectionReason: showRejectionReason,
+                    approvalDateDisplay: approvalDateDisplay,
+                    showApprovalDate: showApprovalDate,
+                    Total_WFH_Days__c: s.Total_WFH_Days__c,
+                    Total_Office_Days__c: s.Total_Office_Days__c,
+                    Schedule_Type__c: s.Schedule_Type__c,
+                    Reason__c: s.Reason__c,
+                    monthDisplay: monthDisplay,
+weekLabel: monthName  // e.g. "March 2026"
                 };
             });
             
+            console.log('✅ Processed Schedules:', this.existingSchedules);
+            
         } catch (error) {
-            console.error('Error loading existing schedules:', error);
-            this.showToast(
-                'Error',
-                'Failed to load existing schedules',
-                'error'
-            );
+            console.error('❌ Error loading schedules:', error);
+            this.existingSchedules = [];
         } finally {
             this.isLoading = false;
         }
     }
-    
-    showToast(title, message, variant) {
-        const event = new ShowToastEvent({
-            title: title,
-            message: message,
-            variant: variant
-        });
-        this.dispatchEvent(event);
+
+    handleRefresh() {
+        this.loadExistingSchedules();
     }
 }
